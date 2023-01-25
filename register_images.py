@@ -252,17 +252,18 @@ def runCnn(model_cache, source_image_path, target_image_path, region01, region00
 
 # output results to .nii.gz volumes
 def output_results(outputPath, inputStack, sid, fn, imSpatialInfo, extension = "nii.gz"):
-    mriOrigin, mriSpace, mriDirection = imSpatialInfo
+    mriOrigin, mriSpace, mriDirection = imSpatialInfo    
     sitkIm = sitk.GetImageFromArray(inputStack)
     sitkIm.SetOrigin(mriOrigin)
     sitkIm.SetSpacing(mriSpace)
     sitkIm.SetDirection(mriDirection)
     try: 
-        os.mkdir(outputPath + sid)
+        os.mkdir(outputPath +'/registration/'+ sid)
     except: 
         pass
     #sitkIm.SetDirection(tr)
-    sitk.WriteImage(sitkIm, outputPath + sid + '\\' + sid + fn + extension)
+    
+    sitk.WriteImage(sitkIm, outputPath +'/registration/'+ sid + '/' + sid + fn + extension)
 
 
 def output_results_high_res(preprocess_moving_dest,preprocess_fixed_dest,outputPath, inputStack, sid, fn, imSpatialInfo, coord, imMri, extension = "nii.gz"):
@@ -299,7 +300,7 @@ def output_results_high_res(preprocess_moving_dest,preprocess_fixed_dest,outputP
     except: 
         pass
     #sitkIm.SetDirection(tr)
-    sitk.WriteImage(sitkIm, outputPath + sid + '\\' + sid + fn + extension)
+    sitk.WriteImage(sitkIm, outputPath + sid + '/' + sid + fn + extension)
 
 def getFiles(file_dest, keyword, sid): 
     cases = []
@@ -329,7 +330,6 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     region00_case = getFiles(preprocess_moving_dest, 'region00', sid)
     region10_case = getFiles(preprocess_moving_dest, 'region10', sid)
     region09_case = getFiles(preprocess_moving_dest, 'region09', sid)
-
     
 
     for mri_file in mri_files: 
@@ -339,8 +339,8 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             elif 'mriMask' in mri_file: 
                 mri_mask.append(mri_file)
             else: 
-                mri_case.append(mri_file)
-
+                mri_case.append(mri_file)    
+    
     w, h, _ = (cv2.imread(preprocess_fixed_dest + mri_highRes[0])).shape
     count = min(len(hist_case), len(mri_case))
     
@@ -356,7 +356,8 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     out3D_region09 = np.zeros(volumeShape_highRes[:-1])
     out3Dmri_mask = np.zeros((count, w, h, 3)[:-1])
 
-    ###### START ALIGNMENT
+    ###### START ALIGNMENT+
+    print('count: ' + str(count))
     for idx in range(count): 
         source_image_path= preprocess_moving_dest + hist_case[idx]
         target_image_path= preprocess_fixed_dest + mri_case[idx]
@@ -388,7 +389,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         start_x = int(padding_factor*half_out_size + (x_prime - x_offset_prime - x + x_offset)/x_s)
 
 
-        imMri_highRes = cv2.imread(preprocess_fixed_dest + mri_highRes[idx])
+        imMri_highRes = cv2.imread(preprocess_fixed_dest + mri_highRes[idx])        
         imCancer = cv2.imread(preprocess_moving_dest + cancer_case[idx])
         imRegion00 = cv2.imread(preprocess_moving_dest + region00_case[idx])
         imRegion10 = cv2.imread(preprocess_moving_dest + region10_case[idx])
@@ -493,8 +494,8 @@ def main():
     cases = toProcess.keys()
 
     ###### PREPROCESSING DESTINATIONS ######################################
-    preprocess_moving_dest = outputPath + '\\preprocess\\hist\\'
-    preprocess_fixed_dest = outputPath + '\\preprocess\\mri\\'
+    preprocess_moving_dest = outputPath + '/preprocess/hist/'
+    preprocess_fixed_dest = outputPath + '/preprocess/mri/'
 
     # start doing preprocessing on each case and register
     for s in json_obj.studies:
@@ -536,24 +537,30 @@ def main():
             ######## LOAD MODELS
             print('.'*30, 'Begin deep learning registration for ' + sid + '.'*30)
 
-            try:
+            """try:
                 model_cache
             except NameError:
                 feature_extraction_cnn = 'resnet101'
 
+                
                 if feature_extraction_cnn=='resnet101':
                     model_aff_path = 'trained_models/best_pascal_checkpoint_adam_affine_grid_loss.pth.tar'
                     model_tps_path = 'trained_models/best_pascal_checkpoint_adam_tps_grid_loss.pth.tar'
                 elif feature_extraction_cnn=='resnet101':
                     model_aff_path = 'trained_models/best_pascal_checkpoint_adam_affine_grid_loss_resnet_random.pth.tar'
                     model_tps_path = 'trained_models/best_pascal_checkpoint_adam_tps_grid_loss_resnet_random.pth.tar'   
-
-                model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True)
+                """
+            model_aff_path = 'trained_models/best_CombinedLoss_affine_resnet101.pth.tar'
+            model_tps_path = 'trained_models/best_CombinedLoss_tps_resnet101.pth.tar'
+            feature_extraction_cnn = 'resnet101'
+            
+            model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True)
 
             start = time.time()
-            output3D_cache = register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid)
+            output3D_cache = register(preprocess_moving_dest+sid+'/', preprocess_fixed_dest+sid+'/', coord, model_cache, sid)            
             end = time.time()
-            out3Dhist_highRes, out3Dhist_lowRes, out3Dmri_highRes, out3Dmri_lowRes, out3Dcancer_highRes, out3Dcancer_lowRes = output3D_cache
+            out3Dhist_highRes, out3Dmri_highRes, out3Dcancer_highRes, _,_,_,_ = output3D_cache
+            #out3Dhist_highRes, out3Dhist_lowRes, out3Dmri_highRes, out3Dmri_lowRes, out3Dcancer_highRes, out3Dcancer_lowRes
             print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
             imMri = sitk.ReadImage(fixed_img_mha)
             mriOrigin = imMri[:,:,coord[sid]['slice'][0]:coord[sid]['slice'][-1]].GetOrigin()
