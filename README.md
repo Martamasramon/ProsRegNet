@@ -1,3 +1,5 @@
+# Adaptation of Wei Shao's original code for use in my MRes project. 
+
 # ProsRegNet: A Deep Learning Framework for Registration of MRI and Histopathology Images of the Prostate.
 
 ![](pictures/pipeline.png)
