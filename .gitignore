@@ -1,0 +1,7 @@
+datasets/
+results/
+trained_models/
+Test_train.o*
+Test.o*
+Train.o*
+*.pyc
