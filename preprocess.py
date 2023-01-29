@@ -47,7 +47,7 @@ def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta
     except: 
         pass 
     
-    outputPath = preprocess_moving_dest + case + '\\' + region + '_' + case + '_' + slice +'.png'
+    outputPath = preprocess_moving_dest + case + '/' + region + '_' + case + '_' + slice +'.png'
     cv2.imwrite(outputPath, rotated)
 
 
@@ -133,7 +133,7 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
         padHist[x_offset:crop.shape[0]+x_offset, y_offset:crop.shape[1]+y_offset, :] = crop
 
         # Write images, with new filename
-        cv2.imwrite(pre_process_moving_dest + case + '\\hist_' + case + '_' + slice +'.png', padHist)
+        cv2.imwrite(pre_process_moving_dest + case + '/hist_' + case + '_' + slice +'.png', padHist)
 
 #preprocess mri mha files to slices here
 def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case):     
@@ -213,11 +213,11 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
             pass 
         
         # write to a file        
-        cv2.imwrite(pre_process_fixed_dest + case + '\\mri_' + case + '_' + str(slice).zfill(2) +'.jpg', upsMri)
+        cv2.imwrite(pre_process_fixed_dest + case + '/mri_' + case + '_' + str(slice).zfill(2) +'.jpg', upsMri)
 
         
-        cv2.imwrite(pre_process_fixed_dest + case + '\\mriUncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])
-        cv2.imwrite(pre_process_fixed_dest + case + '\\mriMask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(mri_mask))
+        cv2.imwrite(pre_process_fixed_dest + case + '/mriUncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])
+        cv2.imwrite(pre_process_fixed_dest + case + '/mriMask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(mri_mask))
 
     coord = OrderedDict(coord)
     
