@@ -262,7 +262,7 @@ def output_results(outputPath, inputStack, sid, fn, imSpatialInfo, extension = "
     except: 
         pass
     #sitkIm.SetDirection(tr)
-    sitk.WriteImage(sitkIm, outputPath + sid + '\\' + sid + fn + extension)
+    sitk.WriteImage(sitkIm, outputPath + sid + '/' + sid + fn + extension)
 
 
 def output_results_high_res(preprocess_moving_dest,preprocess_fixed_dest,outputPath, inputStack, sid, fn, imSpatialInfo, coord, imMri, extension = "nii.gz"):
@@ -299,7 +299,7 @@ def output_results_high_res(preprocess_moving_dest,preprocess_fixed_dest,outputP
     except: 
         pass
     #sitkIm.SetDirection(tr)
-    sitk.WriteImage(sitkIm, outputPath + sid + '\\' + sid + fn + extension)
+    sitk.WriteImage(sitkIm, outputPath + sid + '/' + sid + fn + extension)
 
 def getFiles(file_dest, keyword, sid): 
     cases = []
@@ -493,8 +493,8 @@ def main():
     cases = toProcess.keys()
 
     ###### PREPROCESSING DESTINATIONS ######################################
-    preprocess_moving_dest = outputPath + '\\preprocess\\hist\\'
-    preprocess_fixed_dest = outputPath + '\\preprocess\\mri\\'
+    preprocess_moving_dest = outputPath + '/preprocess/hist/'
+    preprocess_fixed_dest = outputPath + '/preprocess/mri/'
 
     # start doing preprocessing on each case and register
     for s in json_obj.studies:
@@ -551,9 +551,9 @@ def main():
                 model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True)
 
             start = time.time()
-            output3D_cache = register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid)
+            output3D_cache = register(preprocess_moving_dest + '/' + sid, preprocess_fixed_dest + '/' + sid, coord, model_cache, sid)
             end = time.time()
-            out3Dhist_highRes, out3Dhist_lowRes, out3Dmri_highRes, out3Dmri_lowRes, out3Dcancer_highRes, out3Dcancer_lowRes = output3D_cache
+            out3Dhist_highRes, out3Dmri_highRes, out3Dcancer_highRes, out3D_region00, out3D_region10, out3D_region09, out3Dmri_mask = output3D_cache
             print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
             imMri = sitk.ReadImage(fixed_img_mha)
             mriOrigin = imMri[:,:,coord[sid]['slice'][0]:coord[sid]['slice'][-1]].GetOrigin()
