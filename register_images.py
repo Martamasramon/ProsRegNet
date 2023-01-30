@@ -551,7 +551,7 @@ def main():
                 model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True)
 
             start = time.time()
-            output3D_cache = register(preprocess_moving_dest + '/' + sid, preprocess_fixed_dest + '/' + sid, coord, model_cache, sid)
+            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid)
             end = time.time()
             out3Dhist_highRes, out3Dmri_highRes, out3Dcancer_highRes, out3D_region00, out3D_region10, out3D_region09, out3Dmri_mask = output3D_cache
             print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
