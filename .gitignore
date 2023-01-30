@@ -1,6 +1,7 @@
 datasets/
 results/
 trained_models/
+output_logs/
 Test_train.o*
 Test.o*
 Train.o*
