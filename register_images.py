@@ -564,15 +564,15 @@ def main():
 
             # write output hist 3D volume to .nii.gz format
             fn_moving_highRes = '_moving_rgb.'
-            output_results(outputPath, out3Dhist_highRes, sid, fn_moving_highRes, imSpatialInfo, extension = "nii.gz")
+            output_results(outputPath + 'registration/', out3Dhist_highRes, sid, fn_moving_highRes, imSpatialInfo, extension = "nii.gz")
 
             #write output mri 3D volume to .nii.gz format
             fn_fixed_highRes = '_fixed_image.'
-            output_results(outputPath, out3Dmri_highRes, sid, fn_fixed_highRes, imSpatialInfo, extension = "nii.gz")
+            output_results(outputPath + 'registration/', out3Dmri_highRes, sid, fn_fixed_highRes, imSpatialInfo, extension = "nii.gz")
 
             #write output cancer outline 3D volume to .nii.gz format
             fn_cancer_highRes = '_moved_region01_label.'
-            output_results(outputPath, out3Dcancer_highRes, sid, fn_cancer_highRes, imSpatialInfo, extension = "nii.gz")
+            output_results(outputPath + 'registration/', out3Dcancer_highRes, sid, fn_cancer_highRes, imSpatialInfo, extension = "nii.gz")
 
             timings[s] = (end-start)/60.0
             print('Done!')
