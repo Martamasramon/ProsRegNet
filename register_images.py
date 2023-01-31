@@ -80,16 +80,8 @@ def preprocess_image_high_res_back(image):
 
 # load pre-trained models here
 def load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True): 
-#     feature_extraction_cnn = 'resnet101'
-#     if feature_extraction_cnn=='resnet101':
-#         model_aff_path = 'trained_models/best_pascal_checkpoint_adam_affine_grid_loss.pth.tar'
-#         model_tps_path = 'trained_models/best_pascal_checkpoint_adam_tps_grid_loss.pth.tar'
-#     elif feature_extraction_cnn=='resnet101':
-#         model_aff_path = 'trained_models/best_pascal_checkpoint_adam_affine_grid_loss_resnet_random.pth.tar'
-#         model_tps_path = 'trained_models/best_pascal_checkpoint_adam_tps_grid_loss_resnet_random.pth.tar'   
-
-    use_cuda = torch.cuda.is_available()
     
+    use_cuda = torch.cuda.is_available()
     #use_cuda = False
     
     do_aff = not model_aff_path==''
@@ -540,14 +532,10 @@ def main():
                 model_cache
             except NameError:
                 feature_extraction_cnn = 'resnet101'
-
-                if feature_extraction_cnn=='resnet101':
-                    model_aff_path = 'trained_models/best_pascal_checkpoint_adam_affine_grid_loss.pth.tar'
-                    model_tps_path = 'trained_models/best_pascal_checkpoint_adam_tps_grid_loss.pth.tar'
-                elif feature_extraction_cnn=='resnet101':
-                    model_aff_path = 'trained_models/best_pascal_checkpoint_adam_affine_grid_loss_resnet_random.pth.tar'
-                    model_tps_path = 'trained_models/best_pascal_checkpoint_adam_tps_grid_loss_resnet_random.pth.tar'   
-
+                
+                model_aff_path = 'trained_models/best_CombinedLoss_affine_resnet101.pth.tar'
+                model_tps_path = 'trained_models/best_CombinedLoss_tps_resnet101.pth.tar'
+                
                 model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True)
 
             start = time.time()
