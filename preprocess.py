@@ -137,11 +137,23 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
 
 #preprocess mri mha files to slices here
 def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case):     
-    imMri = sitk.ReadImage(fixed_img_mha)
-    imMri = sitk.GetArrayFromImage(imMri)
-    imMriMask = sitk.ReadImage(fixed_seg)
+    imMri       = sitk.ReadImage(fixed_img_mha)
+    imMri       = sitk.GetArrayFromImage(imMri)
+    try:
+        imMri.shape[2]
+    except:
+        imMri = imMri.reshape(1,imMri.shape[0],imMri.shape[1])
+
+    imMriMask   = sitk.ReadImage(fixed_seg)
+    imMriMaskArray = sitk.GetArrayFromImage(imMriMask)
+    try:
+        imMriMaskArray.shape[2]
+    except:
+        imMriMaskArray = imMriMaskArray.reshape(1,imMriMaskArray.shape[0],imMriMaskArray.shape[1])
+    
+    
     #### resample mri mask to be the same size as mri
-    if imMri.shape[1]!=sitk.GetArrayFromImage(imMriMask).shape[1] | imMri.shape[2]!=sitk.GetArrayFromImage(imMriMask).shape[2]:
+    if (imMri.shape[1]!=sitk.GetArrayFromImage(imMriMask).shape[1] or imMri.shape[2]!=sitk.GetArrayFromImage(imMriMask).shape[2]):
         mri_ori = sitk.ReadImage(fixed_img_mha)
         resampler = sitk.ResampleImageFilter()
         resampler.SetReferenceImage(mri_ori)
@@ -149,6 +161,10 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         print("input mri and mri mask have different sizes")
     
     imMriMask = sitk.GetArrayFromImage(imMriMask)
+    try:
+        imMriMask.shape[2]
+    except:
+        imMriMask = imMriMask.reshape(1,imMriMask.shape[0],imMriMask.shape[1])
     
     coord[case] = {}
     coord[case]['x_offset'] = []
@@ -165,7 +181,9 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         
         mri = imMri[slice, :, :]*imMriMask[slice, :, :]
         
-        mri_mask = imMriMask[slice, :, :] * 255
+        mri_mask = imMriMask[slice, :, :] 
+        if np.amax(mri_mask) == 1:
+            mri_mask *= 255
         
         # create a bounding box around slice
         points = np.argwhere(mri_mask != 0)
@@ -173,7 +191,6 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         y, x, h, w = cv2.boundingRect(points) # create a rectangle around those points
         
         
-
         imMri[slice, :, :] = imMri[slice, :, :] / int(np.max(imMri[slice, :, :]) / 255)
    
         if h>w:
@@ -191,7 +208,16 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         coord[case]['x_offset'].append(x_offset)
         coord[case]['y_offset'].append(y_offset)  
         
-        crop = mri[x - x_offset:x+w+x_offset, y - y_offset:y+h +y_offset]
+        if x - x_offset < 0:
+            min_x = 0
+        else:
+            min_x = x - x_offset
+            
+        if y - y_offset < 0:
+            min_y = 0
+        else:
+            min_y = y - y_offset
+        crop = mri[min_x:x+w+x_offset, min_y:y+h +y_offset]
         
         h = h + 2*y_offset
         w = w + 2*x_offset
@@ -205,7 +231,7 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         
         upsMri = cv2.resize(crop.astype('float32'), (upsHeight,  upsWidth), interpolation=cv2.INTER_CUBIC)
         
-                 # save x, y, x_offset, y_offset, h, w for each slice in dictionary 'coord' (coordinates)
+        # save x, y, x_offset, y_offset, h, w for each slice in dictionary 'coord' (coordinates)
         
         try: 
             os.mkdir(pre_process_fixed_dest + case)
@@ -213,9 +239,7 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
             pass 
         
         # write to a file        
-        cv2.imwrite(pre_process_fixed_dest + case + '/mri_' + case + '_' + str(slice).zfill(2) +'.jpg', upsMri)
-
-        
+        cv2.imwrite(pre_process_fixed_dest + case + '/mri_' + case + '_' + str(slice).zfill(2) +'.jpg', upsMri)  
         cv2.imwrite(pre_process_fixed_dest + case + '/mriUncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])
         cv2.imwrite(pre_process_fixed_dest + case + '/mriMask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(mri_mask))
 
