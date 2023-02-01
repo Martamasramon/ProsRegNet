@@ -306,8 +306,8 @@ def getFiles(file_dest, keyword, sid):
 def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid): 
     ####### grab files that were preprocessed 
     
-    mri_files = [pos_mri for pos_mri in sorted(os.listdir(preprocess_fixed_dest)) if pos_mri.endswith('.jpg')]
-
+    mri_files = [pos_mri for pos_mri in sorted(os.listdir(preprocess_fixed_dest)) if (pos_mri.endswith('.jpg') or pos_mri.endswith('.png')) ]
+    
     hist_case = []
     mri_case = []
     mri_highRes = []
@@ -333,6 +333,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             else: 
                 mri_case.append(mri_file)
 
+    
     w, h, _ = (cv2.imread(preprocess_fixed_dest + mri_highRes[0])).shape
     count = min(len(hist_case), len(mri_case))
     
