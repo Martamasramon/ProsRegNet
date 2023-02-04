@@ -6,3 +6,4 @@ Test_train.o*
 Test.o*
 Train.o*
 *.pyc
+coord.txt
