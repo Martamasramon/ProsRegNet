@@ -306,7 +306,7 @@ def getFiles(file_dest, keyword, sid):
 def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid): 
     ####### grab files that were preprocessed 
     
-    mri_files = [pos_mri for pos_mri in sorted(os.listdir(preprocess_fixed_dest)) if (pos_mri.endswith('.jpg') or pos_mri.endswith('.png')) ]
+    mri_files = [pos_mri for pos_mri in sorted(os.listdir(preprocess_fixed_dest)) if pos_mri.endswith('.jpg') ]
     
     hist_case = []
     mri_case = []
@@ -381,12 +381,12 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         start_x = int(padding_factor*half_out_size + (x_prime - x_offset_prime - x + x_offset)/x_s)
 
 
-        imMri_highRes = cv2.imread(preprocess_fixed_dest + mri_highRes[idx])
-        imCancer = cv2.imread(preprocess_moving_dest + cancer_case[idx])
-        imRegion00 = cv2.imread(preprocess_moving_dest + region00_case[idx])
-        imRegion10 = cv2.imread(preprocess_moving_dest + region10_case[idx])
-        imRegion09 = cv2.imread(preprocess_moving_dest + region09_case[idx])
-        imMriMask = cv2.imread(preprocess_fixed_dest + mri_mask[idx])
+        imMri_highRes   = cv2.imread(preprocess_fixed_dest  + mri_highRes[idx])
+        imCancer        = cv2.imread(preprocess_moving_dest + cancer_case[idx])
+        imRegion00      = cv2.imread(preprocess_moving_dest + region00_case[idx])
+        imRegion10      = cv2.imread(preprocess_moving_dest + region10_case[idx])
+        imRegion09      = cv2.imread(preprocess_moving_dest + region09_case[idx])
+        imMriMask       = cv2.imread(preprocess_fixed_dest  + mri_mask[idx])
         
         out3Dmri_highRes[idx, :, :,:] = np.uint8(imMri_highRes)
         out3Dmri_mask[idx, :, :] = np.uint8((imMriMask[:, :, 0] > 255/2.0))
