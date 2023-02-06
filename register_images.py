@@ -246,6 +246,7 @@ def runCnn(model_cache, source_image_path, target_image_path, region01, region00
 def output_results(outputPath, inputStack, sid, fn, imSpatialInfo, extension = "nii.gz"):
     mriOrigin, mriSpace, mriDirection = imSpatialInfo
     sitkIm = sitk.GetImageFromArray(inputStack)
+    
     sitkIm.SetOrigin(mriOrigin)
     sitkIm.SetSpacing(mriSpace)
     sitkIm.SetDirection(mriDirection)
@@ -544,11 +545,22 @@ def main():
             end = time.time()
             out3Dhist_highRes, out3Dmri_highRes, out3Dcancer_highRes, out3D_region00, out3D_region10, out3D_region09, out3Dmri_mask = output3D_cache
             print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
-            imMri = sitk.ReadImage(fixed_img_mha)
-            mriOrigin = imMri[:,:,coord[sid]['slice'][0]:coord[sid]['slice'][-1]].GetOrigin()
-            mriSpace  = imMri.GetSpacing()
+            
+            imMri        = sitk.ReadImage(fixed_img_mha)
+            imMri_array  = sitk.GetArrayFromImage(imMri)
+            
+            mriSpace     = imMri.GetSpacing()
             mriDirection = imMri.GetDirection()
-
+            
+            try:
+                imMri_array.shape[2]
+                mriOrigin = imMri[:,:,coord[sid]['slice'][0]:coord[sid]['slice'][-1]].GetOrigin()
+            except:
+                mriOrigin    = imMri.GetOrigin()
+                mriOrigin    = (mriOrigin[0],    mriOrigin[1],    0.0)
+                mriSpace     = (mriSpace[0],     mriSpace[1],     1.0)
+                mriDirection = (1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0)        # This is probably not good practice, fix :)
+            
             imSpatialInfo = (mriOrigin, mriSpace, mriDirection)
 
             # write output hist 3D volume to .nii.gz format
