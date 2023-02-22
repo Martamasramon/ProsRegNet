@@ -6,12 +6,12 @@
         "id": "aaa0069 CSlice",
         "magnification": 1.2497746800456648,
         "regions": {
-            "region00": {
+            "mask": {
                 "filename": "./datasets/testing/Histology/aaa0069/annotations/aaa0069 CSlice_annotation_01_R000G255B255.tiff",
                 "id": "16776960",
                 "note": "Annotation 0"
             },
-            "region01": {
+            "cancer": {
                 "filename": "./datasets/testing/Histology/aaa0069/annotations/aaa0069 CSlice_annotation_00_R000G255B000.tiff",
                 "id": "65280",
                 "note": "CAP:"
@@ -41,12 +41,12 @@
         "id": "aaa0069 DSlice",
         "magnification": 1.2497060118833236,
         "regions": {
-            "region00": {
+            "mask": {
                 "filename": "./datasets/testing/Histology/aaa0069/annotations/aaa0069 DSlice_annotation_01_R000G255B255.tiff",
                 "id": "16776960",
                 "note": "Annotation 0"
             },
-            "region01": {
+            "cancer": {
                 "filename": "./datasets/testing/Histology/aaa0069/annotations/aaa0069 DSlice_annotation_00_R000G255B000.tiff",
                 "id": "65280",
                 "note": "CAP:"
@@ -76,12 +76,12 @@
         "id": "aaa0069 ESlice",
         "magnification": 1.2497286985584717,
         "regions": {
-            "region00": {
+            "mask": {
                 "filename": "./datasets/testing/Histology/aaa0069/annotations/aaa0069 ESlice_annotation_01_R000G255B255.tiff",
                 "id": "16776960",
                 "note": "Annotation 0"
             },
-            "region01": {
+            "cancer": {
                 "filename": "./datasets/testing/Histology/aaa0069/annotations/aaa0069 ESlice_annotation_00_R000G255B000.tiff",
                 "id": "65280",
                 "note": "CAP:"

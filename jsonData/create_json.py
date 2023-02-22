@@ -27,8 +27,8 @@ def create_json(path_mri, path_histo, file_name):
 
 def main():
     # Paths to image folders 
-    path_mri    = '../datasets/testing/MRI'
-    path_histo  = '../datasets/testing/Histology'
+    path_mri    = './datasets/testing/MRI'
+    path_histo  = './datasets/testing/Histology'
     
     # List of all available samples
     file_names = ['HMU_003_DB', 'HMU_007_TN', 'HMU_010_FH', 
