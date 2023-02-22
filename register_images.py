@@ -2,18 +2,13 @@ from __future__ import print_function, division
 import os
 import argparse
 import torch
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
 from model.ProsRegNet_model import ProsRegNet
-from image.normalization import NormalizeImageDict, normalize_image
-from util.torch_util import BatchTensorToVars, str_to_bool
+from image.normalization import normalize_image
 from geotnf.transformation import GeometricTnf
 from geotnf.transformation_high_res import GeometricTnf_high_res
 from geotnf.point_tnf import *
-import matplotlib.pyplot as plt
 from skimage import io
 import warnings
-from torchvision.transforms import Normalize
 from collections import OrderedDict
 import cv2
 warnings.filterwarnings('ignore')
@@ -26,7 +21,7 @@ import time
 import json
 import numpy as np
 from preprocess import *
-from random import randrange
+
 
 tr = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
 
@@ -111,7 +106,7 @@ def load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_defor
     return model_cache
 
 # run the cnn on our images and return 3D images
-def runCnn(model_cache, source_image_path, target_image_path, region01, region00, region10, region09):
+def runCnn(model_cache, source_image_path, target_image_path, regions):
     model_aff, model_tps, do_aff, do_tps, use_cuda = model_cache
     
     tpsTnf = GeometricTnf(geometric_model='tps', use_cuda=use_cuda)
@@ -130,7 +125,6 @@ def runCnn(model_cache, source_image_path, target_image_path, region01, region00
     target_image3d[:, :, 1] = target_image
     target_image3d[:, :, 2] = target_image
     target_image = np.copy(target_image3d)
-    
 
 
     #### begin new code, affine registration using the masks only
@@ -149,32 +143,25 @@ def runCnn(model_cache, source_image_path, target_image_path, region01, region00
 
     source_image_var = preprocess_image(source_image)
     target_image_var = preprocess_image(target_image)
-    region01_image_var = preprocess_image(region01)
-    region00_image_var = preprocess_image(region00)
-    region10_image_var = preprocess_image(region10)
-    region09_image_var = preprocess_image(region09)
-    
+    histo_image_var  = {}
+    for region in regions:
+        histo_image_var[region] = preprocess_image(regions[region])
     
     source_image_var_high_res = preprocess_image_high_res(source_image)
     target_image_var_high_res = preprocess_image_high_res(target_image)
-    region01_image_var_high_res = preprocess_image_high_res(region01)
-    region00_image_var_high_res = preprocess_image_high_res(region00)
-    region10_image_var_high_res = preprocess_image_high_res(region10)
-    region09_image_var_high_res = preprocess_image_high_res(region09)
+    histo_image_var_high_res  = {}
+    for region in regions:
+        histo_image_var_high_res[region] = preprocess_image_high_res(regions[region])
     
     if use_cuda:
         source_image_var = source_image_var.cuda()
         target_image_var = target_image_var.cuda()
-        region01_image_var = region01_image_var.cuda()
-        region00_image_var = region00_image_var.cuda()
-        region10_image_var = region10_image_var.cuda()
-        region09_image_var = region09_image_var.cuda()
         source_image_var_high_res = source_image_var_high_res.cuda()
         target_image_var_high_res = target_image_var_high_res.cuda()
-        region01_image_var_high_res = region01_image_var_high_res.cuda()
-        region00_image_var_high_res = region00_image_var_high_res.cuda()
-        region10_image_var_high_res = region10_image_var_high_res.cuda()
-        region09_image_var_high_res = region09_image_var_high_res.cuda()
+        
+        for region in regions:
+            histo_image_var[region] = histo_image_var[region].cuda()
+            histo_image_var_high_res[region] = histo_image_var_high_res[region].cuda()
 
     batch = {'source_image': source_image_var, 'target_image':target_image_var}
     batch_high_res = {'source_image': source_image_var_high_res, 'target_image':target_image_var_high_res}
@@ -191,54 +178,47 @@ def runCnn(model_cache, source_image_path, target_image_path, region01, region00
         theta_aff=model_aff(batch_mask)
         warped_image_aff_high_res = affTnf_high_res(batch_high_res['source_image'], theta_aff.view(-1,2,3))
         warped_image_aff = affTnf(batch['source_image'], theta_aff.view(-1,2,3))
-        warped_region01_aff_high_res = affTnf_high_res(region01_image_var_high_res, theta_aff.view(-1,2,3))
-        warped_region00_aff_high_res = affTnf_high_res(region00_image_var_high_res, theta_aff.view(-1,2,3))
-        warped_region10_aff_high_res = affTnf_high_res(region10_image_var_high_res, theta_aff.view(-1,2,3))
-        warped_region09_aff_high_res = affTnf_high_res(region09_image_var_high_res, theta_aff.view(-1,2,3))
+        
+        warped_aff_high_res  = {}
+        for region in regions:
+            warped_aff_high_res[region] = affTnf_high_res(histo_image_var_high_res[region], theta_aff.view(-1,2,3))
         
         ###>>>>>>>>>>>> do affine registration one more time<<<<<<<<<<<<
         warped_mask_aff = affTnf(source_image_mask_var, theta_aff.view(-1,2,3))
         theta_aff=model_aff({'source_image': warped_mask_aff, 'target_image': target_image_mask_var})
         warped_image_aff_high_res = affTnf_high_res(warped_image_aff_high_res, theta_aff.view(-1,2,3))
         warped_image_aff = affTnf(warped_image_aff, theta_aff.view(-1,2,3))
-        warped_region01_aff_high_res = affTnf_high_res(warped_region01_aff_high_res, theta_aff.view(-1,2,3))
-        warped_region00_aff_high_res = affTnf_high_res(warped_region00_aff_high_res, theta_aff.view(-1,2,3))
-        warped_region10_aff_high_res = affTnf_high_res(warped_region10_aff_high_res, theta_aff.view(-1,2,3))
-        warped_region09_aff_high_res = affTnf_high_res(warped_region09_aff_high_res, theta_aff.view(-1,2,3))
+
+        for region in regions:
+            warped_aff_high_res[region] = affTnf_high_res(warped_aff_high_res[region], theta_aff.view(-1,2,3))
+    
         ###>>>>>>>>>>>> do affine registration one more time<<<<<<<<<<<<
 
     if do_aff and do_tps:
         theta_aff_tps=model_tps({'source_image': warped_image_aff, 'target_image': batch['target_image']})   
         warped_image_aff_tps_high_res = tpsTnf_high_res(warped_image_aff_high_res,theta_aff_tps)
-        warped_region01_aff_tps_high_res = tpsTnf_high_res(warped_region01_aff_high_res, theta_aff_tps)
-        warped_region00_aff_tps_high_res = tpsTnf_high_res(warped_region00_aff_high_res, theta_aff_tps)
-        warped_region10_aff_tps_high_res = tpsTnf_high_res(warped_region10_aff_high_res, theta_aff_tps)
-        warped_region09_aff_tps_high_res = tpsTnf_high_res(warped_region09_aff_high_res, theta_aff_tps)
         
-
+        warped_aff_tps_high_res  = {}
+        for region in regions:
+            warped_aff_tps_high_res[region] = tpsTnf_high_res(warped_aff_high_res[region], theta_aff_tps)
 
     # Un-normalize images and convert to numpy
     if do_aff:
         warped_image_aff_np_high_res = normalize_image(warped_image_aff_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        warped_region01_aff_np_high_res = normalize_image(warped_region01_aff_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        warped_region00_aff_np_high_res = normalize_image(warped_region00_aff_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        warped_region10_aff_np_high_res = normalize_image(warped_region10_aff_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        warped_region09_aff_np_high_res = normalize_image(warped_region09_aff_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-       
+        warped_aff_np_high_res  = {}
+        for region in regions:
+            warped_aff_np_high_res[region] = normalize_image(warped_aff_high_res[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy() 
 
     if do_aff and do_tps:
         warped_image_aff_tps_np_high_res = normalize_image(warped_image_aff_tps_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        warped_region01_aff_tps_np_high_res = normalize_image(warped_region01_aff_tps_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        warped_region00_aff_tps_np_high_res = normalize_image(warped_region00_aff_tps_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        warped_region10_aff_tps_np_high_res = normalize_image(warped_region10_aff_tps_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        warped_region09_aff_tps_np_high_res = normalize_image(warped_region09_aff_tps_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        
-    
+        warped_aff_tps_np_high_res  = {}
+        for region in regions:
+            warped_aff_tps_np_high_res[region] = normalize_image(warped_aff_tps_high_res[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
     
     warped_image_aff_np_high_res[warped_image_aff_np_high_res < 0] = 0
     warped_image_aff_tps_np_high_res[warped_image_aff_tps_np_high_res < 0] = 0    
     
-    return warped_image_aff_tps_np_high_res, warped_region01_aff_tps_np_high_res, warped_region00_aff_tps_np_high_res, warped_region10_aff_tps_np_high_res, warped_region09_aff_tps_np_high_res
+    return warped_image_aff_tps_np_high_res, warped_aff_tps_np_high_res
 #    return warped_image_aff_np_high_res, warped_region01_aff_np_high_res, warped_region00_aff_np_high_res, warped_region10_aff_np_high_res, warped_region09_aff_np_high_res
 
 
@@ -304,26 +284,28 @@ def getFiles(file_dest, keyword, sid):
             
     return cases
     
-def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid): 
-    ####### grab files that were preprocessed 
+def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, hist_data): 
+    for slice in hist_data:
+        regions = hist_data[slice]['regions']
+        break
     
+    
+    ####### grab files that were preprocessed 
     mri_files = [pos_mri for pos_mri in sorted(os.listdir(preprocess_fixed_dest)) if pos_mri.endswith('.jpg') ]
     
-    hist_case = []
-    mri_case = []
+    hist_case   = []
+    mri_case    = []
     mri_highRes = []
-    mri_mask = []
-    cancer_case = []
-    region00_case = []
+    mri_mask    = []
     
-    
-    hist_case = getFiles(preprocess_moving_dest, 'hist', sid)
-    cancer_case = getFiles(preprocess_moving_dest, 'region01', sid)
-    region00_case = getFiles(preprocess_moving_dest, 'region00', sid)
-    region10_case = getFiles(preprocess_moving_dest, 'region10', sid)
-    region09_case = getFiles(preprocess_moving_dest, 'region09', sid)
-
-    
+    hist_case  = getFiles(preprocess_moving_dest, 'hist', sid)
+    cases = {}
+    for region in regions:
+        cases[region] = getFiles(preprocess_moving_dest, region, sid)
+        
+    print('Regions in registration:')
+    for region in regions:
+        print(region)
 
     for mri_file in mri_files: 
         if sid in mri_file: 
@@ -343,12 +325,12 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     
     volumeShape_highRes = (count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor), 3)
     out3Dhist_highRes = np.zeros(volumeShape_highRes)
-    out3Dmri_highRes = np.zeros((count, w, h, 3))
-    out3Dcancer_highRes = np.zeros(volumeShape_highRes[:-1])
-    out3D_region00 = np.zeros(volumeShape_highRes[:-1])
-    out3D_region10 = np.zeros(volumeShape_highRes[:-1])
-    out3D_region09 = np.zeros(volumeShape_highRes[:-1])
-    out3Dmri_mask = np.zeros((count, w, h, 3)[:-1])
+    out3Dmri_highRes  = np.zeros((count, w, h, 3))
+    out3Dmri_mask     = np.zeros((count, w, h, 3)[:-1])
+
+    out3D = {}
+    for region in regions:
+        out3D[region] = np.zeros(volumeShape_highRes[:-1])
 
     ###### START ALIGNMENT
     for idx in range(count): 
@@ -361,7 +343,6 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         y_offset = coord[sid]['y_offset'][0]
         h = coord[sid]['h'][0]
         w = coord[sid]['w'][0]
-        
         
         
         y_s = (h+2*y_offset)/(half_out_size*2)
@@ -383,51 +364,42 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
 
 
         imMri_highRes   = cv2.imread(preprocess_fixed_dest  + mri_highRes[idx])
-        imCancer        = cv2.imread(preprocess_moving_dest + cancer_case[idx])
-        imRegion00      = cv2.imread(preprocess_moving_dest + region00_case[idx])
-        imRegion10      = cv2.imread(preprocess_moving_dest + region10_case[idx])
-        imRegion09      = cv2.imread(preprocess_moving_dest + region09_case[idx])
         imMriMask       = cv2.imread(preprocess_fixed_dest  + mri_mask[idx])
+        imHisto         = {}
+        for region in regions:
+            imHisto[region] = cv2.imread(preprocess_moving_dest + cases[region][idx])
         
-        out3Dmri_highRes[idx, :, :,:] = np.uint8(imMri_highRes)
-        out3Dmri_mask[idx, :, :] = np.uint8((imMriMask[:, :, 0] > 255/2.0))
+        out3Dmri_highRes[idx, :, :,:]   = np.uint8(imMri_highRes)
+        out3Dmri_mask[idx, :, :]        = np.uint8((imMriMask[:, :, 0] > 255/2.0))
+       
 
         ######## REGISTER
-        affTps, cancerAffTps, region00_aff_tps, region10_aff_tps, region09_aff_tps= runCnn(model_cache, source_image_path, target_image_path, imCancer, imRegion00, imRegion10, imRegion09) 
+        #affTps, cancerAffTps, region00_aff_tps, region10_aff_tps, region09_aff_tps= runCnn(model_cache, source_image_path, target_image_path, imHisto) 
+        affTps, regions_aff_tps = runCnn(model_cache, source_image_path, target_image_path, imHisto) 
 
-        ####### region 00 
-        region00_aff_tps = cv2.resize(region00_aff_tps*255, (int(h_new),  int(w_new)), interpolation=cv2.INTER_CUBIC)
-        region00_aff_tps = region00_aff_tps >255/1.5
-        
-        out3D_region00[idx, start_x:region00_aff_tps.shape[0]+start_x, start_y:region00_aff_tps.shape[1]+start_y] = np.uint8(region00_aff_tps[:, :,0])
-        
-        ####### region 10 
-        region10_aff_tps = cv2.resize(region10_aff_tps*255, (int(h_new),  int(w_new)), interpolation=cv2.INTER_CUBIC)
-        region10_aff_tps = region10_aff_tps >255/1.5
-        
-        out3D_region10[idx, start_x:region10_aff_tps.shape[0]+start_x, start_y:region10_aff_tps.shape[1]+start_y] = np.uint8(region10_aff_tps[:, :,0])
-        
-        ####### region 09 
-        region09_aff_tps = cv2.resize(region09_aff_tps*255, (int(h_new),  int(w_new)), interpolation=cv2.INTER_CUBIC)
-        region09_aff_tps = region09_aff_tps >255/1.5
-        out3D_region09[idx, start_x:region09_aff_tps.shape[0]+start_x, start_y:region09_aff_tps.shape[1]+start_y] = np.uint8(region09_aff_tps[:,:,0])
+        for region in regions:
+            regions_aff_tps[region] = cv2.resize(regions_aff_tps[region]*255, (int(h_new),  int(w_new)), interpolation=cv2.INTER_CUBIC)
+            if region != 'cancer':
+                regions_aff_tps[region] = regions_aff_tps[region] >255/1.5
+                
+            out3D[region][idx, start_x:regions_aff_tps[region].shape[0]+start_x, start_y:regions_aff_tps[region].shape[1]+start_y] = np.uint8(regions_aff_tps[region][:, :,0])
         
         affTps = cv2.resize(affTps*255, (int(h_new),  int(w_new)), interpolation=cv2.INTER_CUBIC)   
 
-        region00_image3d = np.zeros((affTps.shape[0], affTps.shape[1], 3), dtype=int)
-        region00_image3d[:, :, 0] = region00_aff_tps[:, :,0]
-        region00_image3d[:, :, 1] = region00_aff_tps[:, :,0]
-        region00_image3d[:, :, 2] = region00_aff_tps[:, :,0]
+        mask_image3d = np.zeros((affTps.shape[0], affTps.shape[1], 3), dtype=int)
+        mask_image3d[:, :, 0] = regions_aff_tps['mask'][:, :,0]
+        mask_image3d[:, :, 1] = regions_aff_tps['mask'][:, :,0]
+        mask_image3d[:, :, 2] = regions_aff_tps['mask'][:, :,0]
         
-        points = np.argwhere(region00_image3d == 0)
+        points = np.argwhere(mask_image3d == 0)
         
         for x in range(0,points.shape[0]):
             affTps[tuple(points[x])] = 0
         out3Dhist_highRes[idx, start_x:affTps.shape[0]+start_x, start_y:affTps.shape[1]+start_y,:] = np.uint8(affTps[:, :,:])
         
-        cancerAffTps = cv2.resize(cancerAffTps*255, (int(h_new),  int(w_new)), interpolation=cv2.INTER_CUBIC)
-        out3Dcancer_highRes[idx, start_x:cancerAffTps.shape[0]+start_x, start_y:cancerAffTps.shape[1]+start_y] = np.uint8(cancerAffTps[:, :,0]>255/1.5) 
-    output3D_cache = (out3Dhist_highRes, out3Dmri_highRes, out3Dcancer_highRes, out3D_region00, out3D_region10, out3D_region09, out3Dmri_mask)
+        # cancerAffTps = cv2.resize(cancerAffTps*255, (int(h_new),  int(w_new)), interpolation=cv2.INTER_CUBIC)
+        # out3Dcancer_highRes[idx, start_x:cancerAffTps.shape[0]+start_x, start_y:cancerAffTps.shape[1]+start_y] = np.uint8(cancerAffTps[:, :,0]>255/1.5) 
+    output3D_cache = (out3Dhist_highRes, out3Dmri_highRes, out3D, out3Dmri_mask)
     
     return output3D_cache
     
@@ -481,10 +453,10 @@ def main():
         coord = {}
 
     ############### START REGISTRATION HERE
-    studies = json_obj.studies
-    toProcess = json_obj.ToProcess
-    outputPath = json_obj.output_path
-    cases = toProcess.keys()
+    studies     = json_obj.studies
+    toProcess   = json_obj.ToProcess
+    outputPath  = json_obj.output_path
+    cases       = toProcess.keys()
 
     ###### PREPROCESSING DESTINATIONS ######################################
     preprocess_moving_dest = outputPath + '/preprocess/hist/'
@@ -503,10 +475,10 @@ def main():
 
         studyParser = ParserStudyDict(studyDict)
 
-        sid = studyParser.id
-        fixed_img_mha = studyParser.fixed_filename
-        fixed_seg = studyParser.fixed_segmentation_filename
-        moving_dict = studyParser.ReadMovingImage()
+        sid             = studyParser.id
+        fixed_img_mha   = studyParser.fixed_filename
+        fixed_seg       = studyParser.fixed_segmentation_filename
+        moving_dict     = studyParser.ReadMovingImage()
 
         ###### PREPROCESSING HISTOLOGY HERE #############################################################
         if preprocess_moving == True: 
@@ -541,9 +513,9 @@ def main():
                 model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True)
 
             start = time.time()
-            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid)
+            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, moving_dict)
             end = time.time()
-            out3Dhist_highRes, out3Dmri_highRes, out3Dcancer_highRes, out3D_region00, out3D_region10, out3D_region09, out3Dmri_mask = output3D_cache
+            out3Dhist_highRes, out3Dmri_highRes, out3D, out3Dmri_mask = output3D_cache
             print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
             
             imMri        = sitk.ReadImage(fixed_img_mha)
@@ -572,8 +544,11 @@ def main():
             output_results(outputPath + 'registration/', out3Dmri_highRes, sid, fn_fixed_highRes, imSpatialInfo, extension = "nii.gz")
 
             #write output cancer outline 3D volume to .nii.gz format
-            fn_cancer_highRes = '_moved_region01_label.'
-            output_results(outputPath + 'registration/', out3Dcancer_highRes, sid, fn_cancer_highRes, imSpatialInfo, extension = "nii.gz")
+            try:
+                fn_cancer_highRes = '_moved_cancer_label.'
+                output_results(outputPath + 'registration/', out3D['cancer'], sid, fn_cancer_highRes, imSpatialInfo, extension = "nii.gz")
+            except:
+                print('No cancer labels given.')
 
             timings[s] = (end-start)/60.0
             print('Done!')

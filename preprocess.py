@@ -1,13 +1,14 @@
-import json
 import numpy as np
 import cv2 
 import SimpleITK as sitk 
 from collections import OrderedDict
-from geotnf.transformation import GeometricTnf
-import torch 
-from image.normalization import NormalizeImageDict, normalize_image
 import os 
-from matplotlib import pyplot as plt
+
+#import json
+#from geotnf.transformation import GeometricTnf
+#import torch 
+#from image.normalization import NormalizeImageDict, normalize_image
+#from matplotlib import pyplot as plt
 
 
 def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta, dH, dW, h, w,x,y,x_offset,y_offset): 
@@ -48,6 +49,8 @@ def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta
         pass 
     
     outputPath = preprocess_moving_dest + case + '/' + region + '_' + case + '_' + slice +'.png'
+    # ex. region = mask, case = aaa0069, slice = slice1
+    
     cv2.imwrite(outputPath, rotated)
 
 
@@ -60,14 +63,14 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
         img = cv2.imread(s['filename'], )
 
         # multiply by mask
-        prosPath = s['regions']['region00']['filename']
-        region00 = cv2.imread(prosPath)
-        img = img*(region00/255)
+        prosPath = s['regions']['mask']['filename']
+        mask = cv2.imread(prosPath)
+        img = img*(mask/255)
         # if flip is 1, flip image horizontally
         try: 
             if s['transform']['flip'] == 1: 
                 img = cv2.flip(img, 1)
-                region00 = cv2.flip(region00, 1)
+                mask = cv2.flip(mask, 1)
         except: 
             pass
         # rotate image
@@ -76,15 +79,15 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
         except: 
             theta = 0
         
-        
+    
         img = np.pad(img,((img.shape[0],img.shape[0]),(img.shape[1],img.shape[1]),(0,0)),'constant', constant_values=0)
-        region00 = np.pad(region00,((region00.shape[0],region00.shape[0]),(region00.shape[1],region00.shape[1]),(0,0)),'constant', constant_values=0)
+        mask = np.pad(mask,((mask.shape[0],mask.shape[0]),(mask.shape[1],mask.shape[1]),(0,0)),'constant', constant_values=0)
         
         
         rows, cols, channels = img.shape
         M = cv2.getRotationMatrix2D((cols/2,rows/2),theta,1)
         rotated_hist = cv2.warpAffine(img,M,(cols,rows),borderValue = (0,0,0) )
-        rotated_region00 = cv2.warpAffine(region00,M,(cols,rows))
+        rotated_mask = cv2.warpAffine(mask,M,(cols,rows))
         
 
         dH = int(rotated_hist.shape[1]/4)
@@ -100,11 +103,11 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
         
         
         rotated_hist = cv2.resize(rotated_hist, (dH, dW), interpolation=cv2.INTER_CUBIC)
-        rotated_region00 = cv2.resize(rotated_region00, (dH, dW), interpolation=cv2.INTER_CUBIC)
+        rotated_mask = cv2.resize(rotated_mask, (dH, dW), interpolation=cv2.INTER_CUBIC)
         
 
         # create a bounding box around slice
-        points = np.argwhere(rotated_region00[:,:,0] != 0)
+        points = np.argwhere(rotated_mask[:,:,0] != 0)
         points = np.fliplr(points) # store them in x,y coordinates instead of row,col indices
         y, x, h, w = cv2.boundingRect(points) # create a rectangle around those points
         
@@ -117,16 +120,12 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
             y_offset = int(h*0.2)
             x_offset = int((h - w + 2*y_offset)/2)
             
-        transformAndSaveRegion(pre_process_moving_dest, case, slice, s, 'region00', theta, dH, dW, h, w,x,y,x_offset,y_offset)
-        transformAndSaveRegion(pre_process_moving_dest, case, slice, s, 'region01', theta, dH, dW, h, w,x,y,x_offset,y_offset)
-        transformAndSaveRegion(pre_process_moving_dest, case, slice, s, 'region10', theta, dH, dW, h, w,x,y,x_offset,y_offset)
-        transformAndSaveRegion(pre_process_moving_dest, case, slice, s, 'region09', theta, dH, dW, h, w,x,y,x_offset,y_offset)
+        for region in s['regions']:
+            transformAndSaveRegion(pre_process_moving_dest, case, slice, s, region, theta, dH, dW, h, w,x,y,x_offset,y_offset)
         
         # pad image
         h = h + 2*y_offset
         w = w + 2*x_offset
-        
-
   
         padHist = np.zeros((w, h, 3)) 
       
