@@ -157,7 +157,7 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         resampler = sitk.ResampleImageFilter()
         resampler.SetReferenceImage(mri_ori)
         imMriMask = resampler.Execute(imMriMask)
-        print("input mri and mri mask have different sizes")
+        print("Input MRI and MRI mask have different sizes. Reshaping mask.")
     
     imMriMask = sitk.GetArrayFromImage(imMriMask)
     try:
@@ -178,8 +178,6 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         if np.sum(np.ndarray.flatten(imMriMask[slice, :, :])) == 0: 
             continue
         
-        mri = imMri[slice, :, :]*imMriMask[slice, :, :]
-        
         mri_mask = imMriMask[slice, :, :] 
         if np.amax(mri_mask) == 1:
             mri_mask *= 255
@@ -189,8 +187,8 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         points = np.fliplr(points) # store them in x,y coordinates instead of row,col indices
         y, x, h, w = cv2.boundingRect(points) # create a rectangle around those points
         
-        
-        imMri[slice, :, :] = imMri[slice, :, :] / int(np.max(imMri[slice, :, :]) / 255)
+        imMri[slice, :, :] = imMri[slice, :, :] / np.max(imMri[slice, :, :]) * 255
+        mri = imMri[slice, :, :]*imMriMask[slice, :, :]
    
         if h>w:
             y_offset = int(h*0.15)
@@ -199,6 +197,8 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
             y_offset = int(h*0.2)
             x_offset = int((h - w + 2*y_offset)/2)
         
+        
+        # save x, y, x_offset, y_offset, h, w for each slice in dictionary 'coord' (coordinates)
         coord[case]['x'].append(x)
         coord[case]['y'].append(y)
         coord[case]['h'].append(h)
@@ -229,9 +229,7 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         upsWidth = int(w*ups)
         
         upsMri = cv2.resize(crop.astype('float32'), (upsHeight,  upsWidth), interpolation=cv2.INTER_CUBIC)
-        
-        # save x, y, x_offset, y_offset, h, w for each slice in dictionary 'coord' (coordinates)
-        
+                
         try: 
             os.mkdir(pre_process_fixed_dest + case)
         except: 
