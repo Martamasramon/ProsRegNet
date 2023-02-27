@@ -534,19 +534,17 @@ def main():
                 mriDirection = (1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0)        # This is probably not good practice, fix :)
             
             imSpatialInfo = (mriOrigin, mriSpace, mriDirection)
+                
+            # Write outputs as 3D volumes (.nii.gz format)
+            fn_names = ['_moved.','_moved_mask.','_fixed.', '_moved_cancer.']
+                
+            output_results(outputPath + 'registration/', out3Dhist_highRes, sid, fn_names[0], imSpatialInfo, extension = "nii.gz")
+            output_results(outputPath + 'registration/', out3D['mask'],     sid, fn_names[1], imSpatialInfo, extension = "nii.gz")
+            output_results(outputPath + 'registration/', out3Dmri_highRes,  sid, fn_names[2], imSpatialInfo, extension = "nii.gz")
 
-            # write output hist 3D volume to .nii.gz format
-            fn_moving_highRes = '_moving_rgb.'
-            output_results(outputPath + 'registration/', out3Dhist_highRes, sid, fn_moving_highRes, imSpatialInfo, extension = "nii.gz")
-
-            #write output mri 3D volume to .nii.gz format
-            fn_fixed_highRes = '_fixed_image.'
-            output_results(outputPath + 'registration/', out3Dmri_highRes, sid, fn_fixed_highRes, imSpatialInfo, extension = "nii.gz")
-
-            #write output cancer outline 3D volume to .nii.gz format
+            # Write out cancer outlines if labels exist
             try:
-                fn_cancer_highRes = '_moved_cancer_label.'
-                output_results(outputPath + 'registration/', out3D['cancer'], sid, fn_cancer_highRes, imSpatialInfo, extension = "nii.gz")
+                output_results(outputPath + 'registration/', out3D['cancer'], sid, fn_names[3], imSpatialInfo, extension = "nii.gz")
             except:
                 print('No cancer labels given.')
 
