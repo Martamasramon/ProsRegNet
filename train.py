@@ -7,8 +7,11 @@ If you use this code, please cite the following papers:
 The following code is adapted from: https://github.com/ignacio-rocco/cnngeometric_pytorch.
 """
 
-
 from __future__ import print_function, division
+# Ignore warnings
+import warnings
+warnings.simplefilter("ignore", UserWarning)
+
 import argparse
 import os
 from os.path import exists, join, basename
