@@ -3,17 +3,11 @@ The following code is adapted from: https://github.com/ignacio-rocco/cnngeometri
 """
 
 from __future__ import print_function, division
-import os
-import sys
-from skimage import io
-import pandas as pd
 import numpy as np
 import torch
 from torch.nn.modules.module import Module
-from torch.utils.data import Dataset
 from torch.autograd import Variable
 import torch.nn.functional as F
-from image.normalization import NormalizeImageDict, normalize_image
 
 class GeometricTnf(object):
     """
@@ -43,17 +37,18 @@ class GeometricTnf(object):
             
         sampling_grid = self.gridGen(theta_batch)
 
-        # rescale grid according to crop_factor and padding_factor
-    #    sampling_grid.data = sampling_grid.data*padding_factor*crop_factor
+        # Rescale grid according to crop_factor and padding_factor
+        # sampling_grid.data = sampling_grid.data*padding_factor*crop_factor
         sampling_grid.data = sampling_grid.data*crop_factor/(1+2*padding_factor)
 
-      #  print("original image batch size:")
-       # print(image_batch.shape)
-        # sample transformed image
+        # print("original image batch size:")
+        # print(image_batch.shape)
+        
+        # Sample transformed image
         warped_image_batch = F.grid_sample(image_batch, sampling_grid,padding_mode='border')
-       # print("warped image 88888888888:")
-       # print(warped_image_batch.shape)
-       # print(sampling_grid.shape)
+        # print("warped image 88888888888:")
+        # print(warped_image_batch.shape)
+        # print(sampling_grid.shape)
 
         return warped_image_batch
     
@@ -131,11 +126,9 @@ class SynthPairTnf(object):
         #print(mask1.shape)
 
         #io.imsave('warped_mask.jpg', mask1)
-        
-
-        
 
         return {'source_image': cropped_image_batch, 'target_image': warped_image_batch, 'source_mask': cropped_mask_batch, 'target_mask': warped_mask_batch,'theta_GT': theta_batch}
+
 
     def symmetricImagePad(self,image_batch, padding_factor):
         b, c, h, w = image_batch.size()
