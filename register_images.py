@@ -5,7 +5,6 @@ import torch
 from model.ProsRegNet_model import ProsRegNet
 from image.normalization import normalize_image
 from geotnf.transformation import GeometricTnf
-from geotnf.transformation_high_res import GeometricTnf_high_res
 from geotnf.point_tnf import *
 from skimage import io
 import warnings
@@ -111,8 +110,8 @@ def runCnn(model_cache, source_image_path, target_image_path, regions):
     tpsTnf = GeometricTnf(geometric_model='tps', use_cuda=use_cuda)
     affTnf = GeometricTnf(geometric_model='affine', use_cuda=use_cuda)
     
-    tpsTnf_high_res = GeometricTnf_high_res(geometric_model='tps', use_cuda=use_cuda)
-    affTnf_high_res = GeometricTnf_high_res(geometric_model='affine', use_cuda=use_cuda)
+    tpsTnf_high_res = GeometricTnf(geometric_model='tps', use_cuda=use_cuda, high_res=True)
+    affTnf_high_res = GeometricTnf(geometric_model='affine', use_cuda=use_cuda, high_res=True)
     
     source_image = io.imread(source_image_path)
     target_image = io.imread(target_image_path)

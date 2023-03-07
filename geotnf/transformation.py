@@ -16,7 +16,12 @@ class GeometricTnf(object):
     ( can be used with no transformation to perform bilinear resizing )        
     
     """
-    def __init__(self, geometric_model='affine', out_h=240, out_w=240, use_cuda=True):
+    def __init__(self, geometric_model='affine', out_h=240, out_w=240, use_cuda=True, high_res=False):
+        self.high_res = high_res
+        if high_res and out_h == 240:
+            out_h = 256
+            out_w = 256
+
         self.out_h = out_h
         self.out_w = out_w
         self.use_cuda = use_cuda
@@ -45,7 +50,10 @@ class GeometricTnf(object):
         # print(image_batch.shape)
         
         # Sample transformed image
-        warped_image_batch = F.grid_sample(image_batch, sampling_grid,padding_mode='border')
+        if self.high_res:
+            warped_image_batch = F.grid_sample(image_batch, sampling_grid)
+        else:
+            warped_image_batch = F.grid_sample(image_batch, sampling_grid, padding_mode='border')
         # print("warped image 88888888888:")
         # print(warped_image_batch.shape)
         # print(sampling_grid.shape)
@@ -60,26 +68,25 @@ class SynthPairTnf(object):
     
     """
     def __init__(self, use_cuda=True, geometric_model='affine', crop_factor=16/16, output_size=(240,240), padding_factor = 0.0):
-        assert isinstance(use_cuda, (bool))
-        assert isinstance(crop_factor, (float))
-        assert isinstance(output_size, (tuple))
-        assert isinstance(padding_factor, (float))
-        self.use_cuda=use_cuda
-        self.crop_factor = crop_factor
-        self.padding_factor = padding_factor
-        self.out_h, self.out_w = output_size 
-        self.rescalingTnf = GeometricTnf('affine', self.out_h, self.out_w, 
-                                         use_cuda = self.use_cuda)
-        self.geometricTnf = GeometricTnf(geometric_model, self.out_h, self.out_w, 
-                                         use_cuda = self.use_cuda)
+        assert isinstance(use_cuda,         (bool))
+        assert isinstance(crop_factor,      (float))
+        assert isinstance(output_size,      (tuple))
+        assert isinstance(padding_factor,   (float))
+        
+        self.use_cuda           = use_cuda
+        self.crop_factor        = crop_factor
+        self.padding_factor     = padding_factor
+        self.out_h, self.out_w  = output_size 
+        self.rescalingTnf       = GeometricTnf('affine', self.out_h, self.out_w, use_cuda = self.use_cuda)
+        self.geometricTnf       = GeometricTnf(geometric_model, self.out_h, self.out_w, use_cuda = self.use_cuda)
 
         
     def __call__(self, batch):
         image_batch_A, image_batch_B, theta_batch = batch['image_A'], batch['image_B'], batch['theta'] 
         if self.use_cuda:
-            image_batch_A = image_batch_A.cuda()
-            image_batch_B = image_batch_B.cuda()
-            theta_batch = theta_batch.cuda()
+            image_batch_A   = image_batch_A.cuda()
+            image_batch_B   = image_batch_B.cuda()
+            theta_batch     = theta_batch.cuda()
             
         b, c, h, w = image_batch_A.size()
               
@@ -90,7 +97,7 @@ class SynthPairTnf(object):
         # convert to variables
         image_batch_A = Variable(image_batch_A,requires_grad=False)
         image_batch_B = Variable(image_batch_B,requires_grad=False)
-        theta_batch =  Variable(theta_batch,requires_grad=False)        
+        theta_batch   = Variable(theta_batch,requires_grad=False)        
 
      #   print("before crop")
      #   print(image_batch_A.shape)
@@ -106,29 +113,31 @@ class SynthPairTnf(object):
       #  print(cropped_image_batch.shape)
       #  print(warped_image_batch.shape)
         
-        Ones = torch.ones(cropped_image_batch.size())
-        Zeros = torch.zeros(cropped_image_batch.size())
-        
-        if self.use_cuda:
-            Ones = Ones.cuda()
-            Zeros = Zeros.cuda()
+        if self.high_res == False:
+            Ones = torch.ones(cropped_image_batch.size())
+            Zeros = torch.zeros(cropped_image_batch.size())
             
-        cropped_mask_batch = torch.where(cropped_image_batch > 0.1*Ones, Ones, Zeros)
-        warped_mask_batch = torch.where(warped_image_batch > 0.1*Ones, Ones, Zeros)
-        
-        if self.use_cuda:
-            cropped_mask_batch = cropped_mask_batch.cuda()
-            warped_mask_batch = warped_mask_batch.cuda()
-        
-        #mask1 = 255*normalize_image(warped_mask_batch,forward=False)
-        #mask1 = mask1.data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        
-        #print(mask1.shape)
+            if self.use_cuda:
+                Ones = Ones.cuda()
+                Zeros = Zeros.cuda()
+                
+            cropped_mask_batch = torch.where(cropped_image_batch > 0.1*Ones, Ones, Zeros)
+            warped_mask_batch = torch.where(warped_image_batch > 0.1*Ones, Ones, Zeros)
+            
+            if self.use_cuda:
+                cropped_mask_batch = cropped_mask_batch.cuda()
+                warped_mask_batch = warped_mask_batch.cuda()
+            
+            #mask1 = 255*normalize_image(warped_mask_batch,forward=False)
+            #mask1 = mask1.data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
+            
+            #print(mask1.shape)
 
-        #io.imsave('warped_mask.jpg', mask1)
+            #io.imsave('warped_mask.jpg', mask1)
 
-        return {'source_image': cropped_image_batch, 'target_image': warped_image_batch, 'source_mask': cropped_mask_batch, 'target_mask': warped_mask_batch,'theta_GT': theta_batch}
-
+            return {'source_image': cropped_image_batch, 'target_image': warped_image_batch, 'source_mask': cropped_mask_batch, 'target_mask': warped_mask_batch,'theta_GT': theta_batch}
+        else:
+            return {'source_image': cropped_image_batch, 'target_image': warped_image_batch, 'theta_GT': theta_batch}
 
     def symmetricImagePad(self,image_batch, padding_factor):
         b, c, h, w = image_batch.size()
@@ -152,22 +161,22 @@ class SynthPairTnf(object):
 class AffineGridGen(Module):
     def __init__(self, out_h=240, out_w=240, out_ch = 3):
         super(AffineGridGen, self).__init__()        
-        self.out_h = out_h
-        self.out_w = out_w
+        self.out_h  = out_h
+        self.out_w  = out_w
         self.out_ch = out_ch
         
     def forward(self, theta):
-        theta = theta.contiguous()
-        batch_size = theta.size()[0]
-        out_size = torch.Size((batch_size,self.out_ch,self.out_h,self.out_w))
+        theta       = theta.contiguous()
+        batch_size  = theta.size()[0]
+        out_size    = torch.Size((batch_size,self.out_ch,self.out_h,self.out_w))
         return F.affine_grid(theta, out_size)
         
 class TpsGridGen(Module):
     def __init__(self, out_h=240, out_w=240, use_regular_grid=True, grid_size=6, reg_factor=1, use_cuda=True):
         super(TpsGridGen, self).__init__()
-        self.out_h, self.out_w = out_h, out_w
-        self.reg_factor = reg_factor
-        self.use_cuda = use_cuda
+        self.out_h, self.out_w  = out_h, out_w
+        self.reg_factor         = reg_factor
+        self.use_cuda           = use_cuda
 
         # create grid in numpy
         self.grid = np.zeros( [self.out_h, self.out_w, 3], dtype=np.float32)
