@@ -7,3 +7,4 @@ Test.o*
 Train.o*
 *.pyc
 *.txt
+*.pkl
