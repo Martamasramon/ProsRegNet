@@ -2,21 +2,29 @@
 The following code is adapted from: https://github.com/ignacio-rocco/cnngeometric_pytorch.
 """
 
+
 from __future__ import print_function, division
+import os
+import sys
+from skimage import io
+import pandas as pd
 import numpy as np
 import torch
 from torch.nn.modules.module import Module
+from torch.utils.data import Dataset
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-class GeometricTnf(object):
+half_out_size = 128
+
+class GeometricTnf_high_res(object):
     """
     
     Geometric transfromation to an image batch (wrapped in a PyTorch Variable)
     ( can be used with no transformation to perform bilinear resizing )        
     
     """
-    def __init__(self, geometric_model='affine', out_h=240, out_w=240, use_cuda=True):
+    def __init__(self, geometric_model='affine', out_h=2*half_out_size, out_w=2*half_out_size, use_cuda=True):
         self.out_h = out_h
         self.out_w = out_w
         self.use_cuda = use_cuda
@@ -37,18 +45,17 @@ class GeometricTnf(object):
             
         sampling_grid = self.gridGen(theta_batch)
 
-        # Rescale grid according to crop_factor and padding_factor
-        # sampling_grid.data = sampling_grid.data*padding_factor*crop_factor
+        # rescale grid according to crop_factor and padding_factor
+    #    sampling_grid.data = sampling_grid.data*padding_factor*crop_factor
         sampling_grid.data = sampling_grid.data*crop_factor/(1+2*padding_factor)
 
-        # print("original image batch size:")
-        # print(image_batch.shape)
-        
-        # Sample transformed image
-        warped_image_batch = F.grid_sample(image_batch, sampling_grid,padding_mode='border')
-        # print("warped image 88888888888:")
-        # print(warped_image_batch.shape)
-        # print(sampling_grid.shape)
+      #  print("original image batch size:")
+       # print(image_batch.shape)
+        # sample transformed image
+        warped_image_batch = F.grid_sample(image_batch, sampling_grid)
+       # print("warped image 88888888888:")
+       # print(warped_image_batch.shape)
+       # print(sampling_grid.shape)
 
         return warped_image_batch
     
@@ -59,7 +66,7 @@ class SynthPairTnf(object):
     Generate a synthetically warped training pair using an affine transformation.
     
     """
-    def __init__(self, use_cuda=True, geometric_model='affine', crop_factor=16/16, output_size=(240,240), padding_factor = 0.0):
+    def __init__(self, use_cuda=True, geometric_model='affine', crop_factor=16/16, output_size=(1000,1000), padding_factor = 0.2):
         assert isinstance(use_cuda, (bool))
         assert isinstance(crop_factor, (float))
         assert isinstance(output_size, (tuple))
@@ -68,9 +75,9 @@ class SynthPairTnf(object):
         self.crop_factor = crop_factor
         self.padding_factor = padding_factor
         self.out_h, self.out_w = output_size 
-        self.rescalingTnf = GeometricTnf('affine', self.out_h, self.out_w, 
+        self.rescalingTnf = GeometricTnf_high_res('affine', self.out_h, self.out_w, 
                                          use_cuda = self.use_cuda)
-        self.geometricTnf = GeometricTnf(geometric_model, self.out_h, self.out_w, 
+        self.GeometricTnf_high_res = GeometricTnf_high_res(geometric_model, self.out_h, self.out_w, 
                                          use_cuda = self.use_cuda)
 
         
@@ -99,36 +106,15 @@ class SynthPairTnf(object):
         # get cropped image
         cropped_image_batch = self.rescalingTnf(image_batch_A,None,self.padding_factor,self.crop_factor) # Identity is used as no theta given
         # get transformed image
-        warped_image_batch = self.geometricTnf(image_batch_B,theta_batch,
+        warped_image_batch = self.GeometricTnf_high_res(image_batch_B,theta_batch,
                                                self.padding_factor,self.crop_factor) # Identity is used as no theta given
         
       #  print("cropped_image_size")
       #  print(cropped_image_batch.shape)
       #  print(warped_image_batch.shape)
         
-        Ones = torch.ones(cropped_image_batch.size())
-        Zeros = torch.zeros(cropped_image_batch.size())
         
-        if self.use_cuda:
-            Ones = Ones.cuda()
-            Zeros = Zeros.cuda()
-            
-        cropped_mask_batch = torch.where(cropped_image_batch > 0.1*Ones, Ones, Zeros)
-        warped_mask_batch = torch.where(warped_image_batch > 0.1*Ones, Ones, Zeros)
-        
-        if self.use_cuda:
-            cropped_mask_batch = cropped_mask_batch.cuda()
-            warped_mask_batch = warped_mask_batch.cuda()
-        
-        #mask1 = 255*normalize_image(warped_mask_batch,forward=False)
-        #mask1 = mask1.data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        
-        #print(mask1.shape)
-
-        #io.imsave('warped_mask.jpg', mask1)
-
-        return {'source_image': cropped_image_batch, 'target_image': warped_image_batch, 'source_mask': cropped_mask_batch, 'target_mask': warped_mask_batch,'theta_GT': theta_batch}
-
+        return {'source_image': cropped_image_batch, 'target_image': warped_image_batch, 'theta_GT': theta_batch}
 
     def symmetricImagePad(self,image_batch, padding_factor):
         b, c, h, w = image_batch.size()
@@ -150,7 +136,7 @@ class SynthPairTnf(object):
 
     
 class AffineGridGen(Module):
-    def __init__(self, out_h=240, out_w=240, out_ch = 3):
+    def __init__(self, out_h=2*half_out_size, out_w=2*half_out_size, out_ch = 3):
         super(AffineGridGen, self).__init__()        
         self.out_h = out_h
         self.out_w = out_w
@@ -163,7 +149,7 @@ class AffineGridGen(Module):
         return F.affine_grid(theta, out_size)
         
 class TpsGridGen(Module):
-    def __init__(self, out_h=240, out_w=240, use_regular_grid=True, grid_size=6, reg_factor=1, use_cuda=True):
+    def __init__(self, out_h=2*half_out_size, out_w=2*half_out_size, use_regular_grid=True, grid_size=6, reg_factor=0, use_cuda=True):
         super(TpsGridGen, self).__init__()
         self.out_h, self.out_w = out_h, out_w
         self.reg_factor = reg_factor
