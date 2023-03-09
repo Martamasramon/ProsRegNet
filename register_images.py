@@ -178,57 +178,41 @@ def runCnn(model_cache, source_image_path, target_image_path, regions):
         second_batch_mask = {'source_image': warped_mask_aff, 'target_image':target_image_mask_var}
         theta_aff         = model_aff(second_batch_mask)
             
-        # Transform all images    
+        # Transform high res images    
         warped_image_aff_high_res   = affTnf_high_res(warped_image_aff_high_res, theta_aff.view(-1,2,3))
-        warped_image_aff            = affTnf(warped_image_aff, theta_aff.view(-1,2,3))
-
         for region in regions:
             warped_aff_high_res[region] = affTnf_high_res(warped_aff_high_res[region], theta_aff.view(-1,2,3))
-            warped_aff[region]          = affTnf(histo_image_var[region], theta_aff.view(-1,2,3))
     
 
     if do_aff and do_tps:
         ######## TPS registration using the images
         theta_aff_tps                   = model_tps({'source_image': warped_image_aff, 'target_image': batch['target_image']})   
         warped_image_aff_tps_high_res   = tpsTnf_high_res(warped_image_aff_high_res,theta_aff_tps)
-        warped_image_aff_tps            = tpsTnf(warped_image_aff,theta_aff_tps)
 
         warped_aff_tps_high_res  = {}
-        warped_aff_tps           = {}
         for region in regions:
             warped_aff_tps_high_res[region] = tpsTnf_high_res(warped_aff_high_res[region], theta_aff_tps)
-            warped_aff_tps[region]          = tpsTnf(warped_aff[region], theta_aff_tps)
-
 
     # Un-normalize images and convert to numpy
     if do_aff:
         warped_image_aff_np_high_res = normalize_image(warped_image_aff_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        warped_image_aff_np          = normalize_image(warped_image_aff,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
 
         warped_aff_np_high_res  = {}
-        warped_aff_np           = {}
         for region in regions:
             warped_aff_np_high_res[region] = normalize_image(warped_aff_high_res[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy() 
-            warped_aff_np[region]          = normalize_image(warped_aff[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy() 
 
     if do_aff and do_tps:
         warped_image_aff_tps_np_high_res = normalize_image(warped_image_aff_tps_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        warped_image_aff_tps_np          = normalize_image(warped_image_aff_tps,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
         
         warped_aff_tps_np_high_res  = {}
-        warped_aff_tps_np           = {}
         for region in regions:
             warped_aff_tps_np_high_res[region] = normalize_image(warped_aff_tps_high_res[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-            warped_aff_tps_np[region]          = normalize_image(warped_aff_tps[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
     
     # Ignore negative values
-    warped_image_aff_np_high_res[warped_image_aff_np_high_res < 0] = 0
-    warped_image_aff_np[warped_image_aff_np < 0] = 0
-    
+    warped_image_aff_np_high_res[warped_image_aff_np_high_res < 0] = 0    
     warped_image_aff_tps_np_high_res[warped_image_aff_tps_np_high_res < 0] = 0    
-    warped_image_aff_tps_np[warped_image_aff_tps_np < 0] = 0    
    
-    return warped_image_aff_tps_np_high_res, warped_aff_tps_np_high_res, warped_image_aff_tps_np, warped_aff_tps_np
+    return warped_image_aff_tps_np_high_res, warped_aff_tps_np_high_res
 
 
 
@@ -304,22 +288,14 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         
     
     volumeShape_highRes = (count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor), 3)
-    half_out_lowRes   = 100
-    volumeShape_lowRes = (count, half_out_lowRes*(2+2*padding_factor), half_out_lowRes*(2+2*padding_factor), 3)
-
-    scaling          = half_out_size*(2+2*padding_factor)/w
-    scaling_lowRes   = half_out_lowRes*(2+2*padding_factor)/w
     
-    out3Dhist_highRes = np.zeros(volumeShape_highRes)
-    out3Dhist_lowRes  = np.zeros(volumeShape_lowRes)
+    out3Dhist_highRes = np.zeros((count, w, h, 3))
     out3Dmri_highRes  = np.zeros((count, w, h, 3))
     out3Dmri_mask     = np.zeros((count, w, h, 3)[:-1])
 
     out3D = {}
-    out3D_lowRes = {}
     for region in regions:
         out3D[region]        = np.zeros(volumeShape_highRes[:-1])
-        out3D_lowRes[region] = np.zeros(volumeShape_lowRes[:-1])
 
     
     ###### START ALIGNMENT
@@ -332,8 +308,6 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
 
     y_s = (h+2*y_offset)/(half_out_size*2)
     x_s = (w+2*x_offset)/(half_out_size*2)
-    y_s_lowRes = (h+2*y_offset)/(half_out_lowRes*2)
-    x_s_lowRes = (w+2*x_offset)/(half_out_lowRes*2)
     
     for idx in range(count): 
         source_image_path= preprocess_moving_dest + hist_case[idx]
@@ -346,15 +320,13 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         h_prime         = coord[sid]['h'][idx]
         w_prime         = coord[sid]['w'][idx]
         
-        w_new = int((w_prime + 2*x_offset_prime)/x_s)
-        h_new = int((h_prime + 2*y_offset_prime)/y_s)
-        w_new_lowRes = int((w_prime + 2*x_offset_prime)/x_s_lowRes)
-        h_new_lowRes = int((h_prime + 2*y_offset_prime)/y_s_lowRes)
+        w_new = (w_prime + 2*x_offset_prime)
+        h_new = (h_prime + 2*y_offset_prime)
         
-        start_x = int(padding_factor*half_out_size + (x_prime - x_offset_prime - x + x_offset)/x_s)
-        start_y = int(padding_factor*half_out_size + (y_prime - y_offset_prime - y + y_offset)/y_s)    
-        start_x_lowRes = int(padding_factor*half_out_lowRes + (x_prime - x_offset_prime - x + x_offset)/x_s_lowRes)
-        start_y_lowRes = int(padding_factor*half_out_lowRes + (y_prime - y_offset_prime - y + y_offset)/y_s_lowRes)        
+        start_x = x_prime - x_offset_prime
+        end_x   = x_prime + w_prime + x_offset_prime
+        start_y = y_prime - y_offset_prime
+        end_y   = y_prime + h_prime + y_offset_prime 
 
         imMri_highRes   = cv2.imread(preprocess_fixed_dest  + mri_highRes[idx])
         imMriMask       = cv2.imread(preprocess_fixed_dest  + mri_mask[idx])
@@ -366,42 +338,31 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         out3Dmri_mask[idx, :, :]        = np.uint8((imMriMask[:, :, 0] > 255/2.0))
 
         ######## REGISTER
-        affTps, regions_aff_tps, affTps_lowRes, regions_aff_tps_lowRes = runCnn(model_cache, source_image_path, target_image_path, imHisto) 
+        affTps, regions_aff_tps = runCnn(model_cache, source_image_path, target_image_path, imHisto) 
 
+        # Transform histology to MRI space
+        affTps = cv2.resize(affTps*255, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
+        out3Dhist_highRes[idx, start_x:end_x, start_y:end_y, :] = np.uint8(affTps[:, :, :])
+        
         for region in regions:
             regions_aff_tps[region] = cv2.resize(regions_aff_tps[region]*255, (h_new, w_new), interpolation=cv2.INTER_CUBIC)
-            regions_aff_tps_lowRes[region] = cv2.resize(regions_aff_tps_lowRes[region]*255, (h_new_lowRes, w_new_lowRes), interpolation=cv2.INTER_CUBIC)
             
             if region != 'cancer':
                 regions_aff_tps[region] = regions_aff_tps[region] >255/1.5
-                regions_aff_tps_lowRes[region] = regions_aff_tps_lowRes[region] >255/1.5
             
-            out3D[region][idx, start_x:regions_aff_tps[region].shape[0]+start_x, start_y:regions_aff_tps[region].shape[1]+start_y] = np.uint8(regions_aff_tps[region][:, :,0])
-            out3D_lowRes[region][idx, start_x_lowRes:regions_aff_tps_lowRes[region].shape[0]+start_x_lowRes, start_y_lowRes:regions_aff_tps_lowRes[region].shape[1]+start_y_lowRes] = np.uint8(regions_aff_tps_lowRes[region][:, :,0])
+            out3D[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :,0])
 
-        affTps = cv2.resize(affTps*255, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
-        affTps_lowRes = cv2.resize(affTps_lowRes*255, (h_new_lowRes, w_new_lowRes), interpolation=cv2.INTER_CUBIC)   
-
-        mask_image3d = np.zeros((affTps.shape[0], affTps.shape[1], 3), dtype=int)
-        mask_image3d_lowRes = np.zeros((affTps_lowRes.shape[0], affTps_lowRes.shape[1], 3), dtype=int)
-
+        ## Create mask for warped histology
+        mask_image3d  = np.zeros((affTps.shape[0], affTps.shape[1], 3), dtype=int)
         for i in range(3):
-            mask_image3d[:, :, i] = regions_aff_tps['mask'][:, :,0]
-            mask_image3d_lowRes[:, :, i] = regions_aff_tps_lowRes['mask'][:, :,0]
+            mask_image3d[:, :, i]  = regions_aff_tps['mask'][:, :,0]
         
         points = np.argwhere(mask_image3d == 0)
-        points_lowRes = np.argwhere(mask_image3d_lowRes == 0)
-        
         for i in range(0,points.shape[0]):
             affTps[tuple(points[i])] = 0
-        
-        for i in range(0,points_lowRes.shape[0]):
-            affTps_lowRes[tuple(points_lowRes[i])] = 0
             
-        out3Dhist_highRes[idx, start_x:affTps.shape[0]+start_x, start_y:affTps.shape[1]+start_y, :] = np.uint8(affTps[:, :, :])
-        out3Dhist_lowRes[idx, start_x_lowRes:affTps_lowRes.shape[0]+start_x_lowRes, start_y_lowRes:affTps_lowRes.shape[1]+start_y_lowRes, :] = np.uint8(affTps_lowRes[:, :, :])
-        
-    output3D_cache = (out3Dhist_lowRes, out3Dhist_highRes, out3Dmri_highRes, out3D, out3D_lowRes, out3Dmri_mask, scaling, scaling_lowRes)
+
+    output3D_cache = (out3Dhist_highRes, out3Dmri_highRes, out3D, out3Dmri_mask)
     
     return output3D_cache
     
@@ -524,33 +485,23 @@ def main():
             output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, moving_dict)
             end            = time.time()
             
-            out3Dhist_lowRes, out3Dhist_highRes, out3Dmri_highRes, out3D, out3D_lowRes, out3Dmri_mask, scaling, scaling_lowRes = output3D_cache
+            out3Dhist_highRes, out3Dmri_highRes, out3D, out3Dmri_mask = output3D_cache
             print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
-            
-            ### Print stuff
-            print('shape out3Dhist low & high: ', out3Dhist_lowRes.shape, out3Dhist_highRes.shape)
-            print('scaling low & high: ', scaling_lowRes, scaling)
 
             
             #### SAVE RESULTS
             imMri           = sitk.ReadImage(fixed_img_mha)
         
             mriSpace        = imMri.GetSpacing()
-            histSpaceHigh   = (mriSpace[0]/scaling, mriSpace[1]/scaling, mriSpace[2])
-            histSpaceLow    = (mriSpace[0]/scaling_lowRes, mriSpace[1]/scaling_lowRes, mriSpace[2])
             mriDirection    = imMri.GetDirection()
             mriOrigin       = imMri[:,:,coord[sid]['slice'][0]:coord[sid]['slice'][-1]].GetOrigin()
-            
-            imSpatialInfo       = (mriOrigin, mriSpace, mriDirection)
-            imSpatialInfoHigh   = (mriOrigin, histSpaceHigh, mriDirection)
-            imSpatialInfoLow    = (mriOrigin, histSpaceLow, mriDirection)
+            imSpatialInfo   = (mriOrigin, mriSpace, mriDirection)
             
             # Write outputs as 3D volumes (.nii.gz format)
             fn_names = ['_fixed.','_moved.','_moved_mask.', '_moved_cancer.']
                        
             output_results(outputPath + 'registration/', out3Dmri_highRes,  sid, fn_names[0], imSpatialInfo, extension = extension)
-            output_results(outputPath + 'registration/', out3Dhist_highRes, sid, '_moved_high_res.', imSpatialInfoHigh, extension = extension)
-            output_results(outputPath + 'registration/', out3Dhist_lowRes,  sid, '_moved_low_res.',  imSpatialInfoLow,  extension = extension)
+            output_results(outputPath + 'registration/', out3Dhist_highRes, sid, fn_names[1], imSpatialInfo, extension = extension)
             output_results(outputPath + 'registration/', out3D['mask'],     sid, fn_names[2], imSpatialInfo, extension = extension)
     
             # Write output for cancer segmentation if label exists
