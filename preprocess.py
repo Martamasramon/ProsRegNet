@@ -4,40 +4,35 @@ import SimpleITK as sitk
 from collections import OrderedDict
 import os 
 
-#import json
-#from geotnf.transformation import GeometricTnf
-#import torch 
-#from image.normalization import NormalizeImageDict, normalize_image
-#from matplotlib import pyplot as plt
-
-
 def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta, dH, dW, h, w,x,y,x_offset,y_offset): 
     rotated = np.zeros((w + 2*x_offset, h + 2*y_offset, 3))   
     try:
         path = s['regions'][region]['filename']
-        ann = cv2.imread(path) #annotation
-        # if flip is 1, flip image horizontally
-        try: 
-            if s['transform']['flip'] == 1: 
-                ann = cv2.flip(ann, 1)
-        except: 
-            pass 
-        
+        ann  = cv2.imread(path) #annotation
         ann = np.pad(ann,((ann.shape[0],ann.shape[0]),(ann.shape[1],ann.shape[1]),(0,0)),'constant', constant_values=0)
         
+        # Rotate
         rows, cols, channels = ann.shape
         M = cv2.getRotationMatrix2D((cols/2,rows/2),theta,1)
         rotated_ann = cv2.warpAffine(ann,M,(cols,rows))
 
+        try: 
+            # flip image vertically
+            if s['transform']['flip_v'] == 1: 
+                rotated_ann = cv2.flip(rotated_ann, 0)
+            # flip image horizontally
+            if s['transform']['flip_h'] == 1: 
+                rotated_ann = cv2.flip(rotated_ann, 1)
+        except: 
+            pass 
         
         # find edge and downsample
-        ann = cv2.resize(rotated_ann, (dH, dW), interpolation=cv2.INTER_CUBIC)
-        ann[ann > 5] = 1
+        #ann = cv2.resize(rotated_ann, (dH, dW), interpolation=cv2.INTER_CUBIC)
+        rotated_ann[rotated_ann > 0] = 1
 
         # set edge to outline 
         region3d= np.zeros((w + 2*x_offset, h + 2*y_offset, 3))
-
-        region3d[x_offset:w + x_offset, y_offset:h + y_offset,:] = (ann[x:x+w,y:y+h]>0)*255
+        region3d[x_offset:w + x_offset, y_offset:h + y_offset,:] = (rotated_ann[x:x+w,y:y+h]>0)*255
         
         rotated = region3d
     except: 
@@ -66,44 +61,41 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
         prosPath = s['regions']['mask']['filename']
         mask = cv2.imread(prosPath)
         img = img*(mask/255)
-        # if flip is 1, flip image horizontally
-        try: 
-            if s['transform']['flip'] == 1: 
-                img = cv2.flip(img, 1)
-                mask = cv2.flip(mask, 1)
-        except: 
-            pass
-        # rotate image
+
+        # find rotation
         try: 
             theta = -s['transform']['rotation_angle']
         except: 
             theta = 0
-        
     
-        img = np.pad(img,((img.shape[0],img.shape[0]),(img.shape[1],img.shape[1]),(0,0)),'constant', constant_values=0)
+        img  = np.pad(img,((img.shape[0],img.shape[0]),(img.shape[1],img.shape[1]),(0,0)),'constant', constant_values=0)
         mask = np.pad(mask,((mask.shape[0],mask.shape[0]),(mask.shape[1],mask.shape[1]),(0,0)),'constant', constant_values=0)
         
-        
+        # Rotate image
         rows, cols, channels = img.shape
         M = cv2.getRotationMatrix2D((cols/2,rows/2),theta,1)
-        rotated_hist = cv2.warpAffine(img,M,(cols,rows),borderValue = (0,0,0) )
+        rotated_hist = cv2.warpAffine(img,M,(cols,rows),borderValue = (0,0,0))
         rotated_mask = cv2.warpAffine(mask,M,(cols,rows))
         
+        try: 
+            # flip image vertically
+            if s['transform']['flip_v'] == 1: 
+                rotated_hist = cv2.flip(rotated_hist, 0)
+                rotated_mask = cv2.flip(rotated_mask, 0)
+            # flip image horizontally
+            if s['transform']['flip_h'] == 1: 
+                rotated_hist = cv2.flip(rotated_hist, 1)
+                rotated_mask = cv2.flip(rotated_mask, 1)
+        except: 
+            pass 
 
-        dH = int(rotated_hist.shape[1]/4)
-        dW = int(rotated_hist.shape[0]/4)
+        
 
         # downsample image, this has to be consistent with the size of MRI
-      #  dSize = rotated_hist.shape[0]/720 ; # downsample size
-      #  dH = int(rotated_hist.shape[1]/dSize) #downsampled height
-      #  dW = int(rotated_hist.shape[0]/dSize) #downsampled width
-      #  dH = 3000
-      #  dW = 3000
-      #  imgResize = cv2.resize(rotated_hist, (dH, dW), interpolation=cv2.INTER_CUBIC)
-        
-        
-        rotated_hist = cv2.resize(rotated_hist, (dH, dW), interpolation=cv2.INTER_CUBIC)
-        rotated_mask = cv2.resize(rotated_mask, (dH, dW), interpolation=cv2.INTER_CUBIC)
+        dH = int(rotated_hist.shape[1]/4)
+        dW = int(rotated_hist.shape[0]/4)
+        #rotated_hist = cv2.resize(rotated_hist, (dH, dW), interpolation=cv2.INTER_CUBIC)
+        #rotated_mask = cv2.resize(rotated_mask, (dH, dW), interpolation=cv2.INTER_CUBIC)
         
 
         # create a bounding box around slice
