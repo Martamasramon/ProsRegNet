@@ -8,7 +8,7 @@
     "fixed-landmarks3": "",
     "fixed-landmarks1": "",
     "moving-type": "stack",
-    "moving": "./datasets/testing/Histology/HMU_010_FH_copy.json",
+    "moving": "./datasets/testing/Histology/HMU_010_FH.json",
     "T2w": "",
     "ADC": "",
     "DWI": ""
