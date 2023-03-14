@@ -1,18 +1,12 @@
 Adaptation of Wei Shao's original code for use in my MRes project. 
 
-# ProsRegNet: A Deep Learning Framework for Registration of MRI and Histopathology Images of the Prostate.
-
-![](pictures/pipeline.png)
-
-This is the PyTorch implementation of the following paper:
+## ProsRegNet: A Deep Learning Framework for Registration of MRI and Histopathology Images of the Prostate.
 
 Shao, Wei, et al. "ProsRegNet: A Deep Learning Framework for Registration of MRI and Histopathology Images of the Prostate."  [[Medical Image Analysis (MedIA)](https://doi.org/10.1016/j.media.2020.101919)]
 
+Source code has been modified from [cnngeometric_pytorch](https://github.com/ignacio-rocco/cnngeometric_pytorch), and have been tested successfully on Linux Mint, Cuda 10.0, RTX 2080 Ti, Anaconda Python 3.7, PyTorch 1.3.0.
 
-### Introduction
-Our source code has been modified from [cnngeometric_pytorch](https://github.com/ignacio-rocco/cnngeometric_pytorch), and have been tested successfully on Linux Mint, Cuda 10.0, RTX 2080 Ti, Anaconda Python 3.7, PyTorch 1.3.0.
-
-The code is only for research purposes. If you have any questions regarding how to use this code, feel free to contact Wei Shao (weishao@stanford.edu).
+The code is only for research purposes. 
 
 ### Dependencies
 PyTorch 1.3.0
@@ -48,7 +42,7 @@ python train.py --geometric-model tps
 
 4. Evaluation:
 ```
-run the registration_pipeline.ipynb jupyter notebok
+python python3 register_images.py -i jsonData/TCIA_FUSION.json -v -pm -pf -r
 ```
 
 ### Models trained with larger dataset, see details in our [MedIA paper](https://doi.org/10.1016/j.media.2020.101919)
