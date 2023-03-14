@@ -71,15 +71,21 @@ def process_image(input_image, use_cuda, high_res=False, mask=False):
 def save_transform(theta_aff_1,theta_aff_2,theta_tps):
     
     json_data = {
-        "affine_1": theta_aff_1.numpy(),
-        "affine_2": theta_aff_2.numpy(),
-        "tps":      theta_tps.numpy()
+        "affine_1": theta_aff_1.cpu().detach().numpy().tolist(),
+        "affine_2": theta_aff_2.cpu().detach().numpy().tolist(),
+        "tps":      theta_tps.cpu().detach().numpy().tolist()
     }
     
     return json_data
 
 
-def save_all_transforms(json_data, file_name):
+def save_all_transforms(json_data, file_name, imSpatialInfo, scaling):
+    # Add spatial information to transformation data
+    json_data['origin']     = imSpatialInfo[0]
+    json_data['spacing']    = imSpatialInfo[1]
+    json_data['direction']  = imSpatialInfo[2]
+    json_data['scale']      = scaling
+    
     json_object = json.dumps(json_data, indent=4)
     
     # Save to file
@@ -214,8 +220,7 @@ def runCnn(model_cache, source_image_path, target_image_path, regions):
         for region in regions:
             warped_aff_tps_high_res[region] = tpsTnf_high_res(warped_aff_high_res[region], theta_aff_tps)
             
-    #transform = save_transform(theta_aff_1,theta_aff_2,theta_aff_tps)
-    transform = 0
+    transform = save_transform(theta_aff_1,theta_aff_2,theta_aff_tps)
 
     # Un-normalize images and convert to numpy
     if do_aff:
@@ -373,9 +378,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         for region in regions:
             out3D[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :,0])
 
-    #save_all_transforms(all_transforms, sid)
-
-    output3D_cache = (out3Dhist, out3Dmri, out3D, out3Dmri_mask, [x_s,y_s])
+    output3D_cache = (out3Dhist, out3Dmri, out3D, out3Dmri_mask, [x_s,y_s], all_transforms)
     
     return output3D_cache
     
@@ -498,7 +501,7 @@ def main():
             output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, moving_dict)
             end            = time.time()
             
-            out3Dhist_highRes, out3Dmri_highRes, out3D, out3Dmri_mask, scaling = output3D_cache
+            out3Dhist_highRes, out3Dmri_highRes, out3D, out3Dmri_mask, scaling, transforms = output3D_cache
             print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
 
             
@@ -524,6 +527,8 @@ def main():
                 output_results(outputPath + 'registration/', out3D['cancer'], sid, fn_names[3], histSpatialInfo, extension = extension)
             except:
                 print('No cancer labels given.')
+            
+            save_all_transforms(transforms, sid, imSpatialInfo, scaling)
 
             timings[s] = (end-start)/60.0
             print('Done!')
