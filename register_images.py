@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import os
+import json
 import argparse
 import torch
 from model.ProsRegNet_model import ProsRegNet
@@ -26,7 +27,7 @@ import pickle
 
 tr = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
 
-half_out_size = 500
+half_out_size = 512
 
 def preprocess_image(image, high_res=False):
     """ 
@@ -51,6 +52,7 @@ def preprocess_image(image, high_res=False):
 
     return image_var
 
+
 def process_image(input_image, use_cuda, high_res=False, mask=False):
     if mask:
         image = np.copy(input_image)
@@ -65,6 +67,25 @@ def process_image(input_image, use_cuda, high_res=False, mask=False):
         
     return image_var
     
+    
+def save_transform(theta_aff_1,theta_aff_2,theta_tps):
+    
+    json_data = {
+        "affine_1": theta_aff_1.numpy(),
+        "affine_2": theta_aff_2.numpy(),
+        "tps":      theta_tps.numpy()
+    }
+    
+    return json_data
+
+
+def save_all_transforms(json_data, file_name):
+    json_object = json.dumps(json_data, indent=4)
+    
+    # Save to file
+    with open('transform_' + file_name + '.json', "w") as outfile:
+        outfile.write(json_object)
+
 
 def load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True): 
     """ 
@@ -100,6 +121,7 @@ def load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_defor
     return model_cache
 
 
+
 def runCnn(model_cache, source_image_path, target_image_path, regions):
     """
     Run the cnn on images and return 3D images
@@ -108,7 +130,7 @@ def runCnn(model_cache, source_image_path, target_image_path, regions):
     
     model_aff, model_tps, do_aff, do_tps, use_cuda = model_cache
     
-    tpsTnf = GeometricTnf(geometric_model='tps', use_cuda=use_cuda)
+    #tpsTnf = GeometricTnf(geometric_model='tps', use_cuda=use_cuda)
     affTnf = GeometricTnf(geometric_model='affine', use_cuda=use_cuda)
     
     tpsTnf_high_res = GeometricTnf_high_res(geometric_model='tps', use_cuda=use_cuda)
@@ -159,38 +181,41 @@ def runCnn(model_cache, source_image_path, target_image_path, regions):
         
         ## 1. 
         # Find transform params
-        theta_aff=model_aff(batch_mask)
+        theta_aff_1 = model_aff(batch_mask)
         
         # Transform all images
-        warped_image_aff_high_res   = affTnf_high_res(batch_high_res['source_image'], theta_aff.view(-1,2,3))
-        warped_image_aff            = affTnf(batch['source_image'], theta_aff.view(-1,2,3))
+        warped_image_aff_high_res   = affTnf_high_res(batch_high_res['source_image'], theta_aff_1.view(-1,2,3))
+        warped_image_aff            = affTnf(batch['source_image'], theta_aff_1.view(-1,2,3))
         
         warped_aff_high_res  = {}
         warped_aff  = {}
         for region in regions:
-            warped_aff_high_res[region] = affTnf_high_res(histo_image_var_high_res[region], theta_aff.view(-1,2,3))
-            warped_aff[region]          = affTnf(histo_image_var[region], theta_aff.view(-1,2,3))
+            warped_aff_high_res[region] = affTnf_high_res(histo_image_var_high_res[region], theta_aff_1.view(-1,2,3))
+            warped_aff[region]          = affTnf(histo_image_var[region], theta_aff_1.view(-1,2,3))
         
         ## 2. 
         # Transform mask & find new transform params
-        warped_mask_aff   = affTnf(batch_mask['source_image'], theta_aff.view(-1,2,3))                      
+        warped_mask_aff   = affTnf(batch_mask['source_image'], theta_aff_1.view(-1,2,3))                      
         second_batch_mask = {'source_image': warped_mask_aff, 'target_image':target_image_mask_var}
-        theta_aff         = model_aff(second_batch_mask)
+        theta_aff_2         = model_aff(second_batch_mask)
             
         # Transform high res images    
-        warped_image_aff_high_res   = affTnf_high_res(warped_image_aff_high_res, theta_aff.view(-1,2,3))
+        warped_image_aff_high_res   = affTnf_high_res(warped_image_aff_high_res, theta_aff_2.view(-1,2,3))
         for region in regions:
-            warped_aff_high_res[region] = affTnf_high_res(warped_aff_high_res[region], theta_aff.view(-1,2,3))
+            warped_aff_high_res[region] = affTnf_high_res(warped_aff_high_res[region], theta_aff_2.view(-1,2,3))
     
 
     if do_aff and do_tps:
-        ######## TPS registration using the images
+        ######## TPS registration using only high res images 
         theta_aff_tps                   = model_tps({'source_image': warped_image_aff, 'target_image': batch['target_image']})   
         warped_image_aff_tps_high_res   = tpsTnf_high_res(warped_image_aff_high_res,theta_aff_tps)
 
         warped_aff_tps_high_res  = {}
         for region in regions:
             warped_aff_tps_high_res[region] = tpsTnf_high_res(warped_aff_high_res[region], theta_aff_tps)
+            
+    #transform = save_transform(theta_aff_1,theta_aff_2,theta_aff_tps)
+    transform = 0
 
     # Un-normalize images and convert to numpy
     if do_aff:
@@ -211,7 +236,7 @@ def runCnn(model_cache, source_image_path, target_image_path, regions):
     warped_image_aff_np_high_res[warped_image_aff_np_high_res < 0]         = 0    
     warped_image_aff_tps_np_high_res[warped_image_aff_tps_np_high_res < 0] = 0    
    
-    return warped_image_aff_tps_np_high_res, warped_aff_tps_np_high_res
+    return warped_image_aff_tps_np_high_res, warped_aff_tps_np_high_res, transform
 
 
 
@@ -286,7 +311,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     padding_factor = int(round(max(np.add(coord[sid]['h'],np.multiply(2,coord[sid]['y_offset'])))/(coord[sid]['h'][0]+2*coord[sid]['y_offset'][0])))
 
     y_s = (half_out_size*(2+2*padding_factor))/h
-    x_s = (half_out_size*(2+2*padding_factor))/w    
+    x_s = (half_out_size*(2+2*padding_factor))/w  
     
     out3Dhist       = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor), 3))
     out3Dmri        = np.zeros((count, w, h, 3))
@@ -296,19 +321,10 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     for region in regions:
         out3D[region] = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor)))
     
-    ###### START ALIGNMENT
-    #x           = coord[sid]['x'][0]
-    #y           = coord[sid]['y'][0]
-    #x_offset    = coord[sid]['x_offset'][0]
-    #y_offset    = coord[sid]['y_offset'][0]
-    #h           = coord[sid]['h'][0]
-    #w           = coord[sid]['w'][0]
-
-    
-    
+    all_transforms = {}
     for idx in range(count): 
-        source_image_path= preprocess_moving_dest + hist_case[idx]
-        target_image_path= preprocess_fixed_dest + mri_case[idx]
+        source_image_path = preprocess_moving_dest + hist_case[idx]
+        target_image_path = preprocess_fixed_dest  + mri_case[idx]
         
         x_prime         = coord[sid]['x'][idx]
         y_prime         = coord[sid]['y'][idx]
@@ -317,17 +333,9 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         h_prime         = coord[sid]['h'][idx]
         w_prime         = coord[sid]['w'][idx]
         
-        #w_new = (w_prime + 2*x_offset_prime)
-        #h_new = (h_prime + 2*y_offset_prime)
-        
         w_new = int(w_prime * x_s) + 2*int(x_offset_prime * x_s)
         h_new = int(h_prime * y_s) + 2*int(y_offset_prime * y_s)
         
-        #start_x = x_prime - x_offset_prime
-        #end_x   = x_prime + w_prime + x_offset_prime
-        #start_y = y_prime - y_offset_prime
-        #end_y   = y_prime + h_prime + y_offset_prime 
-
         start_x = int(x_prime * x_s) - int(x_offset_prime * x_s)
         end_x   = int(x_prime * x_s) + int(w_prime * x_s) + int(x_offset_prime * x_s)
         start_y = int(y_prime * y_s) - int(y_offset_prime * y_s)
@@ -343,8 +351,9 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         out3Dmri_mask[idx, :, :] = np.uint8((imMriMask[:, :, 0] > 255/2.0))
 
         ######## REGISTER
-        affTps, regions_aff_tps = runCnn(model_cache, source_image_path, target_image_path, imHisto) 
-
+        affTps, regions_aff_tps, transform = runCnn(model_cache, source_image_path, target_image_path, imHisto) 
+        all_transforms[idx] = transform
+        
         # Transform histology to MRI space    
         affTps = cv2.resize(affTps*255, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
         for region in regions:
@@ -363,6 +372,8 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         out3Dhist[idx, start_x:end_x, start_y:end_y, :] = np.uint8(affTps[:, :, :])
         for region in regions:
             out3D[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :,0])
+
+    #save_all_transforms(all_transforms, sid)
 
     output3D_cache = (out3Dhist, out3Dmri, out3D, out3Dmri_mask, [x_s,y_s])
     
