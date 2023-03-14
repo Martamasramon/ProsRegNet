@@ -4,17 +4,17 @@ import SimpleITK as sitk
 from collections import OrderedDict
 import os 
 
-def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta, dH, dW, h, w,x,y,x_offset,y_offset): 
-    rotated = np.zeros((w + 2*x_offset, h + 2*y_offset, 3))   
+def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta, dH, dW, h, w, x, y, x_offset, y_offset): 
+    rotated = np.zeros((dH, dW, 3))   
     try:
         path = s['regions'][region]['filename']
         ann  = cv2.imread(path) #annotation
-        ann = np.pad(ann,((ann.shape[0],ann.shape[0]),(ann.shape[1],ann.shape[1]),(0,0)),'constant', constant_values=0)
+        ann  = np.pad(ann,((ann.shape[0],ann.shape[0]),(ann.shape[1],ann.shape[1]),(0,0)),'constant', constant_values=0)
         
         # Rotate
-        rows, cols, channels = ann.shape
-        M = cv2.getRotationMatrix2D((cols/2,rows/2),theta,1)
-        rotated_ann = cv2.warpAffine(ann,M,(cols,rows))
+        rows, cols, _   = ann.shape
+        M               = cv2.getRotationMatrix2D((cols/2,rows/2),theta,1)
+        rotated_ann     = cv2.warpAffine(ann,M,(cols,rows))
 
         try: 
             # flip image vertically
@@ -27,14 +27,13 @@ def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta
             pass 
         
         # find edge and downsample
-        #ann = cv2.resize(rotated_ann, (dH, dW), interpolation=cv2.INTER_CUBIC)
         rotated_ann[rotated_ann > 0] = 1
 
         # set edge to outline 
-        region3d= np.zeros((w + 2*x_offset, h + 2*y_offset, 3))
-        region3d[x_offset:w + x_offset, y_offset:h + y_offset,:] = (rotated_ann[x:x+w,y:y+h]>0)*255
+        padRegion = np.zeros((w + 2*x_offset, h + 2*y_offset, 3))
+        padRegion[x_offset:w + x_offset, y_offset:h + y_offset,:] = (rotated_ann[x:x+w,y:y+h]>0)*255 
         
-        rotated = region3d
+        rotated = cv2.resize(padRegion, (dH, dW), interpolation=cv2.INTER_CUBIC)
     except: 
         pass
     
@@ -72,10 +71,10 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
         mask = np.pad(mask,((mask.shape[0],mask.shape[0]),(mask.shape[1],mask.shape[1]),(0,0)),'constant', constant_values=0)
         
         # Rotate image
-        rows, cols, channels = img.shape
-        M = cv2.getRotationMatrix2D((cols/2,rows/2),theta,1)
-        rotated_hist = cv2.warpAffine(img,M,(cols,rows),borderValue = (0,0,0))
-        rotated_mask = cv2.warpAffine(mask,M,(cols,rows))
+        rows, cols, _   = img.shape
+        M               = cv2.getRotationMatrix2D((cols/2,rows/2),theta,1)
+        rotated_hist    = cv2.warpAffine(img,M,(cols,rows),borderValue = (0,0,0))
+        rotated_mask    = cv2.warpAffine(mask,M,(cols,rows))
         
         try: 
             # flip image vertically
@@ -89,19 +88,10 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
         except: 
             pass 
 
-        
-
-        # downsample image, this has to be consistent with the size of MRI
-        dH = int(rotated_hist.shape[1]/4)
-        dW = int(rotated_hist.shape[0]/4)
-        #rotated_hist = cv2.resize(rotated_hist, (dH, dW), interpolation=cv2.INTER_CUBIC)
-        #rotated_mask = cv2.resize(rotated_mask, (dH, dW), interpolation=cv2.INTER_CUBIC)
-        
-
-        # create a bounding box around slice
+        # use mask to create a bounding box around slice
         points = np.argwhere(rotated_mask[:,:,0] != 0)
-        points = np.fliplr(points) # store them in x,y coordinates instead of row,col indices
-        y, x, h, w = cv2.boundingRect(points) # create a rectangle around those points
+        points = np.fliplr(points)                      # store in x,y coordinates instead of row,col indices
+        y, x, h, w = cv2.boundingRect(points)           # create a rectangle around those points
         
         crop = rotated_hist[x:x+w, y:y+h,:]
         
@@ -112,19 +102,20 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
             y_offset = int(h*0.2)
             x_offset = int((h - w + 2*y_offset)/2)
             
-        for region in s['regions']:
-            transformAndSaveRegion(pre_process_moving_dest, case, slice, s, region, theta, dH, dW, h, w,x,y,x_offset,y_offset)
-        
         # pad image
-        h = h + 2*y_offset
-        w = w + 2*x_offset
-  
-        padHist = np.zeros((w, h, 3)) 
-      
+        padHist = np.zeros((w + 2*x_offset, h + 2*y_offset, 3)) 
         padHist[x_offset:crop.shape[0]+x_offset, y_offset:crop.shape[1]+y_offset, :] = crop
+        
+        # downsample image
+        dH = 1024
+        dW = 1024
+        padHist = cv2.resize(padHist, (dH, dW), interpolation=cv2.INTER_CUBIC)
 
         # Write images, with new filename
         cv2.imwrite(pre_process_moving_dest + case + '/hist_' + case + '_' + slice +'.png', padHist)
+        
+        for region in s['regions']:
+            transformAndSaveRegion(pre_process_moving_dest, case, slice, s, region, theta, dH, dW, h, w,x,y,x_offset,y_offset)
 
 #preprocess mri mha files to slices here
 def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case):     
