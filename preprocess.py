@@ -107,16 +107,21 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
         padHist[x_offset:crop.shape[0]+x_offset, y_offset:crop.shape[1]+y_offset, :] = crop
         
         # downsample image
-        dH = 1024
-        dW = 1024
-        padHist = cv2.resize(padHist, (dH, dW), interpolation=cv2.INTER_CUBIC)
+        size_low  = 1024
+        size_high = 2048
+        padHist_low_res  = cv2.resize(padHist, (size_low, size_low), interpolation=cv2.INTER_CUBIC)
+        padHist_high_res = cv2.resize(padHist, (size_high, size_high), interpolation=cv2.INTER_CUBIC)
+
+        # Transform all regions
+        for region in s['regions']:
+            transformAndSaveRegion(pre_process_moving_dest, case, slice,               s, region, theta, size_low,  size_low,  h, w, x, y, x_offset, y_offset)
+            transformAndSaveRegion(pre_process_moving_dest, case + '_high_res', slice, s, region, theta, size_high, size_high, h, w, x, y, x_offset, y_offset)
 
         # Write images, with new filename
-        cv2.imwrite(pre_process_moving_dest + case + '/hist_' + case + '_' + slice +'.png', padHist)
+        cv2.imwrite(pre_process_moving_dest + case + '/hist_' + case + '_' + slice +'.png', padHist_low_res)
+        cv2.imwrite(pre_process_moving_dest + case + '_high_res' + '/hist_' + case + '_high_res_' + slice +'.png', padHist_high_res)
         
-        for region in s['regions']:
-            transformAndSaveRegion(pre_process_moving_dest, case, slice, s, region, theta, dH, dW, h, w,x,y,x_offset,y_offset)
-
+        
 #preprocess mri mha files to slices here
 def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case):     
     imMri       = sitk.ReadImage(fixed_img_mha)
