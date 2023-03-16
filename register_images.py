@@ -8,6 +8,7 @@ from image.normalization import normalize_image
 from geotnf.transformation import GeometricTnf
 from geotnf.transformation_high_res import GeometricTnf_high_res
 from geotnf.point_tnf import *
+from process_img import *
 from skimage import io
 import warnings
 from collections import OrderedDict
@@ -29,44 +30,6 @@ tr = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
 
 half_out_size = 512
 
-def preprocess_image(image, high_res=False):
-    """ 
-    Normalise image 
-    """
-    
-    if  high_res:
-        resizeCNN = GeometricTnf(out_h=half_out_size*2, out_w=half_out_size*2, use_cuda = False) 
-    else:
-        resizeCNN = GeometricTnf(out_h=240, out_w=240, use_cuda = False) 
-
-    # convert to torch Variable
-    image       = np.expand_dims(image.transpose((2,0,1)),0)
-    image       = torch.Tensor(image.astype(np.float32)/255.0)
-    image_var   = Variable(image,requires_grad=False)
-
-    # Resize image using bilinear sampling with identity affine tnf
-    image_var = resizeCNN(image_var)
-
-    # Normalize image
-    image_var = normalize_image(image_var)
-
-    return image_var
-
-
-def process_image(input_image, use_cuda, high_res=False, mask=False):
-    if mask:
-        image = np.copy(input_image)
-        image[np.any(image > 5, axis=-1)] = 255
-    else:
-        image = input_image
-    
-    image_var = preprocess_image(image, high_res=high_res)
-        
-    if use_cuda:
-        image_var = image_var.cuda()
-        
-    return image_var
-    
     
 def save_transform(theta_aff_1,theta_aff_2,theta_tps):
     
