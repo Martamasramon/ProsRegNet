@@ -4,6 +4,9 @@ from geotnf.transformation_high_res import GeometricTnf_high_res
 from skimage import io
 from glob import glob
 from register_images import output_results
+import torch
+import gc
+
 
 def get_data(filename): 
     with open(filename) as file:
@@ -15,12 +18,15 @@ def get_data(filename):
     
 
 def transform_high_res(transforms, path, use_cuda=True):
+    gc.collect()
+    torch.cuda.empty_cache()
+    
     # Get transforms
     theta_aff_1, theta_aff_2, theta_tps = transforms
         
     # Load geometric models
-    tpsTnf_high_res = GeometricTnf_high_res(geometric_model='tps',    use_cuda=use_cuda)
-    affTnf_high_res = GeometricTnf_high_res(geometric_model='affine', use_cuda=use_cuda)
+    tpsTnf_high_res = GeometricTnf_high_res(geometric_model='tps',    out_h=2048, out_w=2048, use_cuda=use_cuda)
+    affTnf_high_res = GeometricTnf_high_res(geometric_model='affine', out_h=2048, out_w=2048, use_cuda=use_cuda)
     
     # Preprocess image 
     source_image     = io.imread(path)
@@ -41,13 +47,21 @@ def transform_high_res(transforms, path, use_cuda=True):
    
     return warped_image_aff_tps_np
 
+def create_tensor(transform, use_cuda=True):
+    transform = torch.Tensor(transform)
+    
+    if use_cuda:
+        transform = transform.cuda()
+        
+    return transform
+
 
 path    = "./results/preprocess/"
 samples = ["HMU_010_FH"]
 
 def main():
     for sid in samples:
-        json_path  = 'transform_' + sid + '.json'
+        json_path  = './transforms/transform_' + sid + '.json'
         img_path   = os.path.join(path, 'hist' , sid+'_high_res/')
         
         # Get image paths
@@ -78,10 +92,10 @@ def main():
         
         # Get transformation params
         for i in range(count):
-            theta_aff_1 = json_data[i]["affine_1"]
-            theta_aff_2 = json_data[i]["affine_2"]
-            theta_tps   = json_data[i]["tps"]
-            transforms  = (theta_aff_1, theta_aff_2, theta_tps)
+            theta_aff_1 = json_data[str(i)]["affine_1"]
+            theta_aff_2 = json_data[str(i)]["affine_2"]
+            theta_tps   = json_data[str(i)]["tps"]
+            transforms  = (create_tensor(theta_aff_1), create_tensor(theta_aff_2), create_tensor(theta_tps))
             
             for annot in all_paths:
                 warped_imgs[annot][i,:,:,:] = transform_high_res(transforms, all_paths[annot][i], use_cuda=True)
@@ -94,6 +108,6 @@ def main():
             
         # Save images
         for annot in all_paths:
-            output_results(path + 'registration/', warped_imgs[annot], sid + '_high_res', annot, spatialInfo, extension = 'nii.gz')
+            output_results(path + 'registration/', warped_imgs[annot], sid + '_high_res', annot, spatialInfo, extension = '.nii.gz')
         
 main()
