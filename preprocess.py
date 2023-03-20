@@ -131,8 +131,8 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
     except:
         imMri = imMri.reshape(1,imMri.shape[0],imMri.shape[1])
 
-    imMriMask   = sitk.ReadImage(fixed_seg)
-    imMriMaskArray = sitk.GetArrayFromImage(imMriMask)
+    imMriMask       = sitk.ReadImage(fixed_seg)
+    imMriMaskArray  = sitk.GetArrayFromImage(imMriMask)
     try:
         imMriMaskArray.shape[2]
     except:
