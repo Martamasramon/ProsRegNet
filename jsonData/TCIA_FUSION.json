@@ -7,7 +7,9 @@
     },
     "output_path": "./results/",
     "studies2process": {
-        "HMU_010_FH": "./jsonData/reg_HMU_010_FH.json"
+        "DWI_HMU_003_DB": "./jsonData/reg_DWI_HMU_003_DB.json",
+        "DWI_HMU_007_TN": "./jsonData/reg_DWI_HMU_007_TN.json",
+        "DWI_HMU_010_FH": "./jsonData/reg_DWI_HMU_010_FH.json"
     },
     "studies": {
         "aaa0069": "./jsonData/reg_aaa0069.json",
@@ -16,13 +18,8 @@
         "HMU_010_FH": "./jsonData/reg_HMU_010_FH.json",
         "HMU_011_MQ": "./jsonData/reg_HMU_011_MQ.json",
         "HMU_025_SH": "./jsonData/reg_HMU_025_SH.json",
-        "HMU_038_JC": "./jsonData/reg_HMU_038_JC.json",
-        "HMU_056_JH": "./jsonData/reg_HMU_056_JH.json",
-        "HMU_064_SB": "./jsonData/reg_HMU_064_SB.json",
-        "HMU_065_RH": "./jsonData/reg_HMU_065_RH.json",
-        "HMU_066_JF": "./jsonData/reg_HMU_066_JF.json",
-        "HMU_067_MS": "./jsonData/reg_HMU_067_MS.json",
-        "HMU_069_NS": "./jsonData/reg_HMU_069_NS.json",
-        "HMU-004-HC": "./jsonData/reg_HMU-004-HC.json"
+        "DWI_HMU_003_DB": "./jsonData/reg_DWI_HMU_003_DB.json",
+        "DWI_HMU_007_TN": "./jsonData/reg_DWI_HMU_007_TN.json",
+        "DWI_HMU_010_FH": "./jsonData/reg_DWI_HMU_010_FH.json"
     }
 }
