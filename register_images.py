@@ -52,7 +52,7 @@ def save_all_transforms(json_data, file_name, imSpatialInfo, scaling):
     json_object = json.dumps(json_data, indent=4)
     
     # Save to file
-    with open('transform_' + file_name + '.json', "w") as outfile:
+    with open('./transforms/transform_' + file_name + '.json', "w") as outfile:
         outfile.write(json_object)
 
 
@@ -375,10 +375,10 @@ def main():
     opt = parser.parse_args()
     
 
-    verbose = opt.verbose
-    preprocess_moving = opt.preprocess_moving
-    preprocess_fixed = opt.preprocess_fixed
-    run_registration = opt.register
+    verbose             = opt.verbose
+    preprocess_moving   = opt.preprocess_moving
+    preprocess_fixed    = opt.preprocess_fixed
+    run_registration    = opt.register
     
     timings = {}
     
@@ -406,7 +406,7 @@ def main():
 
     ###### PREPROCESSING DESTINATIONS ######################################
     preprocess_moving_dest = outputPath + '/preprocess/hist/'
-    preprocess_fixed_dest = outputPath + '/preprocess/mri/'
+    preprocess_fixed_dest  = outputPath + '/preprocess/mri/'
 
     # start doing preprocessing on each case and register
     for s in studies:
