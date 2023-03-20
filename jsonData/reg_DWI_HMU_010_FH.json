@@ -1,0 +1,15 @@
+{
+    "id": "DWI_HMU_010_FH",
+    "invivo-accession": "",
+    "exvivo-accession": "",
+    "fixed": "./datasets/testing/MRI/DWI_HMU_010_FH/DWI_HMU_010_FH.nii.gz",
+    "fixed-segmentation": "./datasets/testing/MRI/DWI_HMU_010_FH/DWI_HMU_010_FH_mask.nii.gz",
+    "fixed-landmarks2": "",
+    "fixed-landmarks3": "",
+    "fixed-landmarks1": "",
+    "moving-type": "stack",
+    "moving": "./datasets/testing/Histology/DWI_HMU_010_FH.json",
+    "T2w": "",
+    "ADC": "",
+    "DWI": ""
+}

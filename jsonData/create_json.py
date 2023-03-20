@@ -4,7 +4,7 @@ import json
 def create_json(path_mri, path_histo, file_name):
     
     json_data = {
-        "id": "HMU_010_FH",
+        "id": file_name,
         "invivo-accession": "",
         "exvivo-accession": "",
         "fixed": os.path.join(path_mri, file_name, 'T2_nifti_' + file_name + '.nii.gz'),
@@ -31,11 +31,13 @@ def main():
     path_histo  = './datasets/testing/Histology'
     
     # List of all available samples
-    file_names = ['HMU_003_DB', 'HMU_007_TN', 'HMU_010_FH', 
+    """file_names = ['HMU_003_DB', 'HMU_007_TN', 'HMU_010_FH', 
                 'HMU_011_MQ', 'HMU_025_SH', 'HMU_038_JC', 
                 'HMU_056_JH', 'HMU_064_SB', 'HMU_065_RH', 
                 'HMU_066_JF', 'HMU_067_MS', 
-                'HMU_069_NS', 'HMU-004-HC']
+                'HMU_069_NS', 'HMU-004-HC']"""
+                
+    file_names = ['DWI_HMU_003_DB', 'DWI_HMU_007_TN', 'DWI_HMU_010_FH']
 
     for name in file_names:
         create_json(path_mri, path_histo, name)
