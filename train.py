@@ -34,27 +34,27 @@ from torch.optim.lr_scheduler import StepLR
 # Argument parsing
 parser = argparse.ArgumentParser(description='ProsRegNet PyTorch implementation')
 # Paths
-parser.add_argument('--training-tnf-csv', type=str, default='', help='path to training transformation csv folder')
-parser.add_argument('--training-image-path', type=str, default='', help='path to folder containing training images')
-parser.add_argument('--trained-models-dir', type=str, default='trained_models', help='path to trained models folder')
-parser.add_argument('--trained-models-fn', type=str, default='CombinedLoss', help='trained model filename')
+parser.add_argument('--training-tnf-csv',       type=str, default='',               help='path to training transformation csv folder')
+parser.add_argument('--training-image-path',    type=str, default='',               help='path to folder containing training images')
+parser.add_argument('--trained-models-dir',     type=str, default='trained_models', help='path to trained models folder')
+parser.add_argument('--trained-models-fn',      type=str, default='CombinedLoss',   help='trained model filename')
 
 parser.add_argument('--pretrained-model-aff', type=str, default='', help='path to a pretrained affine network')
 parser.add_argument('--pretrained-model-tps', type=str, default='', help='path to a pretrained tps network')
 
 
 # Optimization parameters 
-parser.add_argument('--lr', type=float, default=0.0003, help='learning rate')
-parser.add_argument('--gamma', type=float, default=0.95, help='gamma')
-parser.add_argument('--momentum', type=float, default=0.9, help='momentum constant')
-parser.add_argument('--num-epochs', type=int, default=50, help='number of training epochs')
-parser.add_argument('--batch-size', type=int, default=64,help='training batch size')
-parser.add_argument('--weight-decay', type=float, default=0, help='weight decay constant')
-parser.add_argument('--seed', type=int, default=1, help='Pseudo-RNG seed')
+parser.add_argument('--lr',             type=float, default=0.0003, help='learning rate')
+parser.add_argument('--gamma',          type=float, default=0.95,   help='gamma')
+parser.add_argument('--momentum',       type=float, default=0.9,    help='momentum constant')
+parser.add_argument('--num-epochs',     type=int,   default=50,     help='number of training epochs')
+parser.add_argument('--batch-size',     type=int,   default=64,     help='training batch size')
+parser.add_argument('--weight-decay',   type=float, default=0,      help='weight decay constant')
+parser.add_argument('--seed',           type=int,   default=1,      help='Pseudo-RNG seed')
 # Model parameters
-parser.add_argument('--geometric-model', type=str, default='affine', help='geometric model to be regressed at output: affine or tps')
-parser.add_argument('--use-mse-loss', type=str_to_bool, nargs='?', const=True, default=False, help='Use MSE loss on tnf. parameters')
-parser.add_argument('--feature-extraction-cnn', type=str, default='resnet101', help='Feature extraction architecture: vgg/resnet101')
+parser.add_argument('--geometric-model',        type=str,                                default='affine',    help='geometric model to be regressed at output: affine or tps')
+parser.add_argument('--use-mse-loss',           type=str_to_bool, nargs='?', const=True, default=False,       help='Use MSE loss on tnf. parameters')
+parser.add_argument('--feature-extraction-cnn', type=str,                                default='resnet101', help='Feature extraction architecture: vgg/resnet101')
 # Synthetic dataset parameters
 parser.add_argument('--random-sample', type=str_to_bool, nargs='?', const=True, default=False, help='sample random transformations')
 

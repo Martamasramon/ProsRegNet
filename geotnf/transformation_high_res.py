@@ -38,21 +38,26 @@ class GeometricTnf_high_res(object):
 
     def __call__(self, image_batch, theta_batch=None, padding_factor=0.0, crop_factor=1.0):
         b, c, h, w = image_batch.size()
+        print('batch size: ', image_batch.size())
+        
         if theta_batch is None:
             theta_batch = self.theta_identity
             theta_batch = theta_batch.expand(b,2,3)
             theta_batch = Variable(theta_batch,requires_grad=False)        
-            
+        
+        print('theta_size: ', theta_batch.size())
         sampling_grid = self.gridGen(theta_batch)
 
         # rescale grid according to crop_factor and padding_factor
     #    sampling_grid.data = sampling_grid.data*padding_factor*crop_factor
         sampling_grid.data = sampling_grid.data*crop_factor/(1+2*padding_factor)
+        print('sampling grid: ', sampling_grid.size())
 
       #  print("original image batch size:")
        # print(image_batch.shape)
         # sample transformed image
         warped_image_batch = F.grid_sample(image_batch, sampling_grid)
+        print('warped: ', warped_image_batch.size())
        # print("warped image 88888888888:")
        # print(warped_image_batch.shape)
        # print(sampling_grid.shape)
