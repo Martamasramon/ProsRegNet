@@ -33,11 +33,14 @@ from torch.optim.lr_scheduler import StepLR
 
 # Argument parsing
 parser = argparse.ArgumentParser(description='ProsRegNet PyTorch implementation')
+
 # Paths
-parser.add_argument(      '--training-tnf-csv',    type=str, default='',               help='path to training transformation csv folder')
+parser.add_argument(      '--training-csv-name',   type=str, default='train.csv',      help='training transformation csv file name')
+parser.add_argument(      '--test-csv-name',       type=str, default='test.csv',       help='test transformation csv file name')
+
 parser.add_argument(      '--training-image-path', type=str, default='',               help='path to folder containing training images')
 parser.add_argument(      '--trained-models-dir',  type=str, default='trained_models', help='path to trained models folder')
-parser.add_argument('-n', '--trained-models-name', type=str, default='default',       help='trained model filename')
+parser.add_argument('-n', '--trained-models-name', type=str, default='default',        help='trained model filename')
 
 parser.add_argument('--pretrained-model-aff', type=str, default='', help='path to a pretrained affine network')
 parser.add_argument('--pretrained-model-tps', type=str, default='', help='path to a pretrained tps network')
@@ -79,10 +82,10 @@ if use_cuda:
 
 if args.training_image_path == '':
     args.training_image_path = 'datasets/training/'
-if args.training_tnf_csv == '' and args.geometric_model=='affine':
-    args.training_tnf_csv = 'training_data/affine'
-elif args.training_tnf_csv == '' and args.geometric_model=='tps':
-        args.training_tnf_csv = 'training_data/tps'
+if args.geometric_model=='affine':
+    training_tnf_csv = 'training_data/affine'
+elif args.geometric_model=='tps':
+    training_tnf_csv = 'training_data/tps'
 
 # CNN model and loss
 print('Creating CNN model...')
@@ -110,7 +113,7 @@ else:
 
 # Dataset and dataloader
 dataset = SynthDataset(geometric_model=args.geometric_model,
-                       csv_file=os.path.join(args.training_tnf_csv,'train.csv'),
+                       csv_file=os.path.join(training_tnf_csv,args.training_csv_name),
                        training_image_path=args.training_image_path,
                        transform=NormalizeImageDict(['image_A','image_B']),
                        random_sample=args.random_sample)
@@ -119,7 +122,7 @@ dataloader = DataLoader(dataset, batch_size=args.batch_size,
                         shuffle=True, num_workers=4)
 
 dataset_test = SynthDataset(geometric_model=args.geometric_model,
-                            csv_file=os.path.join(args.training_tnf_csv,'test.csv'),
+                            csv_file=os.path.join(training_tnf_csv,args.test_csv_name),
                             training_image_path=args.training_image_path,
                             transform=NormalizeImageDict(['image_A','image_B']),
                             random_sample=args.random_sample)
