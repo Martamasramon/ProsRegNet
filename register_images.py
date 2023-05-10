@@ -72,7 +72,7 @@ def load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_defor
     if do_aff:
         model_aff = ProsRegNet(use_cuda=use_cuda,geometric_model='affine',feature_extraction_cnn=feature_extraction_cnn)
     if do_tps:
-        model_tps = ProsRegNet(use_cuda=use_cuda,geometric_model='tps',feature_extraction_cnn=feature_extraction_cnn)
+        model_tps = ProsRegNet(use_cuda=use_cuda,geometric_model='tps',   feature_extraction_cnn=feature_extraction_cnn)
 
     # Load trained weights
     print('Loading trained model weights...')
@@ -354,24 +354,18 @@ def main():
     
     ###### INPUTS
     parser = argparse.ArgumentParser(description='Parse data')
-    parser.add_argument('-v','--verbose', action='store_true',
-        help='verbose output')
+    parser.add_argument('-v',   '--verbose',            action='store_true', help='verbose output')
+    parser.add_argument('-pm',  '--preprocess_moving',  action='store_true', help='preprocess moving')
+    parser.add_argument('-pf',  '--preprocess_fixed',   action='store_true', help='preprocess fixed')
+    parser.add_argument('-r',   '--register',           action='store_true', help='run deep learning registration')
     
-    parser.add_argument('-i','--in_path', type=str, required=True, 
-        default=".",help="json file")
+    parser.add_argument('-i',   '--in_path',   type=str, required=True,  default=".", help="json file")
+    parser.add_argument('-e',   '--extension', type=str, required=False, default="",  help="extension to save registered volumes (default: nii.gz)")
     
-    parser.add_argument('-pm','--preprocess_moving',  action='store_true',
-        help='preprocess moving')
-    
-    parser.add_argument('-pf','--preprocess_fixed',  action='store_true',
-        help='preprocess fixed')
-    
-    parser.add_argument('-r','--register',  action='store_true',
-        help='run deep learning registration')
-    
-    parser.add_argument('-e','--extension', type=str, required=False, 
-        default="", help="extension to save registered volumes (default: nii.gz)")
-    
+    # Load trained models
+    parser.add_argument(      '--trained-models-dir',  type=str, default='trained_models', help='path to trained models folder')
+    parser.add_argument('-n', '--trained-models-name', type=str, default='default',        help='trained model filename')
+
     opt = parser.parse_args()
     
 
@@ -379,6 +373,9 @@ def main():
     preprocess_moving   = opt.preprocess_moving
     preprocess_fixed    = opt.preprocess_fixed
     run_registration    = opt.register
+    
+    model_aff_path = os.path.join(opt.trained_models_dir, opt.trained_models_name + '_affine.pth.tar')
+    model_tps_path = os.path.join(opt.trained_models_dir, opt.trained_models_name + '_tps.pth.tar')
     
     timings = {}
     
@@ -452,10 +449,6 @@ def main():
                 model_cache
             except NameError:
                 feature_extraction_cnn = 'resnet101'
-                
-                model_aff_path = 'trained_models/best_CombinedLoss_affine_resnet101.pth.tar'
-                model_tps_path = 'trained_models/best_CombinedLoss_tps_resnet101.pth.tar'
-                
                 model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True)
 
 
