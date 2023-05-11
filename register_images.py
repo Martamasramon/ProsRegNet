@@ -240,12 +240,7 @@ def getFiles(file_dest, keyword, sid):
     
     
     
-def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, hist_data): 
-    for slice in hist_data:
-        regions = hist_data[slice]['regions']
-        break
-    
-    
+def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions):     
     ####### grab files that were preprocessed 
     mri_files = [pos_mri for pos_mri in sorted(os.listdir(preprocess_fixed_dest)) if pos_mri.endswith('.jpg') ]
     
@@ -374,8 +369,8 @@ def main():
     preprocess_fixed    = opt.preprocess_fixed
     run_registration    = opt.register
     
-    model_aff_path = os.path.join(opt.trained_models_dir, opt.trained_models_name + '_affine.pth.tar')
-    model_tps_path = os.path.join(opt.trained_models_dir, opt.trained_models_name + '_tps.pth.tar')
+    model_aff_path = os.path.join(opt.trained_models_dir, 'best_' + opt.trained_models_name + '_affine.pth.tar')
+    model_tps_path = os.path.join(opt.trained_models_dir, 'best_' + opt.trained_models_name + '_tps.pth.tar')
     
     timings = {}
     
@@ -421,6 +416,9 @@ def main():
         fixed_seg       = studyParser.fixed_segmentation_filename
         moving_dict     = studyParser.ReadMovingImage()
 
+        for slice in moving_dict:
+            regions = moving_dict[slice]['regions']
+            break
 
         ###### PREPROCESSING HISTOLOGY HERE #############################################################
         if preprocess_moving == True: 
@@ -454,7 +452,7 @@ def main():
 
             ##### REGISTER
             start          = time.time()
-            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, moving_dict)
+            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, regions)
             end            = time.time()
             
             out3Dhist_highRes, out3Dmri_highRes, out3D, out3Dmri_mask, scaling, transforms = output3D_cache
@@ -471,18 +469,11 @@ def main():
             imSpatialInfo   = (mriOrigin, mriSpace, mriDirection)
             histSpatialInfo = (mriOrigin, histSpace, mriDirection)
             
-            # Write outputs as 3D volumes (.nii.gz format)
-            fn_names = ['_fixed.','_moved.','_moved_mask.', '_moved_cancer.']
-                       
-            output_results(outputPath + 'registration/', out3Dmri_highRes,  sid, fn_names[0], imSpatialInfo, extension = extension)
-            output_results(outputPath + 'registration/', out3Dhist_highRes, sid, fn_names[1], histSpatialInfo, extension = extension)
-            output_results(outputPath + 'registration/', out3D['mask'],     sid, fn_names[2], histSpatialInfo, extension = extension)
-    
-            # Write output for cancer segmentation if label exists
-            try:
-                output_results(outputPath + 'registration/', out3D['cancer'], sid, fn_names[3], histSpatialInfo, extension = extension)
-            except:
-                print('No cancer labels given.')
+            # Write outputs as 3D volumes (.nii.gz format)                       
+            output_results(outputPath + 'registration/', out3Dmri_highRes,  sid, '_fixed.', imSpatialInfo, extension = extension)
+            output_results(outputPath + 'registration/', out3Dhist_highRes, sid, '_moved.', histSpatialInfo, extension = extension)
+            for region in regions:
+                output_results(outputPath + 'registration/', out3D[region], sid, '_moved_' + region + '.' , histSpatialInfo, extension = extension)
             
             save_all_transforms(transforms, sid, imSpatialInfo, scaling)
 

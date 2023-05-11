@@ -99,6 +99,7 @@ if args.geometric_model == 'affine' and do_aff:
         
 if args.geometric_model == 'tps' and do_tps:
     checkpoint = torch.load(args.pretrained_model_tps, map_location=lambda storage, loc: storage)
+    print(checkpoint)
     checkpoint['state_dict'] = OrderedDict([(k.replace(args.feature_extraction_cnn, 'model'), v) for k, v in checkpoint['state_dict'].items()])
     model.load_state_dict(checkpoint['state_dict'])
 
@@ -118,8 +119,7 @@ dataset = SynthDataset(geometric_model=args.geometric_model,
                        transform=NormalizeImageDict(['image_A','image_B']),
                        random_sample=args.random_sample)
 
-dataloader = DataLoader(dataset, batch_size=args.batch_size,
-                        shuffle=True, num_workers=4)
+dataloader = DataLoader(dataset, batch_size=args.batch_size,shuffle=True, num_workers=4)
 
 dataset_test = SynthDataset(geometric_model=args.geometric_model,
                             csv_file=os.path.join(training_tnf_csv,args.test_csv_name),
@@ -127,63 +127,45 @@ dataset_test = SynthDataset(geometric_model=args.geometric_model,
                             transform=NormalizeImageDict(['image_A','image_B']),
                             random_sample=args.random_sample)
 
-dataloader_test = DataLoader(dataset_test, batch_size=args.batch_size,
-                        shuffle=True, num_workers=4)
+dataloader_test = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=4)
 
 pair_generation_tnf = SynthPairTnf(geometric_model=args.geometric_model,use_cuda=use_cuda)
 
 # Optimizer
 optimizer = optim.Adam(model.FeatureRegression.parameters(), lr=args.lr)
-
 scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
 
 # Train
-"""if args.use_mse_loss:
-    checkpoint_name = os.path.join(args.trained_models_dir,
-                                   args.trained_models_name + '_' + args.geometric_model + '_mse_loss' + args.feature_extraction_cnn + '.pth.tar')
-
-else:
-    checkpoint_name = os.path.join(args.trained_models_dir,
-                                   args.trained_models_name + '_' + args.geometric_model  + '_' + args.feature_extraction_cnn + '.pth.tar')
-"""
 checkpoint_name = os.path.join(args.trained_models_dir, args.trained_models_name + '_' + args.geometric_model + '.pth.tar')
-
-best_test_loss = float("inf")
+best_test_loss  = float("inf")
 
 print('Starting training...')
 
-epochArray = np.zeros(args.num_epochs)
-trainLossArray = np.zeros(args.num_epochs)
-testLossArray = np.zeros(args.num_epochs)
-
+epochArray      = np.zeros(args.num_epochs)
+trainLossArray  = np.zeros(args.num_epochs)
+testLossArray   = np.zeros(args.num_epochs)
 
 for epoch in range(1, args.num_epochs+1):
     train_loss = train(epoch,model,loss,optimizer,dataloader,pair_generation_tnf,log_interval=10)
-    test_loss = test(model,loss,dataloader_test,pair_generation_tnf,use_cuda=use_cuda, geometric_model=args.geometric_model)
+    test_loss  = test(model,loss,dataloader_test,pair_generation_tnf,use_cuda=use_cuda, geometric_model=args.geometric_model)
 
     scheduler.step()
     
-    epochArray[epoch-1] = epoch
+    epochArray[epoch-1]     = epoch
     trainLossArray[epoch-1] = train_loss
-    testLossArray[epoch-1] = test_loss
+    testLossArray[epoch-1]  = test_loss
 
     # remember best loss
     is_best = test_loss < best_test_loss
     best_test_loss = min(test_loss, best_test_loss)
     save_checkpoint({
-      'epoch': epoch + 1,
-      'args': args,
-      'state_dict': model.state_dict(),
+      'epoch':          epoch + 1,
+      'args':           args,
+      'state_dict':     model.state_dict(),
       'best_test_loss': best_test_loss,
-      'optimizer' : optimizer.state_dict(),
-    }, is_best,checkpoint_name)
+      'optimizer' :     optimizer.state_dict(),
+    }, is_best, checkpoint_name)
 print('Done!')
 
-"""if args.use_mse_loss:
-    np.savetxt(os.path.join(args.trained_models_dir,
-                                   args.trained_models_name + '_' + args.geometric_model + '_mse_loss' + args.feature_extraction_cnn + '.csv'), np.transpose((epochArray, trainLossArray, testLossArray)), delimiter=',')
-else:
-    np.savetxt(os.path.join(args.trained_models_dir,
-                                   args.trained_models_name + '_' + args.geometric_model + args.feature_extraction_cnn + '.csv'), np.transpose((epochArray, trainLossArray, testLossArray)), delimiter=',')
-"""
-np.savetxt(os.path.join(args.trained_models_dir, args.trained_models_name + '.csv'), np.transpose((epochArray, trainLossArray, testLossArray)), delimiter=',')
+# Save model as csv
+np.savetxt(os.path.join(args.trained_models_dir, args.trained_models_name + '_' + args.geometric_model + '.csv'), np.transpose((epochArray, trainLossArray, testLossArray)), delimiter=',')
