@@ -88,7 +88,7 @@ def main():
         
         warped_imgs = {}
         for annot in all_paths:
-            warped_imgs[annot] = np.zeros((count, out_size, out_size, 3))
+            warped_imgs[annot] = np.zeros((count, 2*half_out_size, 2*half_out_size, 3))
         
         # Get transformation params
         for i in range(count):
@@ -101,7 +101,7 @@ def main():
                 warped_imgs[annot][i,:,:,:] = transform_high_res(transforms, all_paths[annot][i], use_cuda=True)
             
             # Apply mask to image
-            mask = np.zeros((out_size, out_size, 3), dtype=int)
+            mask = np.zeros((2*half_out_size, 2*half_out_size, 3), dtype=int)
             for n in range(3):
                 mask[:, :, n]  = warped_imgs['mask'][i, :, :, 0] 
             warped_imgs['histo'][i,:,:,:] = np.multiply(warped_imgs['histo'][i,:,:,:],mask)
