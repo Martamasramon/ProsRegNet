@@ -10,3 +10,5 @@ Train.o*
 *.pyc
 *.txt
 *.pkl
+transform_landmarks.py
+landmarks.sh
