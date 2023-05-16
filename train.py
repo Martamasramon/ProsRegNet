@@ -35,7 +35,7 @@ from torch.optim.lr_scheduler import StepLR
 parser = argparse.ArgumentParser(description='ProsRegNet PyTorch implementation')
 
 # Paths
-parser.add_argument(      '--training-csv-name',   type=str, default='train.csv',      help='training transformation csv file name')
+parser.add_argument('-t', '--training-csv-name',   type=str, default='train.csv',      help='training transformation csv file name')
 parser.add_argument(      '--test-csv-name',       type=str, default='test.csv',       help='test transformation csv file name')
 
 parser.add_argument(      '--training-image-path', type=str, default='',               help='path to folder containing training images')
