@@ -91,7 +91,7 @@ def load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_defor
 
 
 
-def runCnn(model_cache, source_image_path, target_image_path, regions):
+def runCnn(model_cache, source_image_path, target_image_path, histo_regions):
     """
     Run the cnn on images and return 3D images
     """
@@ -130,9 +130,9 @@ def runCnn(model_cache, source_image_path, target_image_path, regions):
     
     histo_image_var  = {}
     histo_image_var_high_res  = {}
-    for region in regions:
-        histo_image_var[region]          = process_image(regions[region], use_cuda)
-        histo_image_var_high_res[region] = process_image(regions[region], use_cuda, high_res=True)
+    for region in histo_regions:
+        histo_image_var[region]          = process_image(histo_regions[region], use_cuda)
+        histo_image_var_high_res[region] = process_image(histo_regions[region], use_cuda, high_res=True)
     
     # Registration inputs
     batch_mask      = {'source_image': source_image_mask_var,       'target_image':target_image_mask_var}
@@ -158,7 +158,7 @@ def runCnn(model_cache, source_image_path, target_image_path, regions):
         
         warped_aff_high_res  = {}
         warped_aff  = {}
-        for region in regions:
+        for region in histo_regions:
             warped_aff_high_res[region] = affTnf_high_res(histo_image_var_high_res[region], theta_aff_1.view(-1,2,3))
             warped_aff[region]          = affTnf(histo_image_var[region], theta_aff_1.view(-1,2,3))
         
@@ -170,7 +170,7 @@ def runCnn(model_cache, source_image_path, target_image_path, regions):
             
         # Transform high res images    
         warped_image_aff_high_res   = affTnf_high_res(warped_image_aff_high_res, theta_aff_2.view(-1,2,3))
-        for region in regions:
+        for region in histo_regions:
             warped_aff_high_res[region] = affTnf_high_res(warped_aff_high_res[region], theta_aff_2.view(-1,2,3))
     
 
@@ -180,7 +180,7 @@ def runCnn(model_cache, source_image_path, target_image_path, regions):
         warped_image_aff_tps_high_res   = tpsTnf_high_res(warped_image_aff_high_res,theta_aff_tps)
 
         warped_aff_tps_high_res  = {}
-        for region in regions:
+        for region in histo_regions:
             warped_aff_tps_high_res[region] = tpsTnf_high_res(warped_aff_high_res[region], theta_aff_tps)
             
     transform = save_transform(theta_aff_1,theta_aff_2,theta_aff_tps)
@@ -190,14 +190,14 @@ def runCnn(model_cache, source_image_path, target_image_path, regions):
         warped_image_aff_np_high_res = normalize_image(warped_image_aff_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
 
         warped_aff_np_high_res  = {}
-        for region in regions:
+        for region in histo_regions:
             warped_aff_np_high_res[region] = normalize_image(warped_aff_high_res[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy() 
 
     if do_aff and do_tps:
         warped_image_aff_tps_np_high_res = normalize_image(warped_image_aff_tps_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
         
         warped_aff_tps_np_high_res  = {}
-        for region in regions:
+        for region in histo_regions:
             warped_aff_tps_np_high_res[region] = normalize_image(warped_aff_tps_high_res[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
     
     # Ignore negative values
@@ -280,9 +280,9 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     out3Dmri        = np.zeros((count, w, h, 3))
     out3Dmri_mask   = np.zeros((count, w, h, 3)[:-1])
 
-    out3D = {}
+    out3D_regions = {}
     for region in regions:
-        out3D[region] = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor)))
+        out3D_regions[region] = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor)))
     
     all_transforms = {}
     for idx in range(count): 
@@ -309,6 +309,11 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         imHisto         = {}
         for region in regions:
             imHisto[region] = cv2.imread(preprocess_moving_dest + cases[region][idx])
+            
+        try:
+            print('histo path',  preprocess_moving_dest + cases['landmarks'][idx])
+        except:
+            print('no landmark in imHisto')
         
         out3Dmri[idx, :, :,:]    = np.uint8(imMri_highRes)
         out3Dmri_mask[idx, :, :] = np.uint8((imMriMask[:, :, 0] > 255/2.0))
@@ -317,7 +322,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         affTps, regions_aff_tps, transform = runCnn(model_cache, source_image_path, target_image_path, imHisto) 
         all_transforms[idx] = transform
         
-        # Transform histology to MRI space    
+        # Transform main histology & regions to MRI space    
         affTps = cv2.resize(affTps*255, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
         for region in regions:
             regions_aff_tps[region] = cv2.resize(regions_aff_tps[region]*255, (h_new, w_new), interpolation=cv2.INTER_CUBIC)
@@ -328,17 +333,46 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         ## Create mask for warped histology
         mask_image3d  = np.zeros((affTps.shape[0], affTps.shape[1], 3), dtype=int)
         for i in range(3):
-            mask_image3d[:, :, i]  = regions_aff_tps['mask'][:, :,0]
-            
-        affTps = np.multiply(affTps,mask_image3d)
-            
+            mask_image3d[:, :, i]  = regions_aff_tps['mask'][:, :, 0]
+        
+        # Output histology 
+        affTps = np.multiply(affTps,mask_image3d)   
         out3Dhist[idx, start_x:end_x, start_y:end_y, :] = np.uint8(affTps[:, :, :])
+        
+        # Output histology regions
         for region in regions:
-            out3D[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :,0])
+            out3D_regions[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :, 0])
 
-    output3D_cache = (out3Dhist, out3Dmri, out3D, out3Dmri_mask, [x_s,y_s], all_transforms)
+    output3D_cache = (out3Dhist, out3Dmri, out3D_regions, out3Dmri_mask, [x_s,y_s], all_transforms)
     
     return output3D_cache
+    
+    
+def calc_dice(hist_mask, mri_mask):
+    """
+    calculate DICE coefficient between masks
+    """
+    
+    hist_mask   = np.squeeze(hist_mask[:,:,:,0])
+    count, h, w = hist_mask.shape
+    dice_total  = 0
+    
+    for i in range(count):
+        # Resize so same dimensions
+        mri   = cv2.resize(mri_mask[i,:,:], (w, h), interpolation=cv2.INTER_CUBIC)
+        histo = hist_mask[i,:,:]
+        
+        print('mri dims ', mri.shape)
+        print('histo dims ', histo.shape)
+        
+        # Calculate DICE
+        numerator   = 2 * np.sum(np.sum(np.sum(histo * mri,dim=3),dim=2),dim=1)
+        denominator = np.sum(np.sum(np.sum(histo + mri,dim=3),dim=2),dim=1)
+        dice        = np.sum(numerator/(denominator + 0.00001)) 
+        dice_total += dice/count
+        
+        print('idx: ' + str(i) + '. DICE: ' + str(dice))
+    print('Total DICE: ' + str(dice_total))
     
     
 
@@ -449,7 +483,6 @@ def main():
                 feature_extraction_cnn = 'resnet101'
                 model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True)
 
-
             ##### REGISTER
             start          = time.time()
             output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, regions)
@@ -457,7 +490,12 @@ def main():
             
             out3Dhist_highRes, out3Dmri_highRes, out3D, out3Dmri_mask, scaling, transforms = output3D_cache
             print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
-
+            
+            #### CALCULATE DICE
+            try:
+                calc_dice(out3D['mask'], out3Dmri_mask)
+            except:
+                print('failed :(')
             
             #### SAVE RESULTS
             imMri           = sitk.ReadImage(fixed_img_mha)
