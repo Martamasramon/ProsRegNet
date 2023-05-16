@@ -41,20 +41,20 @@ def test(model,loss_fn,dataloader,pair_generation_tnf,use_cuda=True,geometric_mo
         test_loss += loss.data.cpu().numpy()
         
         
-        I = tnf_batch['target_mask']
+        target = tnf_batch['target_mask']
         geometricTnf = GeometricTnf(geometric_model, 240, 240, use_cuda = use_cuda)
 
         if geometric_model == 'affine':
             theta = theta.view(-1,2,3)
-        J = geometricTnf(tnf_batch['source_mask'],theta)
+        estimate = geometricTnf(tnf_batch['source_mask'],theta)
         
         if use_cuda:
-            I = I.cuda()
-            J = J.cuda()
+            target   = target.cuda()
+            estimate = estimate.cuda()
         
-        numerator = 2 * torch.sum(torch.sum(torch.sum(I * J,dim=3),dim=2),dim=1)
-        denominator = torch.sum(torch.sum(torch.sum(I + J,dim=3),dim=2),dim=1)
-        dice = dice + torch.sum(numerator/(denominator + 0.00001))/I.shape[0]
+        numerator   = 2 * torch.sum(torch.sum(torch.sum(target * estimate,dim=3),dim=2),dim=1)
+        denominator = torch.sum(torch.sum(torch.sum(target + estimate,dim=3),dim=2),dim=1)
+        dice        = dice + torch.sum(numerator/(denominator + 0.00001))/target.shape[0]
 
     test_loss /= len(dataloader)
     dice /=len(dataloader)

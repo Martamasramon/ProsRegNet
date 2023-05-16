@@ -7,9 +7,10 @@
     },
     "output_path": "./results/",
     "studies2process": {
-        "HMU_003_DB": "./jsonData/reg_HMU_003_DB.json",
-        "HMU_007_TN": "./jsonData/reg_HMU_007_TN.json",
-        "HMU_010_FH": "./jsonData/reg_HMU_010_FH.json"
+        "HMU_025_SH_landmarks": "./jsonData/reg_HMU_025_SH_landmarks.json",
+        "HMU_038_JC_landmarks": "./jsonData/reg_HMU_038_JC_landmarks.json",
+        "HMU_066_JF_landmarks": "./jsonData/reg_HMU_066_JF_landmarks.json",
+        "HMU_069_NS_landmarks": "./jsonData/reg_HMU_069_NS_landmarks.json"
     },
     "studies": {
         "aaa0069": "./jsonData/reg_aaa0069.json",
@@ -18,6 +19,10 @@
         "HMU_010_FH": "./jsonData/reg_HMU_010_FH.json",
         "DWI_HMU_003_DB": "./jsonData/reg_DWI_HMU_003_DB.json",
         "DWI_HMU_007_TN": "./jsonData/reg_DWI_HMU_007_TN.json",
-        "DWI_HMU_010_FH": "./jsonData/reg_DWI_HMU_010_FH.json"
+        "DWI_HMU_010_FH": "./jsonData/reg_DWI_HMU_010_FH.json",
+        "HMU_025_SH_landmarks": "./jsonData/reg_HMU_025_SH_landmarks.json",
+        "HMU_038_JC_landmarks": "./jsonData/reg_HMU_038_JC_landmarks.json",
+        "HMU_066_JF_landmarks": "./jsonData/reg_HMU_066_JF_landmarks.json",
+        "HMU_069_NS_landmarks": "./jsonData/reg_HMU_069_NS_landmarks.json"
     }
 }
