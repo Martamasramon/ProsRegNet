@@ -309,11 +309,6 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         imHisto         = {}
         for region in regions:
             imHisto[region] = cv2.imread(preprocess_moving_dest + cases[region][idx])
-            
-        try:
-            print('histo path',  preprocess_moving_dest + cases['landmarks'][idx])
-        except:
-            print('no landmark in imHisto')
         
         out3Dmri[idx, :, :,:]    = np.uint8(imMri_highRes)
         out3Dmri_mask[idx, :, :] = np.uint8((imMriMask[:, :, 0] > 255/2.0))
@@ -352,26 +347,27 @@ def calc_dice(hist_mask, mri_mask):
     """
     calculate DICE coefficient between masks
     """
-    
-    hist_mask   = np.squeeze(hist_mask[:,:,:,0])
     count, h, w = hist_mask.shape
     dice_total  = 0
     
+    print('---- DICE coefficient ----')
     for i in range(count):
         # Resize so same dimensions
         mri   = cv2.resize(mri_mask[i,:,:], (w, h), interpolation=cv2.INTER_CUBIC)
         histo = hist_mask[i,:,:]
         
-        print('mri dims ', mri.shape)
-        print('histo dims ', histo.shape)
-        
         # Calculate DICE
-        numerator   = 2 * np.sum(np.sum(np.sum(histo * mri,dim=3),dim=2),dim=1)
-        denominator = np.sum(np.sum(np.sum(histo + mri,dim=3),dim=2),dim=1)
-        dice        = np.sum(numerator/(denominator + 0.00001)) 
+        try:
+            numerator   = 2 * np.sum(np.multiply(histo,mri))
+            denominator = np.sum(histo + mri)
+            dice        = np.sum(numerator/(denominator + 0.00001)) 
+            print('Slice ' + str(i) + ': ' + str(dice))
+        except:
+            dice = 1
+            print('Error calculating DICE.')
+        
         dice_total += dice/count
         
-        print('idx: ' + str(i) + '. DICE: ' + str(dice))
     print('Total DICE: ' + str(dice_total))
     
     
@@ -492,10 +488,7 @@ def main():
             print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
             
             #### CALCULATE DICE
-            try:
-                calc_dice(out3D['mask'], out3Dmri_mask)
-            except:
-                print('failed :(')
+            calc_dice(out3D['mask'], out3Dmri_mask)
             
             #### SAVE RESULTS
             imMri           = sitk.ReadImage(fixed_img_mha)
