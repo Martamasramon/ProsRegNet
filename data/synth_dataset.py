@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 import torch
 import os
-from os.path import exists, join, basename
 from skimage import io
 import pandas as pd
 import numpy as np
