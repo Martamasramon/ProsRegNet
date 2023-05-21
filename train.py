@@ -38,9 +38,9 @@ parser = argparse.ArgumentParser(description='ProsRegNet PyTorch implementation'
 parser.add_argument('-t', '--training-csv-name',   type=str, default='train.csv',      help='training transformation csv file name')
 parser.add_argument(      '--test-csv-name',       type=str, default='test.csv',       help='test transformation csv file name')
 
-parser.add_argument(      '--training-image-path', type=str, default='',               help='path to folder containing training images')
-parser.add_argument(      '--trained-models-dir',  type=str, default='trained_models', help='path to trained models folder')
-parser.add_argument('-n', '--trained-models-name', type=str, default='default',        help='trained model filename')
+parser.add_argument('-p', '--training-image-path', type=str, default='datasets/training/',  help='path to folder containing training images')
+parser.add_argument(      '--trained-models-dir',  type=str, default='trained_models',      help='path to trained models folder')
+parser.add_argument('-n', '--trained-models-name', type=str, default='default',             help='trained model filename')
 
 parser.add_argument('--pretrained-model-aff', type=str, default='', help='path to a pretrained affine network')
 parser.add_argument('--pretrained-model-tps', type=str, default='', help='path to a pretrained tps network')
@@ -80,8 +80,6 @@ do_tps = not args.pretrained_model_tps==''
 if use_cuda:
     torch.cuda.manual_seed(args.seed)
 
-if args.training_image_path == '':
-    args.training_image_path = 'datasets/training/'
 if args.geometric_model=='affine':
     training_tnf_csv = 'training_data/affine'
 elif args.geometric_model=='tps':
@@ -99,7 +97,6 @@ if args.geometric_model == 'affine' and do_aff:
         
 if args.geometric_model == 'tps' and do_tps:
     checkpoint = torch.load(args.pretrained_model_tps, map_location=lambda storage, loc: storage)
-    print(checkpoint)
     checkpoint['state_dict'] = OrderedDict([(k.replace(args.feature_extraction_cnn, 'model'), v) for k, v in checkpoint['state_dict'].items()])
     model.load_state_dict(checkpoint['state_dict'])
 

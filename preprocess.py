@@ -107,8 +107,8 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
         padHist[x_offset:crop.shape[0]+x_offset, y_offset:crop.shape[1]+y_offset, :] = crop
         
         # downsample image
-        size_low  = 1024
-        size_high = 2048
+        size_low  = 240
+        size_high = 1024
         padHist_low_res  = cv2.resize(padHist, (size_low, size_low), interpolation=cv2.INTER_CUBIC)
         padHist_high_res = cv2.resize(padHist, (size_high, size_high), interpolation=cv2.INTER_CUBIC)
 
