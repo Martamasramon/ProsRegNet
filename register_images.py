@@ -28,8 +28,6 @@ import pickle
 
 tr = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
 
-half_out_size = 512
-
     
 def save_transform(theta_aff_1,theta_aff_2,theta_tps):
     
@@ -64,7 +62,6 @@ def load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_defor
     use_cuda = torch.cuda.is_available()
     
     do_aff = not model_aff_path==''
-    # do_tps = not model_tps_path==''
     do_tps = do_deformable
 
     # Create model
@@ -99,11 +96,8 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions):
     
     model_aff, model_tps, do_aff, do_tps, use_cuda = model_cache
     
-    #tpsTnf = GeometricTnf(geometric_model='tps', use_cuda=use_cuda)
+    tpsTnf = GeometricTnf(geometric_model='tps',    use_cuda=use_cuda)
     affTnf = GeometricTnf(geometric_model='affine', use_cuda=use_cuda)
-    
-    tpsTnf_high_res = GeometricTnf_high_res(geometric_model='tps', use_cuda=use_cuda)
-    affTnf_high_res = GeometricTnf_high_res(geometric_model='affine', use_cuda=use_cuda)
     
     source_image = io.imread(source_image_path)
     target_image = io.imread(target_image_path)
@@ -117,27 +111,17 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions):
     target_image = np.copy(target_image3d)
 
 
-    ##### Preprocess masks 
+    ##### Preprocess masks - low res
     source_image_mask_var = process_image(source_image, use_cuda, mask=True)
     target_image_mask_var = process_image(target_image, use_cuda, mask=True)
 
-    #### Preprocess full images
+    #### Preprocess images 
     source_image_var = process_image(source_image, use_cuda)
     target_image_var = process_image(source_image, use_cuda)
     
-    source_image_var_high_res = process_image(source_image, use_cuda, high_res=True)
-    target_image_var_high_res = process_image(source_image, use_cuda, high_res=True)
-    
     histo_image_var  = {}
-    histo_image_var_high_res  = {}
     for region in histo_regions:
         histo_image_var[region]          = process_image(histo_regions[region], use_cuda)
-        histo_image_var_high_res[region] = process_image(histo_regions[region], use_cuda, high_res=True)
-    
-    # Registration inputs
-    batch_mask      = {'source_image': source_image_mask_var,       'target_image':target_image_mask_var}
-    batch           = {'source_image': source_image_var,            'target_image':target_image_var}
-    batch_high_res  = {'source_image': source_image_var_high_res,   'target_image':target_image_var_high_res}
 
     ##### Evaluate models
     if do_aff:
@@ -145,66 +129,59 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions):
     if do_tps:
         model_tps.eval()
 
+    # Registration inputs
+    batch_mask      = {'source_image': source_image_mask_var,       'target_image':target_image_mask_var}
+    batch           = {'source_image': source_image_var,            'target_image':target_image_var}
+    
     if do_aff:
-        ######## Affine registration using masks only -> TWICE
-        
+        ######## Find affine registration using masks only -> TWICE
         ## 1. 
-        # Find transform params
-        theta_aff_1 = model_aff(batch_mask)
+        theta_aff_1     = model_aff(batch_mask)
+        warped_mask_aff = affTnf(batch_mask['source_image'], theta_aff_1.view(-1,2,3))     
+        ## 2. 
+        second_batch_mask = {'source_image': warped_mask_aff, 'target_image':target_image_mask_var}
+        theta_aff_2       = model_aff(second_batch_mask)
         
-        # Transform all images
-        warped_image_aff_high_res   = affTnf_high_res(batch_high_res['source_image'], theta_aff_1.view(-1,2,3))
+        # Transform images
         warped_image_aff            = affTnf(batch['source_image'], theta_aff_1.view(-1,2,3))
+        warped_image_aff            = affTnf(warped_image_aff, theta_aff_2.view(-1,2,3))
         
-        warped_aff_high_res  = {}
         warped_aff  = {}
         for region in histo_regions:
-            warped_aff_high_res[region] = affTnf_high_res(histo_image_var_high_res[region], theta_aff_1.view(-1,2,3))
             warped_aff[region]          = affTnf(histo_image_var[region], theta_aff_1.view(-1,2,3))
-        
-        ## 2. 
-        # Transform mask & find new transform params
-        warped_mask_aff   = affTnf(batch_mask['source_image'], theta_aff_1.view(-1,2,3))                      
-        second_batch_mask = {'source_image': warped_mask_aff, 'target_image':target_image_mask_var}
-        theta_aff_2         = model_aff(second_batch_mask)
+            warped_aff[region]          = affTnf(warped_aff[region], theta_aff_2.view(-1,2,3))
             
-        # Transform high res images    
-        warped_image_aff_high_res   = affTnf_high_res(warped_image_aff_high_res, theta_aff_2.view(-1,2,3))
-        for region in histo_regions:
-            warped_aff_high_res[region] = affTnf_high_res(warped_aff_high_res[region], theta_aff_2.view(-1,2,3))
     
-
     if do_aff and do_tps:
-        ######## TPS registration using only high res images 
-        theta_aff_tps                   = model_tps({'source_image': warped_image_aff, 'target_image': batch['target_image']})   
-        warped_image_aff_tps_high_res   = tpsTnf_high_res(warped_image_aff_high_res,theta_aff_tps)
+        ######## TPS registration - low res images 
+        theta_aff_tps           = model_tps({'source_image': warped_image_aff, 'target_image': batch['target_image']})   
+        warped_image_aff_tps    = tpsTnf(warped_image_aff,theta_aff_tps)
 
-        warped_aff_tps_high_res  = {}
+        warped_aff_tps  = {}
         for region in histo_regions:
-            warped_aff_tps_high_res[region] = tpsTnf_high_res(warped_aff_high_res[region], theta_aff_tps)
-            
+            warped_aff_tps[region] = tpsTnf(warped_aff[region], theta_aff_tps)
+                   
     transform = save_transform(theta_aff_1,theta_aff_2,theta_aff_tps)
 
-    # Un-normalize images and convert to numpy
-    if do_aff:
-        warped_image_aff_np_high_res = normalize_image(warped_image_aff_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-
-        warped_aff_np_high_res  = {}
-        for region in histo_regions:
-            warped_aff_np_high_res[region] = normalize_image(warped_aff_high_res[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy() 
-
+    ### Un-normalize images and convert to numpy
     if do_aff and do_tps:
-        warped_image_aff_tps_np_high_res = normalize_image(warped_image_aff_tps_high_res,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        
-        warped_aff_tps_np_high_res  = {}
+        warped_image_np = normalize_image(warped_image_aff_tps,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
+
+        warped_regions_np  = {}
         for region in histo_regions:
-            warped_aff_tps_np_high_res[region] = normalize_image(warped_aff_tps_high_res[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-    
+            warped_regions_np[region] = normalize_image(warped_aff_tps[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
+            
+    elif do_aff:
+        warped_image_np = normalize_image(warped_image_aff,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
+
+        warped_regions_np  = {}
+        for region in histo_regions:
+            warped_regions_np[region] = normalize_image(warped_aff[region],forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy() 
+
     # Ignore negative values
-    warped_image_aff_np_high_res[warped_image_aff_np_high_res < 0]         = 0    
-    warped_image_aff_tps_np_high_res[warped_image_aff_tps_np_high_res < 0] = 0    
+    warped_image_np[warped_image_np < 0]         = 0    
    
-    return warped_image_aff_tps_np_high_res, warped_aff_tps_np_high_res, transform
+    return warped_image_np, warped_regions_np, transform
 
 
 
@@ -223,9 +200,7 @@ def output_results(outputPath, inputStack, sid, fn, imSpatialInfo, extension = "
         os.mkdir(outputPath + sid)
     except: 
         pass
-    #sitkIm.SetDirection(tr)
     sitk.WriteImage(sitkIm, outputPath + sid + '/' + sid + fn + extension)
-
 
 
 def getFiles(file_dest, keyword, sid): 
@@ -239,8 +214,7 @@ def getFiles(file_dest, keyword, sid):
     return cases
     
     
-    
-def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions):     
+def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, half_out_size = 120):     
     ####### grab files that were preprocessed 
     mri_files = [pos_mri for pos_mri in sorted(os.listdir(preprocess_fixed_dest)) if pos_mri.endswith('.jpg') ]
     
