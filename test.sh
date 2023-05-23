@@ -15,7 +15,9 @@ date
 export PATH=/share/apps/python-3.6.9-tkinter/bin:$PATH
 export LD_LIBRARY_PATH=/share/apps/python-3.6.9-tkinter/lib:$LD_LIBRARY_PATH
 
-python3 register_images.py -i jsonData/TCIA_FUSION.json -v -pm -pf -r
+python3 register_images.py -i jsonData/TCIA_FUSION.json -v -pm -pf -r   -n 'default'
+python3 register_images.py -i jsonData/TCIA_FUSION.json -v -pm -pf -r   -n '47'
+python3 register_images.py -i jsonData/TCIA_FUSION.json -v -pm -pf -r   -n 'downsampled_47'
 # -v: verbose, -pf: process fixed (MRI), -pm: process moving (histo), -r: register
 
 date
