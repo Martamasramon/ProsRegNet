@@ -7,14 +7,14 @@ class LandmarkTnf(object):
     
     def __init__(self, use_cuda=True, crop_factor=16/16, output_size=(240,240), padding_factor = 0.0):
         assert isinstance(use_cuda, (bool))
-        assert isinstance(crop_factor, (float))
-        assert isinstance(output_size, (tuple))
-        assert isinstance(padding_factor, (float))
+        #assert isinstance(crop_factor, (float))
+        #assert isinstance(output_size, (tuple))
+        #assert isinstance(padding_factor, (float))
         self.use_cuda           = use_cuda
-        self.crop_factor        = crop_factor
-        self.padding_factor     = padding_factor
-        self.out_h, self.out_w  = output_size 
-        self.rescalingTnf = GeometricTnf('affine', self.out_h, self.out_w, use_cuda = self.use_cuda)
+        #self.crop_factor        = crop_factor
+        #self.padding_factor     = padding_factor
+        #self.out_h, self.out_w  = output_size 
+        #self.rescalingTnf = GeometricTnf('affine', self.out_h, self.out_w, use_cuda = self.use_cuda)
         
     def __call__(self, batch):
         image_batch_A, image_batch_B = batch['source_image'], batch['target_image']

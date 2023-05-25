@@ -13,18 +13,18 @@ class PointTnf(object):
     Class with functions for transforming a set of points with affine/tps transformations
     
     """
-    def __init__(self, use_cuda=True):
-        self.use_cuda=use_cuda
-        self.tpsTnf = TpsGridGen(use_cuda=self.use_cuda)        
+    def __init__(self, out_h=240, out_w=240, use_cuda=True):
+        self.use_cuda   = use_cuda
+        self.tpsTnf     = TpsGridGen(out_h=out_h, out_w=out_w, use_cuda=self.use_cuda)        
 
     def tpsPointTnf(self,theta,points):
         # points are expected in [B,2,N], where first row is X and second row is Y
         # reshape points for applying Tps transformation
-        points=points.unsqueeze(3).transpose(1,3)
+        points = points.unsqueeze(3).transpose(1,3) # -> [B,2,N,1] -> [B,1,N,2]
         # apply transformation
         warped_points = self.tpsTnf.apply_transformation(theta,points)
         # undo reshaping
-        warped_points=warped_points.transpose(3,1).squeeze(3)      
+        warped_points = warped_points.transpose(3,1).squeeze(3)      
         return warped_points
     
     def affPointTnf(self,theta,points):
