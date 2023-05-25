@@ -3,11 +3,9 @@ results/
 trained_models/
 output_logs/
 transforms/
-Test_train.o*
-Transform.o*
-Test.o*
-Train.o*
-Train+.o*
+Transform*.o*
+Test*.o*
+Train*.o*
 *.pyc
 *.txt
 *.pkl

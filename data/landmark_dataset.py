@@ -69,8 +69,8 @@ class LandmarkDataset(Dataset):
         # Get the landmarks in the correct format - as an int list
         histo_x_array = [int(float(a)) for a in self.histo_x[idx].split(';')]
         histo_y_array = [int(float(a)) for a in self.histo_y[idx].split(';')]
-        mri_x_array  = [int(float(a)) for a in self.MRI_x[idx].split(';')]
-        mri_y_array  = [int(float(a)) for a in self.MRI_y[idx].split(';')]
+        mri_x_array   = [int(float(a)) for a in self.MRI_x[idx].split(';')]
+        mri_y_array   = [int(float(a)) for a in self.MRI_y[idx].split(';')]
 
         num_landmarks   = len(histo_x_array)
         if self.batch_size > 1:
@@ -111,15 +111,19 @@ class LandmarkDataset(Dataset):
             image_MRI     = self.affineTnf(Variable(image_MRI.unsqueeze(0),requires_grad=False)).data.squeeze(0)
             landmarks_mri = self.affineTnf(Variable(landmarks_mri.unsqueeze(0),requires_grad=False)).data.squeeze(0)
             
-        # For the target, save landmark locations as array
-        landmarks_mri = landmarks_mri.transpose(0,1).transpose(1,2)
+        # Save landmark locations as array
+        landmarks_histo = landmarks_histo.transpose(0,1).transpose(1,2)
+        landmarks_mri   = landmarks_mri.transpose(0,1).transpose(1,2)
          
-        mri_landmark_list = np.zeros((2, length))
+        histo_landmark_list = np.zeros((2,length))
+        mri_landmark_list   = np.zeros((2,length))
         for i in range(num_landmarks):
+            (x,y) = np.unravel_index(np.argmax(landmarks_histo[:,:,i], axis=None), landmarks_histo[:,:,i].shape)  
+            histo_landmark_list[:,i] = [x,y]
             (x,y) = np.unravel_index(np.argmax(landmarks_mri[:,:,i], axis=None), landmarks_mri[:,:,i].shape)  
-            mri_landmark_list[:,i] = [x,y]
+            mri_landmark_list[:,i]    = [x,y]
             
-        sample = {'source_image': image_histo, 'target_image': image_MRI, 'landmarks_source': landmarks_histo, 'landmarks_target':mri_landmark_list}
+        sample = {'source_image': image_histo, 'target_image': image_MRI, 'landmarks_source': histo_landmark_list, 'landmarks_target':mri_landmark_list}
 
         if self.transform:
             sample = self.transform(sample)
