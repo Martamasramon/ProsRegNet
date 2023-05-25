@@ -26,21 +26,24 @@ class SynthDataset(Dataset):
     def __init__(self, csv_file, training_image_path, output_size=(240,240), geometric_model='affine', transform=None,
                  random_sample=False, random_t=0.5, random_s=0.5, random_alpha=1/6, random_t_tps=0.4):
         # random_sample is used to indicate whether deformation coefficients are randomly generated?
-        self.random_sample = random_sample
-        self.random_t = random_t
-        self.random_t_tps = random_t_tps
-        self.random_alpha = random_alpha
-        self.random_s = random_s
-        self.out_h, self.out_w = output_size
+        self.random_sample      = random_sample
+        self.random_t           = random_t
+        self.random_t_tps       = random_t_tps
+        self.random_alpha       = random_alpha
+        self.random_s           = random_s
+        self.out_h, self.out_w  = output_size
+        
         # read csv file
-        self.train_data = pd.read_csv(csv_file)
-        self.img_A_names = self.train_data.iloc[:,0]
-        self.img_B_names = self.train_data.iloc[:,1]
-        self.theta_array = self.train_data.iloc[:, 2:].values.astype('float')
+        self.train_data     = pd.read_csv(csv_file)
+        self.img_A_names    = self.train_data.iloc[:,0]
+        self.img_B_names    = self.train_data.iloc[:,1]
+        self.theta_array    = self.train_data.iloc[:,2:].values.astype('float')
+        
         # copy arguments
-        self.training_image_path = training_image_path
-        self.transform = transform
-        self.geometric_model = geometric_model
+        self.training_image_path    = training_image_path
+        self.transform              = transform
+        self.geometric_model        = geometric_model
+        
         # affine transform used to rescale images
         self.affineTnf = GeometricTnf(out_h=self.out_h, out_w=self.out_w, use_cuda = False) 
         
@@ -54,6 +57,18 @@ class SynthDataset(Dataset):
 
         img_B_name = os.path.join(self.training_image_path, self.img_B_names[idx])
         image_B = io.imread(img_B_name)
+        
+        if img_A_name.find("hist") < 0 :
+            # Resize MRI images to have 3 channels
+            temp_A  = image_A
+            temp_B  = image_B
+            
+            image_A = np.zeros((temp_A.shape[0],temp_A.shape[1],3))
+            image_B = np.zeros((temp_B.shape[0],temp_B.shape[1],3))
+            
+            for i in range(3):
+                image_A[:,:,i] = temp_A
+                image_B[:,:,i] = temp_B
         
         # read theta
         if self.random_sample==False:
