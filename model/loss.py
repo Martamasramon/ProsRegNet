@@ -1,19 +1,19 @@
 from __future__ import print_function, division
-import numpy as np
 import torch
-import torch.nn as nn
-from torch.autograd import Variable
-from geotnf.point_tnf import PointTnf
-from geotnf.transformation import GeometricTnf
-from skimage import io
+import torch.nn     as nn
+import numpy        as np
+from torch.autograd         import Variable
+from geotnf.point_tnf       import PointTnf
+from geotnf.transformation  import GeometricTnf
+from skimage                import io
 
 class SSDLoss(nn.Module):
-    def __init__(self, geometric_model='affine', use_cuda=True):
+    def __init__(self, use_cuda=True, geometric_model='affine'):
         super(SSDLoss, self).__init__()
         self.geometric_model    = geometric_model
         self.use_cuda           = use_cuda
 
-    def forward(self, theta, theta_GT, tnf_batch):
+    def forward(self, theta, tnf_batch):
         ### compute square root of ssd
         geometricTnf = GeometricTnf(self.geometric_model, use_cuda = self.use_cuda)
         
@@ -27,29 +27,17 @@ class SSDLoss(nn.Module):
         return  ssd 
 
 class MSELoss(nn.Module):
-    def __init__(self, geometric_model='affine', use_cuda=True):
+    def __init__(self, use_cuda=True):
         super(MSELoss, self).__init__()
-        self.geometric_model    = geometric_model
-        self.use_cuda           = use_cuda
+        self.use_cuda   = use_cuda
+        self.pointTnf   = PointTnf(use_cuda=self.use_cuda)
 
     def forward(self, theta, tnf_batch):
-        # Assume batch_size = 1
-        geometricTnf = GeometricTnf(self.geometric_model, use_cuda=self.use_cuda)
-
+        # A & B shape is [B,2,N]
         A = tnf_batch['target_landmarks']
-        B = geometricTnf(tnf_batch['source_landmarks'], theta)
+        B = self.pointTnf.tpsPointTnf(theta, tnf_batch['source_landmarks'])
         
-        # Warped landmarks shape is [N,num_landmarks,240,240]
-        # tnf_batch['target_landmarks'] shape is [N,num_landmarks,2]
-        _,length,_ = A.shape
-        
-        temp        = B.view(length, -1).argmax(1).view(-1, 1)
-        indices     = torch.cat((temp // 240, temp % 240), dim=1)
-        # Indices has shape [num_landmarks,2]
-        # Reshape A to same dimensions
-        A = A.view(length, -1) 
-    
-        mse = torch.mean((A - indices)*(A - indices), dim=0)
+        mse = torch.mean((A - B)*(A - B))
         
         return mse
         

@@ -11,3 +11,6 @@ Train*.o*
 *.pkl
 transform_landmarks.py
 landmarks.sh
+
+test_img*.png
+train_img*.png

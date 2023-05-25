@@ -8,35 +8,33 @@ The following code is adapted from: https://github.com/ignacio-rocco/cnngeometri
 """
 
 from __future__ import print_function, division
+import argparse
+import os
+import torch
+import torch.nn     as nn
+import torch.optim  as optim
+import numpy        as np
+from torch.utils.data           import DataLoader
+from model.ProsRegNet_model     import ProsRegNet
+from model.loss                 import SSDLoss
+from data.synth_dataset         import SynthDataset
+from geotnf.transformation      import SynthPairTnf
+from image.normalization        import NormalizeImageDict
+from util.train_test_fn         import train, test
+from util.torch_util            import save_checkpoint, str_to_bool
+from collections                import OrderedDict
+from torch.optim.lr_scheduler   import StepLR
+
 # Ignore warnings
 import warnings
 warnings.simplefilter("ignore", UserWarning)
-
-import argparse
-import os
-from os.path import exists, join, basename
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-from model.ProsRegNet_model import ProsRegNet
-from model.loss import SSDLoss
-from data.synth_dataset import SynthDataset
-from geotnf.transformation import SynthPairTnf
-from image.normalization import NormalizeImageDict
-from util.train_test_fn import train, test
-from util.torch_util import save_checkpoint, str_to_bool
-import numpy as np
-from collections import OrderedDict
-from torch.optim.lr_scheduler import StepLR
-
 
 # Argument parsing
 parser = argparse.ArgumentParser(description='ProsRegNet PyTorch implementation')
 
 # Paths
 parser.add_argument('-t', '--training-csv-name',   type=str, default='train.csv',      help='training transformation csv file name')
-parser.add_argument(      '--test-csv-name',       type=str, default='test.csv',       help='test transformation csv file name')
+parser.add_argument('-s', '--test-csv-name',       type=str, default='test.csv',       help='test transformation csv file name')
 
 parser.add_argument('-p', '--training-image-path', type=str, default='datasets/training/',  help='path to folder containing training images')
 parser.add_argument(      '--trained-models-dir',  type=str, default='trained_models',      help='path to trained models folder')
@@ -60,6 +58,7 @@ parser.add_argument('--use-mse-loss',           type=str_to_bool, nargs='?', con
 parser.add_argument('--feature-extraction-cnn', type=str,                                default='resnet101', help='Feature extraction architecture: vgg/resnet101')
 
 # Synthetic dataset parameters
+#parser.add_argument('--img-type', type=str, default='histo', help='image type (histo/mri)')
 parser.add_argument('--random-sample', type=str_to_bool, nargs='?', const=True, default=False, help='sample random transformations')
 
 args = parser.parse_args()
@@ -107,24 +106,22 @@ if args.use_mse_loss:
 else:
     print('Using SSD loss...')
     loss = SSDLoss(use_cuda=use_cuda,geometric_model=args.geometric_model)
-
-
+    
 # Dataset and dataloader
-dataset = SynthDataset(geometric_model=args.geometric_model,
-                       csv_file=os.path.join(training_tnf_csv,args.training_csv_name),
-                       training_image_path=args.training_image_path,
-                       transform=NormalizeImageDict(['image_A','image_B']),
-                       random_sample=args.random_sample)
+dataset = SynthDataset(geometric_model      = args.geometric_model,
+                       csv_file             = os.path.join(training_tnf_csv,args.training_csv_name),
+                       training_image_path  = args.training_image_path,
+                       transform            = NormalizeImageDict(['image_A','image_B']),
+                       random_sample        = args.random_sample)
 
-dataloader = DataLoader(dataset, batch_size=args.batch_size,shuffle=True, num_workers=4)
+dataset_test = SynthDataset(geometric_model     = args.geometric_model,
+                            csv_file            = os.path.join(training_tnf_csv,args.test_csv_name),
+                            training_image_path = args.training_image_path,
+                            transform           = NormalizeImageDict(['image_A','image_B']),
+                            random_sample       = args.random_sample)
 
-dataset_test = SynthDataset(geometric_model=args.geometric_model,
-                            csv_file=os.path.join(training_tnf_csv,args.test_csv_name),
-                            training_image_path=args.training_image_path,
-                            transform=NormalizeImageDict(['image_A','image_B']),
-                            random_sample=args.random_sample)
-
-dataloader_test = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=4)
+dataloader_train = DataLoader(dataset, batch_size=args.batch_size,shuffle=True, num_workers=4)
+dataloader_test  = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=4)
 
 pair_generation_tnf = SynthPairTnf(geometric_model=args.geometric_model,use_cuda=use_cuda)
 
@@ -143,8 +140,9 @@ trainLossArray  = np.zeros(args.num_epochs)
 testLossArray   = np.zeros(args.num_epochs)
 
 for epoch in range(1, args.num_epochs+1):
-    train_loss = train(epoch,model,loss,optimizer,dataloader,pair_generation_tnf,log_interval=10)
-    test_loss  = test(model,loss,dataloader_test,pair_generation_tnf,use_cuda=use_cuda, geometric_model=args.geometric_model)
+    print('--- Epoch ' + str(epoch) + ' ---')
+    train_loss = train(model, loss, dataloader_train, pair_generation_tnf, optimizer)
+    test_loss  = test(model,  loss, dataloader_test,  pair_generation_tnf,use_cuda=use_cuda, geometric_model=args.geometric_model)
 
     scheduler.step()
     

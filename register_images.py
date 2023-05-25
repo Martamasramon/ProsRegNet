@@ -185,7 +185,7 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions):
 
 
 
-def output_results(outputPath, inputStack, sid, fn, imSpatialInfo, extension = "nii.gz"):
+def output_results(outputPath, inputStack, sid, fn, imSpatialInfo, model, extension = "nii.gz"):
     """
     Output results to .nii.gz volumes
     """
@@ -200,7 +200,7 @@ def output_results(outputPath, inputStack, sid, fn, imSpatialInfo, extension = "
         os.mkdir(outputPath + sid)
     except: 
         pass
-    sitk.WriteImage(sitkIm, outputPath + sid + '/' + sid + fn + extension)
+    sitk.WriteImage(sitkIm, outputPath + sid + '/' + model + '_' + sid + fn + extension)
 
 
 def getFiles(file_dest, keyword, sid): 
@@ -373,7 +373,7 @@ def main():
     preprocess_fixed    = opt.preprocess_fixed
     run_registration    = opt.register
     
-    model_aff_path = os.path.join(opt.trained_models_dir, 'best_' + opt.trained_models_name + '_affine.pth.tar')
+    model_aff_path = os.path.join(opt.trained_models_dir, 'best_default_affine.pth.tar')
     model_tps_path = os.path.join(opt.trained_models_dir, 'best_' + opt.trained_models_name + '_tps.pth.tar')
     
     timings = {}
@@ -411,7 +411,7 @@ def main():
                 print("Skipping", s)
                 continue
 
-        print("x"*30, "Processing", s,"x"*30)
+        print('\n',"x"*30, "Processing", s,"x"*30)
         studyDict   = studies[s] 
         studyParser = ParserStudyDict(studyDict)
 
@@ -445,7 +445,8 @@ def main():
         if run_registration == True: 
 
             ##### LOAD MODELS
-            print('.'*30, 'Begin deep learning registration for ' + sid + '.'*30)
+            print('.'*10, 'Begin deep learning registration for ' + sid + '.'*10)
+            print('Using trained model: ' + opt.trained_models_name)
 
             try:
                 model_cache
@@ -475,10 +476,10 @@ def main():
             histSpatialInfo = (mriOrigin, histSpace, mriDirection)
             
             # Write outputs as 3D volumes (.nii.gz format)                       
-            output_results(outputPath + 'registration/', out3Dmri_highRes,  sid, '_fixed.', imSpatialInfo, extension = extension)
-            output_results(outputPath + 'registration/', out3Dhist_highRes, sid, '_moved.', histSpatialInfo, extension = extension)
+            output_results(outputPath + 'registration/', out3Dmri_highRes,  sid, '_fixed.', imSpatialInfo, model=opt.trained_models_name, extension = extension)
+            output_results(outputPath + 'registration/', out3Dhist_highRes, sid, '_moved.', histSpatialInfo, model=opt.trained_models_name, extension = extension)
             for region in regions:
-                output_results(outputPath + 'registration/', out3D[region], sid, '_moved_' + region + '.' , histSpatialInfo, extension = extension)
+                output_results(outputPath + 'registration/', out3D[region], sid, '_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
             
             save_all_transforms(transforms, sid, imSpatialInfo, scaling)
 

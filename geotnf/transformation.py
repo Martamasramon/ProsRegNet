@@ -233,18 +233,15 @@ class TpsGridGen(Module):
             theta = theta.unsqueeze(2).unsqueeze(3)
         
         # points should be in the [B,H,W,2] format,
-        # where points[:,:,:,0] are the X coords  
-        # and points[:,:,:,1] are the Y coords  
+        # where points[:,:,:,0] are the X coords and points[:,:,:,1] are the Y coords  
         
         # input are the corresponding control points P_i
         batch_size = theta.size()[0]
         # split theta into point coordinates
         Q_X=theta[:,:self.N,:,:].squeeze(3)
-        ##############################################################Q_Y=theta[:,self.N:,:,:].squeeze(3)
         Q_Y=theta[:,self.N:2*self.N,:,:].squeeze(3)
 
-
-        # get spatial dimensions of points
+        # get spatial dimensions of points -> [1, 1, 2, 26]
         points_b = points.size()[0]
         points_h = points.size()[1]
         points_w = points.size()[2]
@@ -255,25 +252,23 @@ class TpsGridGen(Module):
         
         # compute weigths for non-linear part
         W_X = torch.bmm(self.Li[:,:self.N,:self.N].expand((batch_size,self.N,self.N)),Q_X)
-        # W_Y = torch.bmm(self.Li[:,:self.N,:self.N].expand((batch_size,self.N,self.N)),Q_Y)
         W_Y = torch.bmm(self.Li[:,:self.N,:self.N].expand((batch_size,self.N,self.N)),Q_Y)
         
-        # reshape
-        # W_X,W,Y: size [B,H,W,1,N]
+        # reshape. W_X,W,Y: size [B,H,W,1,N]
         W_X = W_X.unsqueeze(3).unsqueeze(4).transpose(1,4).repeat(1,points_h,points_w,1,1)
         W_Y = W_Y.unsqueeze(3).unsqueeze(4).transpose(1,4).repeat(1,points_h,points_w,1,1)
+        
         # compute weights for affine part
         A_X = torch.bmm(self.Li[:,self.N:,:self.N].expand((batch_size,3,self.N)),Q_X)
-        #A_Y = torch.bmm(self.Li[:,self.N:,:self.N].expand((batch_size,3,self.N)),Q_Y)
         A_Y = torch.bmm(self.Li[:,self.N:,:self.N].expand((batch_size,3,self.N)),Q_Y)
         
-        # reshape
-        # A_X,A,Y: size [B,H,W,1,3]
+        # reshape. A_X,A,Y: size [B,H,W,1,3]
         A_X = A_X.unsqueeze(3).unsqueeze(4).transpose(1,4).repeat(1,points_h,points_w,1,1)
         A_Y = A_Y.unsqueeze(3).unsqueeze(4).transpose(1,4).repeat(1,points_h,points_w,1,1)
         
         # compute distance P_i - (grid_X,grid_Y)
         # grid is expanded in point dim 4, but not in batch dim 0, as points P_X,P_Y are fixed for all batch
+        # points[:,:,:,0] -> [1, 1, 2]. points[:,:,:,0].size()+(1,self.N)) -> [1, 1, 2, 1, 36]
         points_X_for_summation = points[:,:,:,0].unsqueeze(3).unsqueeze(4).expand(points[:,:,:,0].size()+(1,self.N))
         points_Y_for_summation = points[:,:,:,1].unsqueeze(3).unsqueeze(4).expand(points[:,:,:,1].size()+(1,self.N))
         
