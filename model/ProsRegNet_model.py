@@ -126,6 +126,8 @@ class ProsRegNet(nn.Module):
             output_dim = 6
         elif geometric_model=='tps':
             output_dim = 72
+        elif geometric_model=='tps-mri':
+            output_dim = 18
         self.FeatureRegression = FeatureRegression(output_dim,use_cuda=self.use_cuda)
         self.ReLU = nn.ReLU(inplace=True)
 
@@ -153,7 +155,7 @@ class ProsRegNet(nn.Module):
             theta = theta.reshape(theta.size()[0],2,3)
             theta = theta.cuda()
             
-        if theta.shape[1] == 72:
+        elif theta.shape[1] == 72:
             temp = torch.tensor([-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,
                                  -0.6,-0.6,-0.6,-0.6,-0.6,-0.6,
                                  -0.2,-0.2,-0.2,-0.2,-0.2,-0.2,
@@ -166,6 +168,18 @@ class ProsRegNet(nn.Module):
                                  -1.0,-0.6,-0.2,0.2,0.6,1.0,
                                  -1.0,-0.6,-0.2,0.2,0.6,1.0,
                                  -1.0,-0.6,-0.2,0.2,0.6,1.0])
+            adjust = temp.repeat(theta.shape[0],1)
+            adjust = adjust.cuda()
+            theta = 0.1*theta + adjust
+            theta = theta.cuda()
+            
+        elif theta.shape[1] == 18:
+            temp = torch.tensor([-1.0,-1.0,-1.0,
+                                 0.0,0.0,0.0,
+                                 1.0,1.0,1.0,
+                                 -1.0,0.0,1.0,
+                                 -1.0,0.0,1.0,
+                                 -1.0,0.0,1.0])
             adjust = temp.repeat(theta.shape[0],1)
             adjust = adjust.cuda()
             theta = 0.1*theta + adjust

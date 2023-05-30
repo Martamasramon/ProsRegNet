@@ -123,7 +123,7 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
         
         
 #preprocess mri mha files to slices here
-def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case):     
+def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False):     
     imMri       = sitk.ReadImage(fixed_img_mha)
     imMri       = sitk.GetArrayFromImage(imMri)
     try:
@@ -204,19 +204,21 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
             min_y = 0
         else:
             min_y = y - y_offset
-        crop = mri[min_x:x+w+x_offset, min_y:y+h +y_offset]
+        
+        cropMri     = mri[min_x:x+w+x_offset, min_y:y+h +y_offset]
+        cropMri     = cropMri*25.5/(np.max(cropMri)/10)
+        cropMask    = mri_mask[min_x:x+w+x_offset, min_y:y+h +y_offset]
         
         h = h + 2*y_offset
         w = w + 2*x_offset
-        
-        crop = crop*25.5/(np.max(crop)/10)
         
         # upsample slice to approx 500 px in width
         ups = 1; 
         upsHeight = int(h*ups)
         upsWidth = int(w*ups)
         
-        upsMri = cv2.resize(crop.astype('float32'), (upsHeight,  upsWidth), interpolation=cv2.INTER_CUBIC)
+        upsMri  = cv2.resize(cropMri.astype('float32'), (upsHeight,  upsWidth), interpolation=cv2.INTER_CUBIC)
+        upsMask = cv2.resize(cropMask.astype('float32'), (upsHeight,  upsWidth), interpolation=cv2.INTER_CUBIC)
                 
         try: 
             os.mkdir(pre_process_fixed_dest + case)
@@ -226,7 +228,10 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         # write to a file        
         cv2.imwrite(pre_process_fixed_dest + case + '/mri_' + case + '_' + str(slice).zfill(2) +'.jpg', upsMri)  
         cv2.imwrite(pre_process_fixed_dest + case + '/mriUncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])
-        cv2.imwrite(pre_process_fixed_dest + case + '/mriMask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(mri_mask))
+        if crop_mask:
+            cv2.imwrite(pre_process_fixed_dest + case + '/mriMask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(upsMask))
+        else:
+            cv2.imwrite(pre_process_fixed_dest + case + '/mriMask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(mri_mask))
 
     coord = OrderedDict(coord)
     
