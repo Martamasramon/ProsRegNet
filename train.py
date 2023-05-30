@@ -81,7 +81,7 @@ if use_cuda:
 
 if args.geometric_model=='affine':
     training_tnf_csv = 'training_data/affine'
-elif args.geometric_model=='tps':
+else:
     training_tnf_csv = 'training_data/tps'
 
 # CNN model and loss
