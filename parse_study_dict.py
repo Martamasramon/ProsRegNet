@@ -33,17 +33,6 @@ class ParserStudyDict:
         except Exception as e:
             print(e)
 
-            
-        try:
-            self.fixed_landmark1_filename        = self.dict['fixed-landmarks1']
-        except Exception as e:
-            print(e)
-
-        try:
-            self.fixed_landmark2_filename        = self.dict['fixed-landmarks2']
-        except Exception as e:
-            print(e)
-
 
         try:
             self.moving_type                    = self.dict['moving-type']
@@ -57,34 +46,15 @@ class ParserStudyDict:
             print(e)
             
         try:
+            self.moving_segmentation_filename    = self.dict['moving-segmentation']
+        except Exception as e:
+            print(e)
+            
+        try:
             self.id                            = self.dict['id']
         except Exception as e:
             print(e)
         
-        try:
-            self.invivo_accession              = self.dict['invivo-accession']
-        except Exception as e:
-            print(e)
-        
-        try:
-            self.exvivo_accession              = self.dict['exvivo-accession']
-        except Exception as e:
-            print(e)
-
-        try:
-            self.T2_filename                   = self.dict['T2w']
-        except Exception as e:
-            print(e)
-
-        try:
-            self.ADC_filename                  = self.dict['ADC']
-        except Exception as e:
-            print(e)
-
-        try:
-            self.DWI_filename                  = self.dict['DWI']
-        except Exception as e:
-            print(e)
    
     def ReadImage(self, fn):
         im = None
