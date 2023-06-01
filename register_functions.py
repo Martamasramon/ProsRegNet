@@ -253,7 +253,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     mri_mask    = []
     
     if mri:
-        hist_case  = getFiles(preprocess_moving_dest, 'mriUncropped', sid)
+        hist_case  = getFiles(preprocess_moving_dest, 'mri_', sid)
         
     else:
         hist_case  = getFiles(preprocess_moving_dest, 'hist', sid)
