@@ -58,7 +58,7 @@ class SynthDataset(Dataset):
         img_B_name = os.path.join(self.training_image_path, self.img_B_names[idx])
         image_B = io.imread(img_B_name)
         
-        if img_A_name.find("hist") < 0 :
+        if img_A_name.find("hist") < 0 and img_A_name.find("region") < 0:
             # Resize MRI images to have 3 channels
             temp_A  = image_A
             temp_B  = image_B

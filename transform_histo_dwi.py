@@ -7,8 +7,6 @@ from register_functions import output_results
 import torch
 import gc
 
-out_size = 500 
-
 def get_data(filename): 
     with open(filename) as file:
         file_contents = file.read()
@@ -25,7 +23,7 @@ def create_tensor(transform, use_cuda=True):
         
     return transform
 
-def transform_histo(transforms, path, use_cuda=True):
+def transform_histo(transforms, path, use_cuda=True, out_size = 1024):
     gc.collect()
     torch.cuda.empty_cache()
     
@@ -39,7 +37,7 @@ def transform_histo(transforms, path, use_cuda=True):
     
     # Preprocess image 
     source_image     = io.imread(path)
-    source_image_var = process_image(source_image, use_cuda, half_out_size=int(out_size/2), high_res=True)
+    source_image_var = process_image(source_image, use_cuda, out_size=out_size)
 
     # Apply transformations 
     warped_image = affTnf(source_image_var, theta_aff_1.view(-1,2,3))
@@ -78,16 +76,16 @@ def main():
         direction   = json_data_t2_dwi["direction"]
         spacing     = json_data_t2_dwi["spacing"]
         
-        t2_scale    = json_data_histo_t2["scale"]
+        t2_scale    = json_data_histo_t2["scale"] # This is 1
         dwi_scale   = json_data_t2_dwi["scale"]
-        hist_space  = [spacing[0]/(t2_scale[0]*dwi_scale[0]), spacing[1]/(t2_scale[1]*dwi_scale[1]), spacing[2]]
+        
+        scale = 1024/80
+        hist_space  = [spacing[0]/scale, spacing[1]/scale, spacing[2]]
         
         spatialInfo = (origin, hist_space, direction)
         
-        # Get image size
-        #img     = io.imread(all_paths['histo'][0])
-        #w, h, _ = img.shape
-        count   = len(all_paths['histo'])
+        count    = len(all_paths['histo'])
+        out_size = 1024
         
         warped_imgs = {}
         for annot in all_paths:
@@ -115,6 +113,6 @@ def main():
             
         # Save images
         for annot in all_paths:
-            output_results('./results/registration/histo-DWI', warped_imgs[annot], sid, annot, spatialInfo, '', extension = '.nii.gz')
+            output_results('./results/registration/histo-DWI/', warped_imgs[annot], sid, annot, spatialInfo, 'final', extension = '.nii.gz')
     
 main()

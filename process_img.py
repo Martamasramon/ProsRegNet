@@ -8,15 +8,12 @@ sys.path.insert(0, '../parse_data/parse_json')
 import numpy as np
 from preprocess import *
 
-def preprocess_image(image, half_out_size=512, high_res=False):
+def preprocess_image(image, out_size=240):
     """ 
     Normalise image 
     """
     
-    if  high_res:
-        resizeCNN = GeometricTnf(out_h=half_out_size*2, out_w=half_out_size*2, use_cuda = False) 
-    else:
-        resizeCNN = GeometricTnf(out_h=240, out_w=240, use_cuda = False) 
+    resizeCNN = GeometricTnf(out_h=out_size, out_w=out_size, use_cuda = False) 
 
     # convert to torch Variable
     image       = np.expand_dims(image.transpose((2,0,1)),0)
@@ -32,14 +29,14 @@ def preprocess_image(image, half_out_size=512, high_res=False):
     return image_var
 
 
-def process_image(input_image, use_cuda, half_out_size=512, high_res=False, mask=False):
+def process_image(input_image, use_cuda, out_size=240, mask=False):
     if mask:
         image = np.copy(input_image)
         image[np.any(image > 5, axis=-1)] = 255
     else:
         image = input_image
     
-    image_var = preprocess_image(image, half_out_size=half_out_size, high_res=high_res)
+    image_var = preprocess_image(image, out_size=out_size)
         
     if use_cuda:
         image_var = image_var.cuda()

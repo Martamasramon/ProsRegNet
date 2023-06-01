@@ -58,7 +58,6 @@ parser.add_argument('--use-mse-loss',           type=str_to_bool, nargs='?', con
 parser.add_argument('--feature-extraction-cnn', type=str,                                default='resnet101', help='Feature extraction architecture: vgg/resnet101')
 
 # Synthetic dataset parameters
-#parser.add_argument('--img-type', type=str, default='histo', help='image type (histo/mri)')
 parser.add_argument('--random-sample', type=str_to_bool, nargs='?', const=True, default=False, help='sample random transformations')
 
 args = parser.parse_args()
@@ -70,60 +69,65 @@ print("Use Cuda? ", use_cuda)
 torch.cuda.set_device(0)
 print("cuda:", torch.cuda.current_device())
 
-
-do_aff = not args.pretrained_model_aff==''
-do_tps = not args.pretrained_model_tps==''
-
-
 # Seed
 if use_cuda:
     torch.cuda.manual_seed(args.seed)
 
+mri = False
+if args.geometric_model=='tps-mri' or args.trained_models_name=='mri':
+    mri=True
+    
 if args.geometric_model=='affine':
     training_tnf_csv = 'training_data/affine'
 else:
-    training_tnf_csv = 'training_data/tps'
+    training_tnf_csv = 'training_data/tps' 
 
 # CNN model and loss
 print('Creating CNN model...')
 
-model = ProsRegNet(use_cuda=use_cuda,geometric_model=args.geometric_model,feature_extraction_cnn=args.feature_extraction_cnn)
+model = ProsRegNet(use_cuda=use_cuda,geometric_model=args.geometric_model,feature_extraction_cnn=args.feature_extraction_cnn, mri=mri)
 
-if args.geometric_model == 'affine' and do_aff:
+if args.geometric_model == 'affine' and args.pretrained_model_aff!='':
     checkpoint = torch.load(args.pretrained_model_aff, map_location=lambda storage, loc: storage)
     checkpoint['state_dict'] = OrderedDict([(k.replace(args.feature_extraction_cnn, 'model'), v) for k, v in checkpoint['state_dict'].items()])
     model.load_state_dict(checkpoint['state_dict'])
         
-if args.geometric_model == 'tps' and do_tps:
+if args.geometric_model == 'tps' and args.pretrained_model_tps!='':
     checkpoint = torch.load(args.pretrained_model_tps, map_location=lambda storage, loc: storage)
     checkpoint['state_dict'] = OrderedDict([(k.replace(args.feature_extraction_cnn, 'model'), v) for k, v in checkpoint['state_dict'].items()])
-    model.load_state_dict(checkpoint['state_dict'])
-
-
+    model.load_state_dict(checkpoint['state_dict']) 
+    
+if args.geometric_model == 'tps-mri' or args.trained_models_name=='mri':
+    out_size = 80
+else:
+    out_size = 240
+    
 if args.use_mse_loss:
     print('Using MSE loss...')
     loss = nn.MSELoss()
 else:
     print('Using SSD loss...')
-    loss = SSDLoss(use_cuda=use_cuda,geometric_model=args.geometric_model)
-    
+    loss = SSDLoss(use_cuda=use_cuda,geometric_model=args.geometric_model,out_size=out_size)
+       
 # Dataset and dataloader
 dataset = SynthDataset(geometric_model      = args.geometric_model,
                        csv_file             = os.path.join(training_tnf_csv,args.training_csv_name),
                        training_image_path  = args.training_image_path,
+                       output_size          = (out_size,out_size),
                        transform            = NormalizeImageDict(['image_A','image_B']),
                        random_sample        = args.random_sample)
 
 dataset_test = SynthDataset(geometric_model     = args.geometric_model,
                             csv_file            = os.path.join(training_tnf_csv,args.test_csv_name),
                             training_image_path = args.training_image_path,
+                            output_size         = (out_size,out_size),
                             transform           = NormalizeImageDict(['image_A','image_B']),
                             random_sample       = args.random_sample)
 
 dataloader_train = DataLoader(dataset, batch_size=args.batch_size,shuffle=True, num_workers=4)
 dataloader_test  = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True, num_workers=4)
 
-pair_generation_tnf = SynthPairTnf(geometric_model=args.geometric_model,use_cuda=use_cuda)
+pair_generation_tnf = SynthPairTnf(geometric_model=args.geometric_model,output_size=(out_size,out_size),use_cuda=use_cuda)
 
 # Optimizer
 optimizer = optim.Adam(model.FeatureRegression.parameters(), lr=args.lr)
@@ -142,7 +146,7 @@ testLossArray   = np.zeros(args.num_epochs)
 for epoch in range(1, args.num_epochs+1):
     print('--- Epoch ' + str(epoch) + ' ---')
     train_loss = train(model, loss, dataloader_train, pair_generation_tnf, optimizer)
-    test_loss  = test(model,  loss, dataloader_test,  pair_generation_tnf,use_cuda=use_cuda, geometric_model=args.geometric_model)
+    test_loss  = test(model,  loss, dataloader_test,  pair_generation_tnf,use_cuda=use_cuda, geometric_model=args.geometric_model, out_size=out_size)
 
     scheduler.step()
     
