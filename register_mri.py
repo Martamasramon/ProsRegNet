@@ -44,7 +44,7 @@ def main():
     run_registration    = opt.register
     
     model_aff_path = os.path.join(opt.trained_models_dir, 'best_default_affine.pth.tar')
-    model_tps_path = os.path.join(opt.trained_models_dir, 'best_' + opt.trained_models_name + '_tps.pth.tar')
+    model_tps_path = os.path.join(opt.trained_models_dir, 'best_' + opt.trained_models_name + '_tps-mri.pth.tar')
     
     timings = {}
     
@@ -157,7 +157,7 @@ def main():
             output_results(save_path, out3D_T2,                 sid, '_moved.',      t2SpatialInfo,  model=opt.trained_models_name, extension = extension)
             output_results(save_path, out3D_T2_regions['Mask'], sid, '_moved_mask.', t2SpatialInfo,  model=opt.trained_models_name, extension = extension)
             
-            save_all_transforms(transforms, sid, dwiSpatialInfo, scaling)
+            save_all_transforms(transforms, sid + '_T2_DWI', dwiSpatialInfo, scaling)
 
             timings[s] = (end-start)/60.0
             print('Done!')
