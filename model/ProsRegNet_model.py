@@ -72,7 +72,7 @@ class FeatureL2Norm(torch.nn.Module):
 
     def forward(self, feature):
         epsilon = 1e-6
-        norm = torch.pow(torch.sum(torch.pow(feature,2),1)+epsilon,0.5).unsqueeze(1).expand_as(feature)
+        norm    = torch.pow(torch.sum(torch.pow(feature,2),1)+epsilon,0.5).unsqueeze(1).expand_as(feature)
         return torch.div(feature,norm)
     
 class FeatureCorrelation(torch.nn.Module):
@@ -90,46 +90,57 @@ class FeatureCorrelation(torch.nn.Module):
         return correlation_tensor
     
 class FeatureRegression(nn.Module):
-    def __init__(self, output_dim=6, use_cuda=True):
+    def __init__(self, output_dim=6, mri=False,use_cuda=True):
         super(FeatureRegression, self).__init__()
+        
+        if mri:
+            dims    = [25,25,25]
+            kernel  = [3,1]
+            mult    = 3 * 3
+        else:
+            dims    = [225,128,64]
+            kernel  = [7,5]
+            mult    = 5 * 5
+            
         self.conv = nn.Sequential(
-            nn.Conv2d(225, 128, kernel_size=7, padding=0),
-            nn.BatchNorm2d(128),
+            nn.Conv2d(dims[0], dims[1], kernel_size=kernel[0], padding=0),
+            nn.BatchNorm2d(dims[1]),
             nn.ReLU(inplace=True),
-            nn.Conv2d(128, 64, kernel_size=5, padding=0),
-            nn.BatchNorm2d(64),
+            nn.Conv2d(dims[1], dims[2], kernel_size=kernel[1], padding=0),
+            nn.BatchNorm2d(dims[2]),
             nn.ReLU(inplace=True),
         )
-        self.linear = nn.Linear(64 * 5 * 5, output_dim)
+        self.linear = nn.Linear(dims[2] * mult, output_dim)
         
         if use_cuda:
             self.conv.cuda()
             self.linear.cuda()
 
     def forward(self, x):
-    
         x = self.conv(x)
         x = x.contiguous().view(x.size(0), -1)
         x = self.linear(x)
         return x
 
 class ProsRegNet(nn.Module):
-    def __init__(self, geometric_model='affine', normalize_features=True, normalize_matches=True, batch_normalization=True, use_cuda=True, feature_extraction_cnn='resnet101'):
+    def __init__(self, geometric_model='affine', normalize_features=True, normalize_matches=True, batch_normalization=True, mri=False, use_cuda=True, feature_extraction_cnn='resnet101'):
         super(ProsRegNet, self).__init__()
         self.use_cuda = use_cuda
-        self.normalize_features = normalize_features
-        self.normalize_matches = normalize_matches
-        self.FeatureExtraction = FeatureExtraction(use_cuda=self.use_cuda, feature_extraction_cnn=feature_extraction_cnn)
-        self.FeatureL2Norm = FeatureL2Norm()
-        self.FeatureCorrelation = FeatureCorrelation()
+        self.normalize_features     = normalize_features
+        self.normalize_matches      = normalize_matches
+        self.FeatureExtraction      = FeatureExtraction(use_cuda=self.use_cuda, feature_extraction_cnn=feature_extraction_cnn)
+        self.FeatureL2Norm          = FeatureL2Norm()
+        self.FeatureCorrelation     = FeatureCorrelation()
+        
         if geometric_model=='affine':
             output_dim = 6
         elif geometric_model=='tps':
             output_dim = 72
         elif geometric_model=='tps-mri':
             output_dim = 18
-        self.FeatureRegression = FeatureRegression(output_dim,use_cuda=self.use_cuda)
-        self.ReLU = nn.ReLU(inplace=True)
+
+        self.FeatureRegression  = FeatureRegression(output_dim,mri=mri,use_cuda=self.use_cuda)
+        self.ReLU               = nn.ReLU(inplace=True)
 
     def forward(self, tnf_batch):
         # do feature extraction

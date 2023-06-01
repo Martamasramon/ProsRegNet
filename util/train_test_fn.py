@@ -16,7 +16,7 @@ def train(model,loss_fn,dataloader,pair_generation_tnf,optimizer):
         tnf_batch   = pair_generation_tnf(batch)
         theta       = model(tnf_batch)
         
-        loss        = loss_fn(theta,tnf_batch)
+        loss        = loss_fn(theta, tnf_batch)
         
         loss.backward()
         optimizer.step()
@@ -27,7 +27,7 @@ def train(model,loss_fn,dataloader,pair_generation_tnf,optimizer):
     print('Train set: Average loss: {:.6f}'.format(train_loss))
     return train_loss
 
-def test(model,loss_fn,dataloader,pair_generation_tnf,use_cuda=True,geometric_model='affine'):
+def test(model,loss_fn,dataloader,pair_generation_tnf,use_cuda=True,geometric_model='affine', out_size=240):
     model.eval()
     test_loss = 0
     dice = 0
@@ -39,7 +39,7 @@ def test(model,loss_fn,dataloader,pair_generation_tnf,use_cuda=True,geometric_mo
         test_loss += loss.data.cpu().numpy()
         
         target = tnf_batch['target_mask']
-        geometricTnf = GeometricTnf(geometric_model, 240, 240, use_cuda = use_cuda)
+        geometricTnf = GeometricTnf(geometric_model, out_h=out_size, out_w=out_size, use_cuda = use_cuda)
 
         if geometric_model == 'affine':
             theta = theta.view(-1,2,3)

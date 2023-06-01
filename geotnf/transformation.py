@@ -94,20 +94,11 @@ class SynthPairTnf(object):
         image_batch_B = Variable(image_batch_B,requires_grad=False)
         theta_batch =  Variable(theta_batch,requires_grad=False)        
 
-     #   print("before crop")
-     #   print(image_batch_A.shape)
-     #   print(image_batch_B.shape)
-
         # get cropped image
         cropped_image_batch = self.rescalingTnf(image_batch_A,None,self.padding_factor,self.crop_factor) # Identity is used as no theta given
         # get transformed image
-        warped_image_batch = self.geometricTnf(image_batch_B,theta_batch,
-                                               self.padding_factor,self.crop_factor) # Identity is used as no theta given
-        
-      #  print("cropped_image_size")
-      #  print(cropped_image_batch.shape)
-      #  print(warped_image_batch.shape)
-        
+        warped_image_batch = self.geometricTnf(image_batch_B,theta_batch,self.padding_factor,self.crop_factor) 
+
         Ones = torch.ones(cropped_image_batch.size())
         Zeros = torch.zeros(cropped_image_batch.size())
         
@@ -121,15 +112,8 @@ class SynthPairTnf(object):
         if self.use_cuda:
             cropped_mask_batch = cropped_mask_batch.cuda()
             warped_mask_batch = warped_mask_batch.cuda()
-        
-        #mask1 = 255*normalize_image(warped_mask_batch,forward=False)
-        #mask1 = mask1.data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
-        
-        #print(mask1.shape)
 
-        #io.imsave('warped_mask.jpg', mask1)
-
-        return {'source_image': cropped_image_batch, 'target_image': warped_image_batch, 'source_mask': cropped_mask_batch, 'target_mask': warped_mask_batch,'theta_GT': theta_batch}
+        return {'source_image': cropped_image_batch, 'target_image': warped_image_batch, 'source_mask': cropped_mask_batch, 'target_mask': warped_mask_batch,'theta': theta_batch}
 
 
     def symmetricImagePad(self,image_batch, padding_factor):

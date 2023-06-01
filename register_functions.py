@@ -46,7 +46,7 @@ def save_all_transforms(json_data, file_name, imSpatialInfo, scaling):
         outfile.write(json_object)
 
 
-def load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True, tps_type='tps'): 
+def load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True, tps_type='tps', mri=False): 
     """ 
     Load pre-trained models
     """
@@ -59,9 +59,9 @@ def load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_defor
     # Create model
     print('Creating CNN model...')
     if do_aff:
-        model_aff = ProsRegNet(use_cuda=use_cuda,geometric_model='affine',feature_extraction_cnn=feature_extraction_cnn)
+        model_aff = ProsRegNet(use_cuda=use_cuda,geometric_model='affine',feature_extraction_cnn=feature_extraction_cnn, mri=mri)
     if do_tps:
-        model_tps = ProsRegNet(use_cuda=use_cuda,geometric_model=tps_type,feature_extraction_cnn=feature_extraction_cnn)
+        model_tps = ProsRegNet(use_cuda=use_cuda,geometric_model=tps_type,feature_extraction_cnn=feature_extraction_cnn, mri=mri)
 
     # Load trained weights
     print('Loading trained model weights...')
@@ -136,7 +136,7 @@ def calc_dice(hist_mask, mri_mask):
     print('Total DICE: ' + str(dice_total))
 
 
-def runCnn(model_cache, source_image_path, target_image_path, histo_regions, mri=False):
+def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out_size=240, mri=False):
     """
     Run the cnn on images and return 3D images
     """
@@ -144,11 +144,11 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, mri
     
     model_aff, model_tps, do_aff, do_tps, use_cuda = model_cache
     
+    affTnf = GeometricTnf(geometric_model='affine', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
     if mri:
-        tpsTnf = GeometricTnf(geometric_model='tps-mri',    use_cuda=use_cuda)
+        tpsTnf   = GeometricTnf(geometric_model='tps-mri', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
     else:
-        tpsTnf = GeometricTnf(geometric_model='tps',    use_cuda=use_cuda)
-    affTnf = GeometricTnf(geometric_model='affine', use_cuda=use_cuda)
+        tpsTnf = GeometricTnf(geometric_model='tps', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
     
     source_image = io.imread(source_image_path)
     target_image = io.imread(target_image_path)
@@ -169,17 +169,17 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, mri
     target_image = np.copy(target_image3d)
 
 
-    ##### Preprocess masks - low res
-    source_image_mask_var = process_image(source_image, use_cuda, mask=True)
-    target_image_mask_var = process_image(target_image, use_cuda, mask=True)
+    ##### Preprocess masks 
+    source_image_mask_var = process_image(source_image, use_cuda, out_size=out_size, mask=True)
+    target_image_mask_var = process_image(target_image, use_cuda, out_size=out_size, mask=True)
 
     #### Preprocess images 
-    source_image_var = process_image(source_image, use_cuda)
-    target_image_var = process_image(source_image, use_cuda)
+    source_image_var = process_image(source_image, use_cuda, out_size=out_size)
+    target_image_var = process_image(source_image, use_cuda, out_size=out_size)
     
     histo_image_var  = {}
     for region in histo_regions:
-        histo_image_var[region]          = process_image(histo_regions[region], use_cuda)
+        histo_image_var[region]  = process_image(histo_regions[region], use_cuda, out_size=out_size)
 
     ##### Evaluate models
     if do_aff:
@@ -323,7 +323,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         out3Dmri_mask[idx, :, :] = np.uint8((imMriMask[:, :, 0] > 255/2.0))
 
         ######## REGISTER
-        affTps, regions_aff_tps, transform = runCnn(model_cache, source_image_path, target_image_path, imHisto, mri=mri) 
+        affTps, regions_aff_tps, transform = runCnn(model_cache, source_image_path, target_image_path, imHisto, out_size=2*half_out_size, mri=mri) 
         all_transforms[idx] = transform
         
         # Transform main histology & regions to MRI space    

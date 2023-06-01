@@ -43,7 +43,7 @@ def main():
     preprocess_fixed    = opt.preprocess_fixed
     run_registration    = opt.register
     
-    model_aff_path = os.path.join(opt.trained_models_dir, 'best_default_affine.pth.tar')
+    model_aff_path = os.path.join(opt.trained_models_dir, 'best_mri_affine.pth.tar')
     model_tps_path = os.path.join(opt.trained_models_dir, 'best_' + opt.trained_models_name + '_tps-mri.pth.tar')
     
     timings = {}
@@ -126,11 +126,11 @@ def main():
             print('Using trained model: ' + opt.trained_models_name)
 
             feature_extraction_cnn = 'resnet101'
-            model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path,do_deformable=True,tps_type='tps-mri')
+            model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path,do_deformable=True,tps_type='tps-mri',mri=True)
 
             ##### REGISTER
             start          = time.time()
-            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord_dwi, model_cache, sid, regions, mri=True)
+            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord_dwi, model_cache, sid, regions, half_out_size=40, mri=True)
             end            = time.time()
             
             out3D_T2, out3D_DWI, out3D_T2_regions, out3D_DWI_mask, scaling, transforms = output3D_cache
