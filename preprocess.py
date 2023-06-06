@@ -4,7 +4,7 @@ import SimpleITK as sitk
 from collections import OrderedDict
 import os 
 
-def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta, dH, dW, h, w, x, y, x_offset, y_offset): 
+def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta, dH, dW, h, w, x, y, x_offset, y_offset, fIC=''): 
     rotated = np.zeros((dH, dW, 3))   
     try:
         path = s['regions'][region]['filename']
@@ -22,6 +22,8 @@ def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta
                 rotated_ann = cv2.flip(rotated_ann, 0)
             # flip image horizontally
             if s['transform']['flip_h'] == 1: 
+                rotated_ann = cv2.flip(rotated_ann, 1)
+            if fIC: 
                 rotated_ann = cv2.flip(rotated_ann, 1)
         except: 
             pass 
@@ -49,7 +51,7 @@ def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta
 
 
 # preprocess_hist into hist slices here
-def preprocess_hist(moving_dict, pre_process_moving_dest, case): 
+def preprocess_hist(moving_dict, pre_process_moving_dest, case, fIC=''): 
     for slice in moving_dict:
         s = moving_dict[slice]
         
@@ -85,6 +87,9 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
             if s['transform']['flip_h'] == 1: 
                 rotated_hist = cv2.flip(rotated_hist, 1)
                 rotated_mask = cv2.flip(rotated_mask, 1)
+            if fIC: 
+                rotated_hist = cv2.flip(rotated_hist, 1)
+                rotated_mask = cv2.flip(rotated_mask, 1)
         except: 
             pass 
 
@@ -114,44 +119,39 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case):
 
         # Transform all regions
         for region in s['regions']:
-            transformAndSaveRegion(pre_process_moving_dest, case, slice,               s, region, theta, size_low,  size_low,  h, w, x, y, x_offset, y_offset)
-            transformAndSaveRegion(pre_process_moving_dest, case + '_high_res', slice, s, region, theta, size_high, size_high, h, w, x, y, x_offset, y_offset)
+            transformAndSaveRegion(pre_process_moving_dest, case, slice,               s, region, theta, size_low,  size_low,  h, w, x, y, x_offset, y_offset, fIC=fIC)
+            transformAndSaveRegion(pre_process_moving_dest, case + '_high_res', slice, s, region, theta, size_high, size_high, h, w, x, y, x_offset, y_offset, fIC=fIC)
 
         # Write images, with new filename
         cv2.imwrite(pre_process_moving_dest + case + '/hist_' + case + '_' + slice +'.png', padHist_low_res)
         cv2.imwrite(pre_process_moving_dest + case + '_high_res' + '/hist_' + case + '_high_res_' + slice +'.png', padHist_high_res)
-        
-        
+
+    
 #preprocess mri mha files to slices here
-def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False):     
+def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False, fIC=''):     
     imMri       = sitk.ReadImage(fixed_img_mha)
     imMri       = sitk.GetArrayFromImage(imMri)
-    try:
-        imMri.shape[2]
-    except:
-        imMri = imMri.reshape(1,imMri.shape[0],imMri.shape[1])
-
-    imMriMask       = sitk.ReadImage(fixed_seg)
-    imMriMaskArray  = sitk.GetArrayFromImage(imMriMask)
-    try:
-        imMriMaskArray.shape[2]
-    except:
-        imMriMaskArray = imMriMaskArray.reshape(1,imMriMaskArray.shape[0],imMriMaskArray.shape[1])
     
+    if len(imMri.shape) > 3:
+        imMri = np.squeeze(imMri[0,:,:,:])
+        
+    imMriMask   = sitk.ReadImage(fixed_seg)
+    maskArray   = sitk.GetArrayFromImage(imMriMask)
+    
+    if fIC:
+        imfIC   = sitk.ReadImage(fIC)
+        imfIC   = sitk.GetArrayFromImage(imfIC)
     
     #### resample mri mask to be the same size as mri
-    if (imMri.shape[1]!=sitk.GetArrayFromImage(imMriMask).shape[1] or imMri.shape[2]!=sitk.GetArrayFromImage(imMriMask).shape[2]):
-        mri_ori = sitk.ReadImage(fixed_img_mha)
-        resampler = sitk.ResampleImageFilter()
-        resampler.SetReferenceImage(mri_ori)
-        imMriMask = resampler.Execute(imMriMask)
+    if (imMri.shape[1]!=maskArray.shape[1] or imMri.shape[2]!=maskArray.shape[2]):
         print("Input MRI and MRI mask have different sizes. Reshaping mask.")
+        print(imMri.shape, maskArray.shape)
+        mri_ori     = sitk.ReadImage(fixed_img_mha)
+        resampler   = sitk.ResampleImageFilter()
+        resampler.SetReferenceImage(mri_ori)
+        imMriMask   = resampler.Execute(imMriMask)
     
     imMriMask = sitk.GetArrayFromImage(imMriMask)
-    try:
-        imMriMask.shape[2]
-    except:
-        imMriMask = imMriMask.reshape(1,imMriMask.shape[0],imMriMask.shape[1])
     
     coord[case] = {}
     coord[case]['x_offset'] = []
@@ -232,7 +232,12 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         else:
             cv2.imwrite(pre_process_fixed_dest + case + '/mriMask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(mri_mask))
             cv2.imwrite(pre_process_fixed_dest + case + '/mriUncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])
-
+        
+        if fIC:
+            ####### NOTE: we are scaling the pixel values ####### 
+            imfIC[slice, :, :] = imfIC[slice, :, :] * 140
+            cv2.imwrite(pre_process_fixed_dest + case + '/fIC_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(imfIC[slice,:,:]))
+        
     coord = OrderedDict(coord)
     
     return coord

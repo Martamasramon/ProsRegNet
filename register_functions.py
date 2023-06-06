@@ -32,7 +32,7 @@ def save_transform(theta_aff_1,theta_aff_2,theta_tps):
     return json_data
 
 
-def save_all_transforms(json_data, file_name, imSpatialInfo, scaling):
+def save_all_transforms(json_data, file_name, imSpatialInfo, scaling, folder):
     # Add spatial information to transformation data
     json_data['origin']     = imSpatialInfo[0]
     json_data['spacing']    = imSpatialInfo[1]
@@ -42,7 +42,7 @@ def save_all_transforms(json_data, file_name, imSpatialInfo, scaling):
     json_object = json.dumps(json_data, indent=4)
     
     # Save to file
-    with open('./transforms/transform_' + file_name + '.json', "w") as outfile:
+    with open('./transforms/' + folder + 'transform_' + file_name + '.json', "w") as outfile:
         outfile.write(json_object)
 
 
@@ -94,12 +94,13 @@ def output_results(outputPath, inputStack, sid, fn, imSpatialInfo, model, extens
         os.mkdir(outputPath + sid)
     except: 
         pass
+    
     sitk.WriteImage(sitkIm, outputPath + sid + '/' + model + '_' + sid + fn + extension)
 
 
-def getFiles(file_dest, keyword, sid): 
+def getFiles(file_dest, keyword, sid, reverse=False): 
     cases = []
-    files = [pos for pos in sorted(os.listdir(file_dest)) if keyword in pos]
+    files = [pos for pos in sorted(os.listdir(file_dest),reverse=reverse) if keyword in pos]
 
     for f in files: 
         if sid in f: 
@@ -241,10 +242,26 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out
    
     return warped_image_np, warped_regions_np, transform
 
+def get_fIC(preprocess_fixed_dest):
+    
+    files       = [pos for pos in sorted(os.listdir(preprocess_fixed_dest)) if 'fIC' in pos]
+    w, h, _     = (cv2.imread(preprocess_fixed_dest + files[0])).shape 
+    count       = len(files)
+    out3D       = np.zeros((count, w, h, 3))
+    
+    for idx in range(count): 
+        img               = cv2.imread(preprocess_fixed_dest  + files[idx])
+        out3D[idx,:,:,:]  = np.uint8(img)
+
+    return out3D
 
    
-def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, half_out_size = 120, mri=False):     
+def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, half_out_size = 120, mri=False, fIC=''):     
     ####### grab files that were preprocessed 
+    if fIC:
+        reverse = True
+    else:
+        reverse = False
     mri_files = [pos_mri for pos_mri in sorted(os.listdir(preprocess_fixed_dest)) if pos_mri.endswith('.jpg') ]
     
     hist_case   = []
@@ -253,16 +270,16 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     mri_mask    = []
     
     if mri:
-        hist_case  = getFiles(preprocess_moving_dest, 'mri_', sid)
+        hist_case  = getFiles(preprocess_moving_dest, 'mri_', sid, reverse =reverse )
         
     else:
-        hist_case  = getFiles(preprocess_moving_dest, 'hist', sid)
+        hist_case  = getFiles(preprocess_moving_dest, 'hist', sid, reverse =reverse)
         
     cases = {}
     for region in regions:
-        cases[region] = getFiles(preprocess_moving_dest, region, sid)
+        cases[region] = getFiles(preprocess_moving_dest, region, sid, reverse =reverse)
     
-       
+    print(mri_files, hist_case) 
     print('Regions in registration:')
     for region in regions:
         print(region)
@@ -292,6 +309,9 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     out3D_regions = {}
     for region in regions:
         out3D_regions[region] = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor)))
+        
+    if fIC:
+        out3D_regions['fIC'] = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor), 3))
     
     all_transforms = {}
     for idx in range(count): 
@@ -312,16 +332,14 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         end_x   = int(x_prime * x_s) + int(w_prime * x_s) + int(x_offset_prime * x_s)
         start_y = int(y_prime * y_s) - int(y_offset_prime * y_s)
         end_y   = int(y_prime * y_s) + int(h_prime * y_s) + int(y_offset_prime * y_s)
-
-        imMri_highRes   = cv2.imread(preprocess_fixed_dest  + mri_highRes[idx])
-        imMriMask       = cv2.imread(preprocess_fixed_dest  + mri_mask[idx])
+        
         imHisto         = {}
         for region in regions:
             imHisto[region] = cv2.imread(preprocess_moving_dest + cases[region][idx])
-        
-        out3Dmri[idx, :, :,:]    = np.uint8(imMri_highRes)
-        out3Dmri_mask[idx, :, :] = np.uint8((imMriMask[:, :, 0] > 255/2.0))
 
+        imMri_highRes   = cv2.imread(preprocess_fixed_dest  + mri_highRes[idx])
+        imMriMask       = cv2.imread(preprocess_fixed_dest  + mri_mask[idx])
+        
         ######## REGISTER
         affTps, regions_aff_tps, transform = runCnn(model_cache, source_image_path, target_image_path, imHisto, out_size=2*half_out_size, mri=mri) 
         all_transforms[idx] = transform
@@ -341,14 +359,25 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
                 mask_image3d[:, :, i]  = regions_aff_tps['Mask'][:, :, 0]
             else:
                 mask_image3d[:, :, i]  = regions_aff_tps['mask'][:, :, 0]
-        
-        # Output histology 
         affTps = np.multiply(affTps,mask_image3d)   
-        out3Dhist[idx, start_x:end_x, start_y:end_y, :] = np.uint8(affTps[:, :, :])
         
-        # Output histology regions
+        # Flip vertically
+        #if fIC:
+            #affTps          = cv2.flip(affTps, 0)
+            #imMri_highRes   = cv2.flip(imMri_highRes, 0)
+            #imMriMask       = cv2.flip(imMriMask, 0)
+            
+        # Output histology & regions
+        out3Dhist[idx, start_x:end_x, start_y:end_y, :] = np.uint8(affTps)
         for region in regions:
             out3D_regions[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :, 0])
+    
+        if fIC:
+            out3D_regions['fIC'][idx, start_x:end_x, start_y:end_y] = np.uint8(cv2.flip(affTps, 0))
+        
+        # Output MRI
+        out3Dmri[idx, :, :,:]    = np.uint8(imMri_highRes)
+        out3Dmri_mask[idx, :, :] = np.uint8((imMriMask[:, :, 0] > 255/2.0))
 
     output3D_cache = (out3Dhist, out3Dmri, out3D_regions, out3Dmri_mask, [x_s,y_s], all_transforms)
     
