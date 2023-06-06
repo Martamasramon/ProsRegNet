@@ -10,15 +10,11 @@ class ParserStudyDict:
         self.invivo_accession           = None
         self.fixed_filename             = None
         self.fixed_segmentation_filename= None
-        self.fixed_landmark1_filename   = None
-        self.fixed_landmark2_filename   = None
         self.moving_type                = None
         self.moving_filename            = None
         self.moving_dict                = None
-
-        self.T2_filename                = None
-        self.ADC_filename               = None
-        self.DWI_filename               = None
+        self.fIC                        = None
+        self.DWI                        = None
         
         self.SetFromDict()
         
@@ -46,12 +42,19 @@ class ParserStudyDict:
             print(e)
             
         try:
-            self.moving_segmentation_filename    = self.dict['moving-segmentation']
+            self.id                             = self.dict['id']
         except Exception as e:
             print(e)
-            
+        
         try:
-            self.id                            = self.dict['id']
+            DWI                                 = self.dict['DWI']
+            if DWI == "True":
+                self.DWI = True                           
+        except Exception as e:
+            print(e)
+        
+        try:
+            self.fIC                            = self.dict['fIC']                   
         except Exception as e:
             print(e)
         

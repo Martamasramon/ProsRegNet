@@ -3,6 +3,7 @@ results/
 trained_models/
 output_logs/
 transforms/
+wandb/ 
 Transform*.o*
 Test*.o*
 Train*.o*
