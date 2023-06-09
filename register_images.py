@@ -135,8 +135,7 @@ def main():
             try:
                 model_cache
             except NameError:
-                feature_extraction_cnn = 'resnet101'
-                model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True)
+                model_cache = load_models(model_aff_path, model_tps_path, do_deformable=True)
 
             ##### REGISTER
             start          = time.time()
