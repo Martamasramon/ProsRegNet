@@ -109,18 +109,24 @@ def getFiles(file_dest, keyword, sid, reverse=False):
     return cases
     
 
-def calc_dice(hist_mask, mri_mask):
+def calc_dice(histo_mask, mri_mask):
     """
     calculate DICE coefficient between masks
     """
-    count, h, w = hist_mask.shape
+    count, h, w = histo_mask.shape
     dice_total  = 0
     
-    print('---- DICE coefficient ----')
+    if count > 1:
+        print('---- DICE coefficient ----')
+        
     for i in range(count):
-        # Resize so same dimensions
-        mri   = cv2.resize(mri_mask[i,:,:], (w, h), interpolation=cv2.INTER_CUBIC)
-        histo = hist_mask[i,:,:]
+        if histo_mask.shape != mri_mask.shape:
+            # Resize so same dimensions
+            mri = cv2.resize(mri_mask[i,:,:], (w, h), interpolation=cv2.INTER_CUBIC)
+        else:
+            mri = mri_mask[i,:,:]
+        
+        histo = histo_mask[i,:,:]
         
         # Calculate DICE
         try:
@@ -129,12 +135,19 @@ def calc_dice(hist_mask, mri_mask):
             dice        = np.sum(numerator/(denominator + 0.00001)) 
             print('Slice ' + str(i) + ': ' + str(dice))
         except:
-            dice = 1
-            print('Error calculating DICE.')
-        
+            try:
+                numerator   = 2 * torch.sum(torch.multiply(histo,mri))
+                denominator = torch.sum(histo + mri)
+                dice        = torch.sum(numerator/(denominator + 0.00001)) 
+                dice        = dice.data.cpu().numpy()
+            except:
+                dice = 1
+                print('Error calculating DICE.')
+
         dice_total += dice/count
         
     print('Total DICE: ' + str(dice_total))
+    return dice_total
 
 
 def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out_size=240, mri=False):
