@@ -10,6 +10,7 @@ The following code is adapted from: https://github.com/ignacio-rocco/cnngeometri
 from __future__ import print_function, division
 import argparse
 import os
+import wandb
 import torch
 import torch.nn     as nn
 import torch.optim  as optim
@@ -61,6 +62,18 @@ parser.add_argument('--feature-extraction-cnn', type=str,                       
 parser.add_argument('--random-sample', type=str_to_bool, nargs='?', const=True, default=False, help='sample random transformations')
 
 args = parser.parse_args()
+
+# Track training
+wandb.login(key="7b96e5eef65e41f6ddbbe343c84f1586ee09f565")
+# start a new wandb run to track this script
+wandb.init(
+    project = "ProsRegNet",
+    name    = args.trained_models_name,
+    
+    config={
+    "epochs": args.num_epochs,
+    }
+)
 
 use_cuda = torch.cuda.is_available()
 
@@ -148,6 +161,10 @@ for epoch in range(1, args.num_epochs+1):
     train_loss = train(model, loss, dataloader_train, pair_generation_tnf, optimizer)
     test_loss  = test(model,  loss, dataloader_test,  pair_generation_tnf,use_cuda=use_cuda, geometric_model=args.geometric_model, out_size=out_size)
 
+    wandb.log({"train_loss":    train_loss, 
+               "test_loss":     test_loss})
+    print('lr', scheduler.get_lr())
+
     scheduler.step()
     
     epochArray[epoch-1]     = epoch
@@ -168,3 +185,4 @@ print('Done!')
 
 # Save model as csv
 np.savetxt(os.path.join(args.trained_models_dir, args.trained_models_name + '_' + args.geometric_model + '.csv'), np.transpose((epochArray, trainLossArray, testLossArray)), delimiter=',')
+wandb.finish()
