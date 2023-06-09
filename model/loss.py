@@ -8,6 +8,10 @@ from geotnf.transformation  import GeometricTnf
 from skimage                import io
 
 class SSDLoss(nn.Module):
+    """
+    Calculate sum of squared distance (SSD) between target & warped image.
+    """
+    
     def __init__(self, use_cuda=True, geometric_model='affine', out_size=240):
         super(SSDLoss, self).__init__()
         self.geometric_model    = geometric_model
@@ -15,7 +19,6 @@ class SSDLoss(nn.Module):
         self.out_h, self.out_w  = (out_size, out_size)
 
     def forward(self, theta, tnf_batch):
-        ### compute square root of ssd
         geometricTnf = GeometricTnf(self.geometric_model, out_h=self.out_h, out_w=self.out_w, use_cuda = self.use_cuda)
         
         A = tnf_batch['target_image']

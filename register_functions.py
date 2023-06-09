@@ -46,7 +46,7 @@ def save_all_transforms(json_data, file_name, imSpatialInfo, scaling, folder):
         outfile.write(json_object)
 
 
-def load_models(feature_extraction_cnn, model_aff_path, model_tps_path, do_deformable=True, tps_type='tps', mri=False): 
+def load_models(model_aff_path, model_tps_path, do_deformable=True, tps_type='tps', mri=False, feature_extraction_cnn = 'resnet101'): 
     """ 
     Load pre-trained models
     """
