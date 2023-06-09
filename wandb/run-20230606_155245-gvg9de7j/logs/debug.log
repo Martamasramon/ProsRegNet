@@ -1,0 +1,27 @@
+2023-06-06 15:52:45,102 INFO    MainThread:10497 [wandb_setup.py:_flush():76] Current SDK version is 0.15.3
+2023-06-06 15:52:45,103 INFO    MainThread:10497 [wandb_setup.py:_flush():76] Configure stats pid to 10497
+2023-06-06 15:52:45,103 INFO    MainThread:10497 [wandb_setup.py:_flush():76] Loading settings from /home/mmasramo/.config/wandb/settings
+2023-06-06 15:52:45,103 INFO    MainThread:10497 [wandb_setup.py:_flush():76] Loading settings from /home/mmasramo/ProsRegNet/wandb/settings
+2023-06-06 15:52:45,103 INFO    MainThread:10497 [wandb_setup.py:_flush():76] Loading settings from environment variables: {}
+2023-06-06 15:52:45,103 INFO    MainThread:10497 [wandb_setup.py:_flush():76] Inferring run settings from compute environment: {'program_relpath': 'train.py', 'program': 'train.py'}
+2023-06-06 15:52:45,103 INFO    MainThread:10497 [wandb_setup.py:_flush():76] Applying login settings: {'api_key': '***REDACTED***'}
+2023-06-06 15:52:45,103 INFO    MainThread:10497 [wandb_setup.py:_flush():76] Applying login settings: {'api_key': '***REDACTED***'}
+2023-06-06 15:52:45,103 INFO    MainThread:10497 [wandb_init.py:_log_setup():507] Logging user logs to /home/mmasramo/ProsRegNet/wandb/run-20230606_155245-gvg9de7j/logs/debug.log
+2023-06-06 15:52:45,103 INFO    MainThread:10497 [wandb_init.py:_log_setup():508] Logging internal logs to /home/mmasramo/ProsRegNet/wandb/run-20230606_155245-gvg9de7j/logs/debug-internal.log
+2023-06-06 15:52:45,108 INFO    MainThread:10497 [wandb_init.py:init():547] calling init triggers
+2023-06-06 15:52:45,108 INFO    MainThread:10497 [wandb_init.py:init():555] wandb.init called with sweep_config: {}
+config: {'dataset': 'Default', 'epochs': 50}
+2023-06-06 15:52:45,111 INFO    MainThread:10497 [wandb_init.py:init():596] starting backend
+2023-06-06 15:52:45,111 INFO    MainThread:10497 [wandb_init.py:init():600] setting up manager
+2023-06-06 15:52:45,132 INFO    MainThread:10497 [backend.py:_multiprocessing_setup():108] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2023-06-06 15:52:45,147 INFO    MainThread:10497 [wandb_init.py:init():606] backend started and connected
+2023-06-06 15:52:45,169 INFO    MainThread:10497 [wandb_init.py:init():700] updated telemetry
+2023-06-06 15:52:45,220 INFO    MainThread:10497 [wandb_init.py:init():737] communicating run to backend with 60.0 second timeout
+2023-06-06 15:52:45,674 INFO    MainThread:10497 [wandb_run.py:_on_init():2177] communicating current version
+2023-06-06 15:52:45,737 INFO    MainThread:10497 [wandb_run.py:_on_init():2186] got version response 
+2023-06-06 15:52:45,737 INFO    MainThread:10497 [wandb_init.py:init():787] starting run threads in backend
+2023-06-06 15:52:45,961 INFO    MainThread:10497 [wandb_run.py:_console_start():2158] atexit reg
+2023-06-06 15:52:45,966 INFO    MainThread:10497 [wandb_run.py:_redirect():2013] redirect: SettingsConsole.WRAP_RAW
+2023-06-06 15:52:45,967 INFO    MainThread:10497 [wandb_run.py:_redirect():2078] Wrapping output streams.
+2023-06-06 15:52:45,967 INFO    MainThread:10497 [wandb_run.py:_redirect():2103] Redirects installed.
+2023-06-06 15:52:45,968 INFO    MainThread:10497 [wandb_init.py:init():829] run started, returning control to user process
