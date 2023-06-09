@@ -1,13 +1,57 @@
 from __future__ import print_function, division
 import os
+import cv2
 import torch
 import numpy        as np
 import pandas       as pd
 from torch.utils.data           import Dataset
 from geotnf.transformation      import GeometricTnf
-from geotnf.point_tnf           import PointTnf
 from skimage                    import io
 from torch.autograd             import Variable
+
+
+def list_to_image(dims, x_array, y_array, m, tensor=False, use_cuda=True):
+    # Use the landmark coordinates to create histo 'landmarks image'
+    num_landmarks   = len(x_array)
+    landmarks       = np.zeros((dims[0], dims[1], num_landmarks))
+    
+    # Make square to ensure resized image still contains landmark
+    # Use 5x5 for histo and 3x3 for mri, since different amount of resizing
+    for i in range(num_landmarks):
+        x, y = (x_array[i],y_array[i])
+        landmarks[int(x-m):int(x+m),int(y-m):int(y+m),i] = 1
+        
+    if tensor:
+        # make arrays float tensor for subsequent processing
+        landmarks = torch.Tensor(landmarks.astype(np.float32))
+        # permute order of image to CHW
+        landmarks = landmarks.transpose(1,2).transpose(0,1)
+        landmarks = Variable(landmarks.unsqueeze(0),requires_grad=False)
+        if use_cuda:
+            landmarks = landmarks.cuda()
+            
+    return landmarks
+            
+def image_to_list(landmarks, use_cuda=False):
+    if use_cuda:
+        landmarks = torch.squeeze(landmarks).cpu().detach()
+        
+    num_landmarks = landmarks.shape[0]
+    landmarks     = landmarks.transpose(0,1).transpose(1,2) # Shape is now 240 x 240 x N
+    landmark_list = np.zeros((2,num_landmarks))
+           
+    # Find non-zero locations. Average over all of them. 
+    for i in range(num_landmarks):
+        non_zero           = np.argwhere(landmarks[:,:,i]).double()
+        x, y               = torch.ceil(torch.mean(non_zero,axis=1))
+        landmark_list[:,i] = [int(x),int(y)]
+      
+    landmark_list = torch.Tensor(landmark_list.astype(np.float32)) 
+    
+    if use_cuda:
+        landmark_list = landmark_list.cuda()
+       
+    return landmark_list
 
 
 class LandmarkDataset(Dataset):
@@ -78,17 +122,29 @@ class LandmarkDataset(Dataset):
         else:
             length = num_landmarks
             
-        # Use the landmark coordinates to create histo 'landmarks image'
-        landmarks_histo = np.zeros((image_histo.shape[0], image_histo.shape[1], length))
-        landmarks_mri   = np.zeros((image_MRI.shape[0], image_MRI.shape[1], num_landmarks))
+        landmarks_histo = list_to_image(image_histo.shape[:2], histo_x_array, histo_y_array, 2)
+        landmarks_mri   = list_to_image(image_MRI.shape[:2],   mri_x_array, mri_y_array, 1)
         
-        # Make square to ensure resized image still contains landmark
-        # Use 5x5 for histo and 3x3 for mri, since different amount of resizing
-        for i in range(num_landmarks):
-            x, y = (histo_x_array[i],histo_y_array[i])
-            landmarks_histo[x-2:x+2,y-2:y+2,i] = 1
-            x, y = (mri_x_array[i],mri_y_array[i])
-            landmarks_mri[x-1:x+1,y-1:y+1,i] = 1
+        # Crop HMU_025_SH
+        if '25' in self.img_MRI_names[idx]:
+            image_MRI       = image_MRI[160:260,160:290,:]
+            landmarks_mri   = landmarks_mri[160:260,160:290,:]
+            image_histo     = image_histo[:,160:,:]
+            landmarks_histo = landmarks_histo[:,160:,:]
+            
+        # Pad MRI & MRI landmarks to make square
+        if MRI.shape[0] > MRI.shape[1]:
+            pad_h = 20
+            pad_w = int((MRI.shape[0]-MRI.shape[1])/2) + 20
+        else:
+            pad_h = int((MRI.shape[1]-MRI.shape[0])/2) + 20
+            pad_w = 20
+
+        image_MRI       = cv2.copyMakeBorder(image_MRI, pad_h, pad_h, pad_w, pad_w, cv2.BORDER_CONSTANT,value=0)
+        landmarks_mri   = cv2.copyMakeBorder(landmarks_mri, pad_h, pad_h, pad_w, pad_w, cv2.BORDER_CONSTANT,value=0)
+        
+        image_histo     = cv2.copyMakeBorder(image_histo,     100, 100, 100, 100, cv2.BORDER_CONSTANT, value=0)
+        landmarks_histo = cv2.copyMakeBorder(landmarks_histo, 100, 100, 100, 100, cv2.BORDER_CONSTANT, value=0)
         
         # make arrays float tensor for subsequent processing
         image_histo     = torch.Tensor(image_histo.astype(np.float32))
@@ -112,18 +168,10 @@ class LandmarkDataset(Dataset):
             landmarks_mri = self.affineTnf(Variable(landmarks_mri.unsqueeze(0),requires_grad=False)).data.squeeze(0)
             
         # Save landmark locations as array
-        landmarks_histo = landmarks_histo.transpose(0,1).transpose(1,2)
-        landmarks_mri   = landmarks_mri.transpose(0,1).transpose(1,2)
-         
-        histo_landmark_list = np.zeros((2,length))
-        mri_landmark_list   = np.zeros((2,length))
-        for i in range(num_landmarks):
-            (x,y) = np.unravel_index(np.argmax(landmarks_histo[:,:,i], axis=None), landmarks_histo[:,:,i].shape)  
-            histo_landmark_list[:,i] = [x,y]
-            (x,y) = np.unravel_index(np.argmax(landmarks_mri[:,:,i], axis=None), landmarks_mri[:,:,i].shape)  
-            mri_landmark_list[:,i]    = [x,y]
+        histo_landmark_list = image_to_list(landmarks_histo)
+        mri_landmark_list   = image_to_list(landmarks_mri)
             
-        sample = {'source_image': image_histo, 'target_image': image_MRI, 'landmarks_source': histo_landmark_list, 'landmarks_target':mri_landmark_list}
+        sample = {'source_image': image_histo, 'target_image': image_MRI, 'landmarks_source': histo_landmark_list, 'landmarks_target':mri_landmark_list, 'name':self.img_histo_names[idx]}
 
         if self.transform:
             sample = self.transform(sample)
