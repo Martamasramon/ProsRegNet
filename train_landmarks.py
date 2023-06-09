@@ -13,6 +13,7 @@ import os
 import random
 import cv2
 import torch
+import wandb
 import torch.nn     as nn
 import torch.optim  as optim
 import numpy        as np
@@ -33,7 +34,6 @@ from collections                import OrderedDict
 import warnings
 warnings.simplefilter("ignore", UserWarning)
 
-
 def train(epoch, model, loss_fn, dataloader, landmark_tnf, optimizer):
     model.train()
     train_loss = 0
@@ -44,7 +44,7 @@ def train(epoch, model, loss_fn, dataloader, landmark_tnf, optimizer):
         tnf_batch   = landmark_tnf(batch)
         theta       = model(tnf_batch)
 
-        loss = loss_fn(theta, tnf_batch)
+        loss = loss_fn(theta, tnf_batch, batch_idx)
         
         loss.backward()
         optimizer.step()
@@ -99,6 +99,18 @@ parser.add_argument('--weight-decay',   type=float, default=0,      help='weight
 parser.add_argument('--seed',           type=int,   default=1,      help='Pseudo-RNG seed')
 
 args     = parser.parse_args()
+
+# Track training
+wandb.login(key="7b96e5eef65e41f6ddbbe343c84f1586ee09f565")
+# start a new wandb run to track this script
+wandb.init(
+    project = "ProsRegNet",
+    name    = "Landmarks",
+    
+    config={
+    "epochs": args.num_epochs,
+    }
+)
 
 ## CUDA
 use_cuda = torch.cuda.is_available() 
@@ -160,6 +172,8 @@ for epoch in range(1, args.num_epochs+1):
     train_loss = train(epoch, model, mse_loss, dataloader_train, landmark_tnf, optimizer)
     #test_loss  = test(        model, mse_loss, dataloader_test,  landmark_tnf)
     
+    wandb.log({"train_loss":    train_loss})
+    
     scheduler.step()
     
     epochArray[epoch-1]     = epoch
@@ -181,3 +195,4 @@ print('Done!')
 # Save model as csv
 np.savetxt(os.path.join(args.trained_models_dir, args.trained_models_name + '_tps_landmarks.csv'), np.transpose((epochArray, trainLossArray)), delimiter=',')
 #np.savetxt(os.path.join(args.trained_models_dir, args.trained_models_name + '_tps_landmarks.csv'), np.transpose((epochArray, trainLossArray, testLossArray)), delimiter=',')
+wandb.finish()
