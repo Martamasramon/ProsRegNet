@@ -19,7 +19,7 @@ from data.landmark_dataset              import LandmarkDataset, list_to_image, i
 from geotnf.transformation_landmarks    import LandmarkTnf
 from geotnf.transformation              import GeometricTnf
 from geotnf.point_tnf                   import PointTnf
-from register_functions                 import load_models
+from register_functions                 import load_models, calc_dice
 
 # Ignore warnings
 import warnings
@@ -80,38 +80,40 @@ dataloader_test  = DataLoader(dataset_test,  batch_size=args.batch_size, shuffle
 
 model_aff.eval()
 model_tps.eval()
-test_loss = 0
+total_landmark_loss = 0
+total_dice_loss     = 0
 
 for batch_idx, batch in enumerate(dataloader_test):
-    tnf_batch   = landmark_tnf(batch)
-    name        = tnf_batch['name'][0][:10]
+    tnf_batch       = landmark_tnf(batch)
+    img_landmarks   = list_to_image((240,240), tnf_batch['source_landmarks'][0,0,:],tnf_batch['source_landmarks'][0,1,:],3,tensor=True,use_cuda=use_cuda)
+    name            = tnf_batch['name'][0][:10]
     
     # Affine transformation -- 1
     input_batch = {'source_image': tnf_batch['source_mask'], 'target_image': tnf_batch['target_mask']}
     theta_aff_1 = model_aff(input_batch)
     
-    warped_histo        = aff_tnf(tnf_batch['source_image'], theta_aff_1)
-    warped_mask         = aff_tnf(tnf_batch['source_mask'],  theta_aff_1)
-    #warped_landmarks    = point_tnf.affPointTnf(theta_aff_1, tnf_batch['source_landmarks'])
+    warped_histo            = aff_tnf(tnf_batch['source_image'], theta_aff_1)
+    warped_mask             = aff_tnf(tnf_batch['source_mask'],  theta_aff_1)
+    warped_img_landmarks    = aff_tnf(img_landmarks,  theta_aff_1)
+    #warped_landmarks       = point_tnf.affPointTnf(theta_aff_1, tnf_batch['source_landmarks'])
     
     # Affine transformation -- 2
     input_batch = {'source_image': warped_mask, 'target_image': tnf_batch['target_mask']}
     theta_aff_2 = model_aff(input_batch)
     
-    warped_histo        = aff_tnf(warped_histo, theta_aff_2)
-    #warped_landmarks    = point_tnf.affPointTnf(theta_aff_2, warped_landmarks)
+    warped_histo            = aff_tnf(warped_histo, theta_aff_2)
+    warped_img_landmarks    = aff_tnf(warped_img_landmarks,  theta_aff_2)
+    #warped_landmarks       = point_tnf.affPointTnf(theta_aff_2, warped_landmarks)
     
     # TPS transformation
     input_batch = {'source_image': warped_histo, 'target_image': tnf_batch['target_image']}
     theta_tps   = model_tps(input_batch)
     
-    warped_histo        = tps_tnf(warped_histo, theta_tps)
-    #warped_landmarks    = point_tnf.tpsPointTnf(theta_tps, warped_landmarks)    
-
-    img_landmarks           = list_to_image((240,240), tnf_batch['source_landmarks'][0,0,:],tnf_batch['source_landmarks'][0,1,:],3,tensor=True,use_cuda=use_cuda)
-    warped_img_landmarks    = aff_tnf(img_landmarks,  theta_aff_1)
-    warped_img_landmarks    = aff_tnf(warped_img_landmarks,  theta_aff_2)
+    warped_histo            = tps_tnf(warped_histo, theta_tps)
     warped_img_landmarks    = tps_tnf(warped_img_landmarks,  theta_tps)
+    #warped_landmarks       = point_tnf.tpsPointTnf(theta_tps, warped_landmarks)    
+   
+    # Transform image of landmarks to list
     warped_landmarks        = image_to_list(warped_img_landmarks, use_cuda=use_cuda)
 
     # Save landmark locations 
@@ -134,14 +136,16 @@ for batch_idx, batch in enumerate(dataloader_test):
     for item in save_images:
         save_results(item + name, save_images[item])
             
-    # Calculate loss
-    ssd     = torch.sqrt(torch.mean((warped_landmarks - tnf_batch['target_landmarks'])*(warped_landmarks - tnf_batch['target_landmarks'])))
-    loss    = ssd.data.cpu().numpy()
-    test_loss += loss
-
-    print('SSD loss for sample ' + name + ': ' + str(loss))
+    # Calculate losses
+    landmark_loss        = torch.sqrt(torch.mean((warped_landmarks - tnf_batch['target_landmarks'])*(warped_landmarks - tnf_batch['target_landmarks']))).data.cpu().numpy()
+    total_landmark_loss  += landmark_loss
+    print('\n***** Sample ' + name + ' *****')
+    print('Landmark SSD loss: '+ str(landmark_loss))
     
+    dice_loss        = calc_dice(tnf_batch['source_mask'][:,0,:,:], tnf_batch['target_mask'][:,0,:,:])
+    total_dice_loss += dice_loss
     
-test_loss /= len(dataloader_test)
-
-print('Test set: Average SSD loss: {:.6f}'.format(test_loss))
+total_landmark_loss /= len(dataloader_test)
+total_dice_loss     /= len(dataloader_test)
+print('\nAverage landmark SSD loss: {:.6f}'.format(total_landmark_loss))
+print('Average DICE loss: {:.6f}'.format(total_dice_loss))
