@@ -46,6 +46,31 @@ class LandmarkTnf(object):
             mri_mask_batch      = mri_mask_batch.cuda()
             histo_landmarks     = histo_landmarks.cuda()
             mri_landmarks       = mri_landmarks.cuda()
+            
+        if len(batch['cancer_histo']) > 0:
+            cancer_A, cancer_B     = batch['cancer_histo'], batch['cancer_mri']
+            
+            if self.use_cuda:
+                cancer_A   = cancer_A.cuda()
+                cancer_B   = cancer_B.cuda()
+            
+            # convert to variables
+            histo_cancer     = Variable(cancer_A,requires_grad=False)
+            mri_cancer       = Variable(cancer_B,requires_grad=False)
+                
+            histo_cancer = torch.where(histo_cancer != 0.0 *Ones_A, Ones_A, Zeros_A)
+            mri_cancer   = torch.where(mri_cancer   != 0.0 *Ones_B, Ones_B, Zeros_B)
+            
+            if self.use_cuda:
+                histo_cancer    = histo_cancer.cuda()
+                mri_cancer      = mri_cancer.cuda()
+            
+            return {'source_image':     histo_image_batch,  'target_image':     mri_image_batch, 
+                'source_mask':      histo_mask_batch,   'target_mask':      mri_mask_batch, 
+                'source_landmarks': histo_landmarks,    'target_landmarks': mri_landmarks,
+                'name':             batch['name'],
+                'cancer_histo':     histo_cancer,       'cancer_mri':   mri_cancer}
+            
 
         return {'source_image':     histo_image_batch,  'target_image':     mri_image_batch, 
                 'source_mask':      histo_mask_batch,   'target_mask':      mri_mask_batch, 
