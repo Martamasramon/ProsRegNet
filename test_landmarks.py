@@ -20,6 +20,7 @@ from geotnf.transformation_landmarks    import LandmarkTnf
 from geotnf.transformation              import GeometricTnf
 from geotnf.point_tnf                   import PointTnf
 from register_functions                 import load_models, calc_dice
+from scipy.spatial.distance             import directed_hausdorff
 
 # Ignore warnings
 import warnings
@@ -30,16 +31,25 @@ def save_csv(name, data):
 
 def save_results(name, img):
     cv2.imwrite("results/landmarks/" + name + ".png", img.data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy() * 255)
+
+def hausdorff(mask_A, mask_B):
+    non_zero_A  = np.nonzero(mask_A.cpu().detach())    
+    non_zero_B  = np.nonzero(mask_B.cpu().detach())
+    
+    hausdorff = directed_hausdorff(non_zero_A, non_zero_B)    
+    print('Hausdorff:', hausdorff[0])
+
+    return hausdorff[0]
     
 # Argument parsing
 parser = argparse.ArgumentParser(description='ProsRegNet PyTorch implementation')
 
 # Paths
-parser.add_argument('-t', '--test-csv-name',       type=str, default='landmarks_train.csv',  help='test data csv file name')
+parser.add_argument('-t', '--test-csv-name',       type=str, default='landmarks.csv',  help='test data csv file name')
 
-parser.add_argument('-p', '--training-image-path', type=str, default='datasets/training_landmarks/',  help='path to folder containing training images')
-parser.add_argument(      '--trained-models-dir',  type=str, default='trained_models',                help='path to trained models folder')
-parser.add_argument('-n', '--trained-models-name', type=str, default='default',                       help='trained model filename')
+parser.add_argument('-p', '--training-image-path', type=str, default='datasets/landmarks/', help='path to folder containing training images')
+parser.add_argument(      '--trained-models-dir',  type=str, default='trained_models',      help='path to trained models folder')
+parser.add_argument('-n', '--trained-models-name', type=str, default='default',             help='trained model filename')
 
 # Optimization parameters 
 parser.add_argument('--batch-size',     type=int,   default=1,      help='training batch size')
@@ -82,6 +92,7 @@ model_aff.eval()
 model_tps.eval()
 total_landmark_loss = 0
 total_dice_loss     = 0
+total_haus_loss     = 0
 
 for batch_idx, batch in enumerate(dataloader_test):
     tnf_batch       = landmark_tnf(batch)
@@ -95,23 +106,22 @@ for batch_idx, batch in enumerate(dataloader_test):
     warped_histo            = aff_tnf(tnf_batch['source_image'], theta_aff_1)
     warped_mask             = aff_tnf(tnf_batch['source_mask'],  theta_aff_1)
     warped_img_landmarks    = aff_tnf(img_landmarks,  theta_aff_1)
-    #warped_landmarks       = point_tnf.affPointTnf(theta_aff_1, tnf_batch['source_landmarks'])
     
     # Affine transformation -- 2
     input_batch = {'source_image': warped_mask, 'target_image': tnf_batch['target_mask']}
     theta_aff_2 = model_aff(input_batch)
     
     warped_histo            = aff_tnf(warped_histo, theta_aff_2)
+    warped_mask             = aff_tnf(warped_mask,  theta_aff_2)
     warped_img_landmarks    = aff_tnf(warped_img_landmarks,  theta_aff_2)
-    #warped_landmarks       = point_tnf.affPointTnf(theta_aff_2, warped_landmarks)
     
     # TPS transformation
     input_batch = {'source_image': warped_histo, 'target_image': tnf_batch['target_image']}
     theta_tps   = model_tps(input_batch)
     
     warped_histo            = tps_tnf(warped_histo, theta_tps)
+    warped_mask             = tps_tnf(warped_mask,  theta_tps)
     warped_img_landmarks    = tps_tnf(warped_img_landmarks,  theta_tps)
-    #warped_landmarks       = point_tnf.tpsPointTnf(theta_tps, warped_landmarks)    
    
     # Transform image of landmarks to list
     warped_landmarks        = image_to_list(warped_img_landmarks, use_cuda=use_cuda)
@@ -128,10 +138,8 @@ for batch_idx, batch in enumerate(dataloader_test):
     # Save images
     save_images = {
         "histo_":           warped_histo,
-        #"histo_source_":    tnf_batch['source_image'], 
-        "histo_mask_":      tnf_batch['source_mask'], 
-        #"mri_":             tnf_batch['target_image'], 
-        #"mri_mask_":        tnf_batch['target_mask']
+        "histo_mask_":      warped_mask,
+        "mri_mask_":        tnf_batch['target_mask']
     }
     for item in save_images:
         save_results(item + name, save_images[item])
@@ -143,9 +151,28 @@ for batch_idx, batch in enumerate(dataloader_test):
     print('Landmark SSD loss: '+ str(landmark_loss))
     
     dice_loss        = calc_dice(tnf_batch['source_mask'][:,0,:,:], tnf_batch['target_mask'][:,0,:,:])
+    haus_loss        = hausdorff(tnf_batch['source_mask'][0,0,:,:], tnf_batch['target_mask'][0,0,:,:])
     total_dice_loss += dice_loss
+    total_haus_loss += haus_loss
+
+    try:
+        cancer_histo    = tnf_batch['cancer_histo']
+        warped_cancer   = aff_tnf(cancer_histo,  theta_aff_1)
+        warped_cancer   = aff_tnf(warped_cancer,  theta_aff_2)
+        warped_cancer   = tps_tnf(warped_cancer,  theta_tps)
+        
+        save_results('cancer_histo_' + name, warped_cancer)
+        save_results('cancer_mri_' + name,   tnf_batch['cancer_mri'])
+
+        print('Cancer ROI...')
+        cancer_dice_loss = calc_dice(warped_cancer[:,0,:,:], tnf_batch['cancer_mri'][:,0,:,:])
+        cancer_haus_loss = hausdorff(warped_cancer[0,0,:,:], tnf_batch['cancer_mri'][0,0,:,:])
+    except:
+        print('no cancer labels given')
     
 total_landmark_loss /= len(dataloader_test)
 total_dice_loss     /= len(dataloader_test)
+total_haus_loss     /= len(dataloader_test)
 print('\nAverage landmark SSD loss: {:.6f}'.format(total_landmark_loss))
-print('Average DICE loss: {:.6f}'.format(total_dice_loss))
+print('Average DICE coefficient: {:.6f}'.format(total_dice_loss))
+print('Average Hausdorff distance: {:.6f}'.format(total_haus_loss))
