@@ -16,6 +16,8 @@ from preprocess                 import *
 from register_functions         import *
 from model.ProsRegNet_model     import ProsRegNet
 from collections                import OrderedDict
+from scipy.spatial.distance     import directed_hausdorff
+
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -84,6 +86,13 @@ def output_results(outputPath, inputStack, sid, fn, imSpatialInfo, model, extens
     Output results to .nii.gz volumes
     """
     
+    if len(inputStack.shape)<4:
+        c, w, h     = inputStack.shape
+        temp        = inputStack
+        inputStack  = np.zeros((c,w,h,3))
+        for i in range(3):
+            inputStack[:,:,:,i] = temp
+        
     mriOrigin, mriSpace, mriDirection = imSpatialInfo
     sitkIm = sitk.GetImageFromArray(inputStack)
     
@@ -146,9 +155,56 @@ def calc_dice(histo_mask, mri_mask):
 
         dice_total += dice/count
         
-    print('Total DICE: ' + str(dice_total))
+    print('Average DICE: ' + str(dice_total))
     return dice_total
 
+def hausdorff(mask_A, mask_B):
+    """
+    calculate DICE coefficient between masks
+    """
+    count, h, w = mask_A.shape
+    total  = 0
+    
+    if count > 1:
+        print('---- Hausdorff distance ----')
+        
+    for i in range(count):
+        if mask_A.shape != mask_B.shape:
+            # Resize so same dimensions
+            B = cv2.resize(mask_B[i,:,:], (w, h), interpolation=cv2.INTER_CUBIC)
+        else:
+            B = mask_B[i,:,:]
+        
+        A = mask_A[i,:,:]
+        
+        # Calculate Hausdorff distance
+        try:
+            x_A, y_A  = np.nonzero(A)    
+            x_B, y_B  = np.nonzero(B)
+            
+            non_zero_A = np.zeros((len(x_A), 2))
+            non_zero_A[:,0] = x_A
+            non_zero_A[:,1] = y_A
+            
+            non_zero_B = np.zeros((len(x_B), 2))
+            non_zero_B[:,0] = x_B
+            non_zero_B[:,1] = y_B
+            
+            hausdorff_A = directed_hausdorff(non_zero_A, non_zero_B)  
+            hausdorff_B = directed_hausdorff(non_zero_B, non_zero_A)  
+            
+            hausdorff   = (hausdorff_A[0] + hausdorff_B[0])/2
+            
+            print('Slice ' + str(i) + ': ', hausdorff)
+  
+        except:
+            hausdorff = 1
+            print('Error calculating Hausdorff distance.')
+
+        total += hausdorff/count
+        
+    print('Average Hausdorff distance: ' + str(total))
+    return total
 
 def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out_size=240, mri=False):
     """
@@ -160,7 +216,7 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out
     
     affTnf = GeometricTnf(geometric_model='affine', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
     if mri:
-        tpsTnf   = GeometricTnf(geometric_model='tps-mri', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
+        tpsTnf = GeometricTnf(geometric_model='tps-mri', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
     else:
         tpsTnf = GeometricTnf(geometric_model='tps', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
     
@@ -255,9 +311,9 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out
    
     return warped_image_np, warped_regions_np, transform
 
-def get_fIC(preprocess_fixed_dest):
+def get_map(preprocess_fixed_dest, text='fIC'):
     
-    files       = [pos for pos in sorted(os.listdir(preprocess_fixed_dest)) if 'fIC' in pos]
+    files       = [pos for pos in sorted(os.listdir(preprocess_fixed_dest)) if text in pos]
     w, h, _     = (cv2.imread(preprocess_fixed_dest + files[0])).shape 
     count       = len(files)
     out3D       = np.zeros((count, w, h, 3))
@@ -292,8 +348,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     for region in regions:
         cases[region] = getFiles(preprocess_moving_dest, region, sid, reverse =reverse)
     
-    print(mri_files, hist_case) 
-    print('Regions in registration:')
+    print('\nRegions in registration:')
     for region in regions:
         print(region)
 
@@ -315,16 +370,20 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     y_s = (half_out_size*(2+2*padding_factor))/h
     x_s = (half_out_size*(2+2*padding_factor))/w  
     
-    out3Dhist       = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor), 3))
+    empty_histo     = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor),3))
+    empty_mask      = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor)))
+
+    out3Dhist       = empty_histo
     out3Dmri        = np.zeros((count, w, h, 3))
     out3Dmri_mask   = np.zeros((count, w, h, 3)[:-1])
 
     out3D_regions = {}
     for region in regions:
-        out3D_regions[region] = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor)))
+        out3D_regions[region]       = empty_mask
         
     if fIC:
-        out3D_regions['fIC'] = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor), 3))
+        out3D_regions['fIC']        = empty_histo
+        out3D_regions['fIC-mask']   = empty_histo
     
     all_transforms = {}
     for idx in range(count): 
@@ -373,12 +432,6 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             else:
                 mask_image3d[:, :, i]  = regions_aff_tps['mask'][:, :, 0]
         affTps = np.multiply(affTps,mask_image3d)   
-        
-        # Flip vertically
-        #if fIC:
-            #affTps          = cv2.flip(affTps, 0)
-            #imMri_highRes   = cv2.flip(imMri_highRes, 0)
-            #imMriMask       = cv2.flip(imMriMask, 0)
             
         # Output histology & regions
         out3Dhist[idx, start_x:end_x, start_y:end_y, :] = np.uint8(affTps)
@@ -386,7 +439,13 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             out3D_regions[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :, 0])
     
         if fIC:
-            out3D_regions['fIC'][idx, start_x:end_x, start_y:end_y] = np.uint8(cv2.flip(affTps, 0))
+            temp_img = np.zeros((half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor),3))
+            temp_img[start_x:end_x, start_y:end_y,:]    = affTps
+            out3D_regions['fIC'][idx,:,:,:]             = np.uint8(cv2.flip(temp_img, 0))
+            
+            temp_mask = np.zeros((half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor),3))
+            temp_mask[start_x:end_x, start_y:end_y,:]   = mask_image3d
+            out3D_regions['fIC-mask'][idx,:,:,:]        = np.uint8(cv2.flip(temp_mask, 0))
         
         # Output MRI
         out3Dmri[idx, :, :,:]    = np.uint8(imMri_highRes)

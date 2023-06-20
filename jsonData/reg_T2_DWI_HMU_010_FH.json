@@ -1,7 +1,7 @@
 {
-    "fixed-segmentation": "./datasets/testing/DWI/HMU_010_FH/DWI_HMU_010_FH_mask.nii.gz", 
-    "moving": "./datasets/testing/MRI/HMU_010_FH/MRI_in_vivo_HMU_010_FH.nii.gz", 
-    "fixed": "./datasets/testing/DWI/HMU_010_FH/DWI_HMU_010_FH.nii.gz", 
-    "id": "HMU_010_FH", 
-    "moving-segmentation": "./datasets/testing/MRI/HMU_010_FH/MRI_in_vivo_HMU_010_FH_mask.nii.gz"
+    "id":                   "HMU_010_FH", 
+    "fixed":                "./datasets/testing/DWI/HMU_010_FH/DWI_HMU_010_FH.nii.gz",
+    "fixed-segmentation":   "./datasets/testing/DWI/HMU_010_FH/DWI_HMU_010_FH_mask.nii.gz", 
+    "moving":               "./datasets/testing/MRI/HMU_010_FH/MRI_in_vivo_HMU_010_FH.nii.gz", 
+    "moving-segmentation":  "./datasets/testing/MRI/HMU_010_FH/MRI_in_vivo_HMU_010_FH_mask.nii.gz"
 }

@@ -7,6 +7,7 @@ wandb/
 Transform*.o*
 Test*.o*
 Train*.o*
+landmarks*.o*
 *.pyc
 *.txt
 *.pkl

@@ -41,9 +41,6 @@ def main():
 
     opt = parser.parse_args()
     
-    
-
-
 
     verbose             = opt.verbose
     preprocess_moving   = opt.preprocess_moving
@@ -87,7 +84,8 @@ def main():
         fixed_seg       = studyParser.fixed_segmentation_filename
         moving_dict     = studyParser.ReadMovingImage()
         dwi             = studyParser.DWI
-        fIC             = studyParser.fIC
+        fIC             = studyParser.fIC   
+        dwi_map         = studyParser.DWI_map
 
         for slice in moving_dict:
             regions = moving_dict[slice]['regions']
@@ -96,8 +94,12 @@ def main():
         ###### PREPROCESSING DESTINATIONS ######################################
         preprocess_moving_dest = outputPath + '/preprocess/hist/'
         if dwi:
-            preprocess_fixed_dest  = outputPath + '/preprocess/dwi/'
-            coord_path             = 'coord_dwi.txt'
+            if fIC:
+                preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b0/'
+                coord_path             = 'coord_dwi_b0.txt'
+            else:
+                preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b90/'
+                coord_path             = 'coord_dwi_b90.txt'
         else:
             preprocess_fixed_dest  = outputPath + '/preprocess/mri/'
             coord_path             = 'coord.txt'
@@ -111,14 +113,14 @@ def main():
         ###### PREPROCESSING HISTOLOGY HERE #############################################################
         if preprocess_moving == True: 
             print('Preprocessing moving sid:', sid, '...')
-            preprocess_hist(moving_dict, preprocess_moving_dest, sid, fIC=fIC)
+            preprocess_hist(moving_dict, preprocess_moving_dest, sid, dwi=dwi, fIC=fIC)
             print('Finished preprocessing', sid)
 
 
         ###### PREPROCESSING MRI HERE #############################################################
         if preprocess_fixed == True:
             print ("Preprocessing fixed case:", sid, '...')
-            coord = preprocess_mri(fixed_img_mha, fixed_seg, preprocess_fixed_dest, coord, sid, fIC=fIC)
+            coord = preprocess_mri(fixed_img_mha, fixed_seg, preprocess_fixed_dest, coord, sid, dwi_map=dwi_map, fIC=fIC)
             print("Finished processing fixed mha", sid)
 
             with open(coord_path, 'w') as json_file: 
@@ -129,7 +131,7 @@ def main():
         if run_registration == True: 
 
             ##### LOAD MODELS
-            print('.'*10, 'Begin deep learning registration for ' + sid + '.'*10)
+            print('\n', '.'*10, 'Begin deep learning registration for ' + sid + '.'*10)
             print('Using trained model: ' + opt.trained_models_name)
 
             try:
@@ -143,46 +145,58 @@ def main():
             end            = time.time()
             
             out3Dhist, out3Dmri, out3Dhist_regions, out3Dmri_mask, scaling, transforms = output3D_cache
-            print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
+            print("\nRegistration done in {:6.3f}(min)".format((end-start)/60.0))
             
-            #### CALCULATE DICE
+            #### CALCULATE ERROR
             calc_dice(out3Dhist_regions['mask'], out3Dmri_mask)
+            hausdorff(out3Dhist_regions['mask'], out3Dmri_mask)
             
             #### SAVE RESULTS
             imMri           = sitk.ReadImage(fixed_img_mha)
             if fIC:
-                imMri       = sitk.ReadImage(fIC)
+                imMri       = sitk.ReadImage(dwi_map)
                 
             mriSpace        = imMri.GetSpacing()
             histSpace       = [mriSpace[0]/scaling[0], mriSpace[1]/scaling[1], mriSpace[2]]
-            mriDirection    = imMri.GetDirection()
+            mriDirection    = imMri.GetDirection() # direction = ( x ,0.0,0.0,0.0, y ,0.0,0.0,0.0, z )
             mriOrigin       = imMri[:,:,coord[sid]['slice'][0]:coord[sid]['slice'][-1]].GetOrigin()
             imSpatialInfo   = (mriOrigin, mriSpace, mriDirection)
             histSpatialInfo = (mriOrigin, histSpace, mriDirection)
             
-            #direction       = ( x ,0.0,0.0,0.0, y ,0.0,0.0,0.0, z )
-
             # Write outputs as 3D volumes (.nii.gz format)   
             if dwi:
-                folder = 'histo-DWI/'                
+                folder = 'histo-DWI/'  
+                if fIC:
+                    tag = '_b90'     
+                else:
+                    tag = '_b0'  
             else:
-                folder = 'histo-T2/' 
+                folder  = 'histo-T2/' 
+                tag     = '_T2'
             save_path = outputPath + 'registration/' + folder
             
-            output_results(save_path, out3Dmri,  sid, '_fixed.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
-            output_results(save_path, out3Dhist, sid, '_moved.', histSpatialInfo, model=opt.trained_models_name, extension = extension)
+            output_results(save_path, out3Dmri,  sid, tag +'_fixed.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
+            output_results(save_path, out3Dhist, sid, tag + '_moved.', histSpatialInfo, model=opt.trained_models_name, extension = extension)
             for region in regions:
-                output_results(save_path, out3Dhist_regions[region], sid, '_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+                output_results(save_path, out3Dhist_regions[region], sid, tag + '_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+            output_results(save_path, 1-out3Dhist_regions['mask'], sid, tag + '_moved_reverse_mask.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+
             
-            if fIC:
-                output_results(save_path, out3Dhist_regions['fIC'], sid, '_moved_fIC.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
-                out_fIC     = get_fIC(preprocess_fixed_dest + sid + '/')
-                output_results(save_path, out_fIC,  sid, '_fIC.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
+            if dwi:
+                if fIC:
+                    output_results(save_path, out3Dhist_regions['fIC'], sid, '_fIC_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+                    output_results(save_path, 1-out3Dhist_regions['fIC-mask'], sid, '_fIC_reverse_mask_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+                    text = 'fIC'
+                else:
+                    text = 'ADC'
+                
+                out_fIC  = get_map(preprocess_fixed_dest + sid + '/', text)
+                output_results(save_path, out_fIC,  sid, '_'+text+'.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
                 
             save_all_transforms(transforms, sid, imSpatialInfo, scaling, folder)
 
             timings[s] = (end-start)/60.0
-            print('Done!')
+            print('Done!\n')
 
     return timings    
 

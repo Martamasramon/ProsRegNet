@@ -1,5 +1,5 @@
 #$ -l tmem=32G,h_vmem=32G
-#$ -l h_rt=0:10:00
+#$ -l h_rt=0:00:30
 #$ -l gpu=true
 
 #$ -S /bin/bash

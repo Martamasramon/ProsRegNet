@@ -1,0 +1,10 @@
+{
+    "id":                   "HMU_038_JC",
+    "moving-type":          "stack",
+    "fixed":                "./datasets/testing/DWI/HMU_038_JC/DWI-b0-registered.nii.gz",
+    "fixed-segmentation":   "./datasets/testing/DWI/HMU_038_JC/DWI-b0-registered-mask.nii.gz",
+    "DWI":                  "True",
+    "fIC":                  "",
+    "DWI-map":              "./datasets/testing/DWI/HMU_038_JC/ADC-corrected.nii.gz",
+    "moving":               "./datasets/testing/Histology/HMU_038_JC.json"
+}

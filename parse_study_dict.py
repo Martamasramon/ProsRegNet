@@ -6,8 +6,6 @@ class ParserStudyDict:
         self.dict = studyDict
   
         self.id                         = None
-        self.exvivo_accession           = None
-        self.invivo_accession           = None
         self.fixed_filename             = None
         self.fixed_segmentation_filename= None
         self.moving_type                = None
@@ -15,7 +13,8 @@ class ParserStudyDict:
         self.moving_dict                = None
         self.fIC                        = None
         self.DWI                        = None
-        
+        self.DWI_map                    = None
+
         self.SetFromDict()
         
     def SetFromDict(self):  
@@ -53,6 +52,11 @@ class ParserStudyDict:
         except Exception as e:
             print(e)
         
+        try:
+            self.DWI_map                        = self.dict['DWI-map']                   
+        except Exception as e:
+            print(e)
+            
         try:
             self.fIC                            = self.dict['fIC']                   
         except Exception as e:

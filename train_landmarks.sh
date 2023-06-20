@@ -4,7 +4,7 @@
 
 #$ -S /bin/bash
 #$ -j y
-#$ -N Train+
+#$ -N Landmarks
 #$ -V
 #$ -wd /home/mmasramo/ProsRegNet
 
@@ -15,6 +15,6 @@ date
 export PATH=/share/apps/python-3.6.9-tkinter/bin:$PATH
 export LD_LIBRARY_PATH=/share/apps/python-3.6.9-tkinter/lib:$LD_LIBRARY_PATH
 
-python3 train_landmarks.py -n 'histo_mri' 
+python3 test_landmarks.py -n 'default' 
 
 date
