@@ -36,8 +36,11 @@ def hausdorff(mask_A, mask_B):
     non_zero_A  = np.nonzero(mask_A.cpu().detach())    
     non_zero_B  = np.nonzero(mask_B.cpu().detach())
     
-    hausdorff = directed_hausdorff(non_zero_A, non_zero_B)    
-    print('Hausdorff:', hausdorff[0])
+    hausdorff_A = directed_hausdorff(non_zero_A, non_zero_B)  
+    hausdorff_B = directed_hausdorff(non_zero_B, non_zero_A)  
+    
+    hausdorff   = (hausdorff_A[0] + hausdorff_B[0])/2 
+    print('Hausdorff:', hausdorff)
 
     return hausdorff[0]
     

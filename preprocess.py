@@ -51,7 +51,7 @@ def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta
 
 
 # preprocess_hist into hist slices here
-def preprocess_hist(moving_dict, pre_process_moving_dest, case, fIC=''): 
+def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC=''): 
     for slice in moving_dict:
         s = moving_dict[slice]
         
@@ -114,8 +114,13 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, fIC=''):
         # downsample image
         size_low  = 240
         size_high = 1024
-        padHist_low_res  = cv2.resize(padHist, (size_low, size_low), interpolation=cv2.INTER_CUBIC)
-        padHist_high_res = cv2.resize(padHist, (size_high, size_high), interpolation=cv2.INTER_CUBIC)
+        padHist_high_res    = cv2.resize(padHist, (size_high, size_high), interpolation=cv2.INTER_CUBIC)
+        
+        ### Keep???? 
+        if dwi:
+            padHist         = cv2.resize(padHist, (100, 100), interpolation=cv2.INTER_CUBIC)
+        padHist_low_res     = cv2.resize(padHist, (size_low, size_low), interpolation=cv2.INTER_CUBIC)
+        
 
         # Transform all regions
         for region in s['regions']:
@@ -128,7 +133,7 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, fIC=''):
 
     
 #preprocess mri mha files to slices here
-def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False, fIC=''):     
+def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False, dwi_map='', fIC=False):     
     imMri       = sitk.ReadImage(fixed_img_mha)
     imMri       = sitk.GetArrayFromImage(imMri)
     
@@ -138,9 +143,9 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
     imMriMask   = sitk.ReadImage(fixed_seg)
     maskArray   = sitk.GetArrayFromImage(imMriMask)
     
-    if fIC:
-        imfIC   = sitk.ReadImage(fIC)
-        imfIC   = sitk.GetArrayFromImage(imfIC)
+    if dwi_map:
+        im_dwi_map = sitk.ReadImage(dwi_map)
+        im_dwi_map = sitk.GetArrayFromImage(im_dwi_map)
     
     #### resample mri mask to be the same size as mri
     if (imMri.shape[1]!=maskArray.shape[1] or imMri.shape[2]!=maskArray.shape[2]):
@@ -233,10 +238,16 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
             cv2.imwrite(pre_process_fixed_dest + case + '/mriMask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(mri_mask))
             cv2.imwrite(pre_process_fixed_dest + case + '/mriUncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])
         
-        if fIC:
-            ####### NOTE: we are scaling the pixel values ####### 
-            imfIC[slice, :, :] = imfIC[slice, :, :] * 140
-            cv2.imwrite(pre_process_fixed_dest + case + '/fIC_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(imfIC[slice,:,:]))
+        if dwi_map:
+            if fIC:
+                ####### NOTE: we are scaling the pixel values ####### 
+                im_dwi_map[slice, :, :] = im_dwi_map[slice, :, :] / 2 * 255
+                tag = '/fIC_'
+            else:
+                im_dwi_map[slice, :, :] = im_dwi_map[slice, :, :] / 3 * 255
+                tag = '/ADC_'
+            
+            cv2.imwrite(pre_process_fixed_dest + case + tag + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_dwi_map[slice,:,:]))
         
     coord = OrderedDict(coord)
     
