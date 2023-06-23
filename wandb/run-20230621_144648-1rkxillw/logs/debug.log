@@ -1,0 +1,28 @@
+2023-06-21 14:46:48,362 INFO    MainThread:219372 [wandb_setup.py:_flush():76] Current SDK version is 0.15.4
+2023-06-21 14:46:48,362 INFO    MainThread:219372 [wandb_setup.py:_flush():76] Configure stats pid to 219372
+2023-06-21 14:46:48,362 INFO    MainThread:219372 [wandb_setup.py:_flush():76] Loading settings from /home/mmasramo/.config/wandb/settings
+2023-06-21 14:46:48,362 INFO    MainThread:219372 [wandb_setup.py:_flush():76] Loading settings from /home/mmasramo/ProsRegNet/wandb/settings
+2023-06-21 14:46:48,362 INFO    MainThread:219372 [wandb_setup.py:_flush():76] Loading settings from environment variables: {}
+2023-06-21 14:46:48,362 INFO    MainThread:219372 [wandb_setup.py:_flush():76] Inferring run settings from compute environment: {'program_relpath': 'train.py', 'program': 'train.py'}
+2023-06-21 14:46:48,363 INFO    MainThread:219372 [wandb_setup.py:_flush():76] Applying login settings: {'api_key': '***REDACTED***'}
+2023-06-21 14:46:48,363 INFO    MainThread:219372 [wandb_setup.py:_flush():76] Applying login settings: {'api_key': '***REDACTED***'}
+2023-06-21 14:46:48,363 INFO    MainThread:219372 [wandb_init.py:_log_setup():507] Logging user logs to /home/mmasramo/ProsRegNet/wandb/run-20230621_144648-1rkxillw/logs/debug.log
+2023-06-21 14:46:48,363 INFO    MainThread:219372 [wandb_init.py:_log_setup():508] Logging internal logs to /home/mmasramo/ProsRegNet/wandb/run-20230621_144648-1rkxillw/logs/debug-internal.log
+2023-06-21 14:46:48,367 INFO    MainThread:219372 [wandb_init.py:init():547] calling init triggers
+2023-06-21 14:46:48,367 INFO    MainThread:219372 [wandb_init.py:init():555] wandb.init called with sweep_config: {}
+config: {'epochs': 50}
+2023-06-21 14:46:48,371 INFO    MainThread:219372 [wandb_init.py:init():596] starting backend
+2023-06-21 14:46:48,371 INFO    MainThread:219372 [wandb_init.py:init():600] setting up manager
+2023-06-21 14:46:48,393 INFO    MainThread:219372 [backend.py:_multiprocessing_setup():108] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2023-06-21 14:46:48,408 INFO    MainThread:219372 [wandb_init.py:init():606] backend started and connected
+2023-06-21 14:46:48,449 INFO    MainThread:219372 [wandb_init.py:init():703] updated telemetry
+2023-06-21 14:46:48,513 INFO    MainThread:219372 [wandb_init.py:init():736] communicating run to backend with 60.0 second timeout
+2023-06-21 14:46:48,956 INFO    MainThread:219372 [wandb_run.py:_on_init():2176] communicating current version
+2023-06-21 14:46:49,013 INFO    MainThread:219372 [wandb_run.py:_on_init():2185] got version response 
+2023-06-21 14:46:49,013 INFO    MainThread:219372 [wandb_init.py:init():787] starting run threads in backend
+2023-06-21 14:46:49,640 INFO    MainThread:219372 [wandb_run.py:_console_start():2155] atexit reg
+2023-06-21 14:46:49,655 INFO    MainThread:219372 [wandb_run.py:_redirect():2010] redirect: SettingsConsole.WRAP_RAW
+2023-06-21 14:46:49,659 INFO    MainThread:219372 [wandb_run.py:_redirect():2075] Wrapping output streams.
+2023-06-21 14:46:49,659 INFO    MainThread:219372 [wandb_run.py:_redirect():2100] Redirects installed.
+2023-06-21 14:46:49,663 INFO    MainThread:219372 [wandb_init.py:init():828] run started, returning control to user process
+2023-06-21 14:47:07,119 WARNING MsgRouterThr:219372 [router.py:message_loop():77] message_loop has been closed

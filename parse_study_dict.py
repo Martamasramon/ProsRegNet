@@ -14,62 +14,74 @@ class ParserStudyDict:
         self.fIC                        = None
         self.DWI                        = None
         self.DWI_map                    = None
-
+        self.cancer                     = None
+        self.landmarks                  = None
+        
         self.SetFromDict()
         
     def SetFromDict(self):  
         try:
             self.fixed_filename                 = self.dict['fixed']
-        except Exception as e:
-            print(e)
+        except :
+            pass
             
         try:
             self.fixed_segmentation_filename    = self.dict['fixed-segmentation']
-        except Exception as e:
-            print(e)
+        except :
+            pass
 
 
         try:
             self.moving_type                    = self.dict['moving-type']
 
-        except Exception as e:
-            print(e)
+        except :
+            pass
 
         try:
             self.moving_filename                = self.dict['moving']
-        except Exception as e:
-            print(e)
+        except :
+            pass
             
         try:
             self.id                             = self.dict['id']
-        except Exception as e:
-            print(e)
+        except :
+            pass
         
         try:
             DWI                                 = self.dict['DWI']
             if DWI == "True":
                 self.DWI = True                           
-        except Exception as e:
-            print(e)
+        except :
+            pass
         
         try:
             self.DWI_map                        = self.dict['DWI-map']                   
-        except Exception as e:
-            print(e)
+        except :
+            pass
             
         try:
             self.fIC                            = self.dict['fIC']                   
-        except Exception as e:
-            print(e)
+        except :
+            pass
+            
+        try:
+            self.cancer                         = self.dict['cancer']                   
+        except :
+            pass
         
-   
+        try:
+            self.landmarks                      = self.dict['landmarks']                   
+        except :
+            pass
+            
+            
     def ReadImage(self, fn):
         im = None
         if fn:
             try:
                 im = sitk.ReadImage( fn )
-            except Exception as e:
-                print(e)
+            except :
+                pass
                 print("Fixed image cound not be read from", fn)
                 im = None
         else:

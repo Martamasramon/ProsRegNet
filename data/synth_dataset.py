@@ -58,18 +58,21 @@ class SynthDataset(Dataset):
         img_B_name = os.path.join(self.training_image_path, self.img_B_names[idx])
         image_B = io.imread(img_B_name)
         
-        if img_A_name.find("hist") < 0 and img_A_name.find("region") < 0:
-            # Resize MRI images to have 3 channels
-            temp_A  = image_A
-            temp_B  = image_B
-            
-            image_A = np.zeros((temp_A.shape[0],temp_A.shape[1],3))
-            image_B = np.zeros((temp_B.shape[0],temp_B.shape[1],3))
-            
-            for i in range(3):
-                image_A[:,:,i] = temp_A
-                image_B[:,:,i] = temp_B
-        
+        if img_A_name.find("hist") < 0 and img_A_name.find("segmented") < 0 and img_A_name.find("region") < 0:
+            try:
+                # Resize MRI images to have 3 channels
+                temp_A  = image_A
+                temp_B  = image_B
+                
+                image_A = np.zeros((temp_A.shape[0],temp_A.shape[1],3))
+                image_B = np.zeros((temp_B.shape[0],temp_B.shape[1],3))
+                
+                for i in range(3):
+                    image_A[:,:,i] = temp_A
+                    image_B[:,:,i] = temp_B
+            except:
+                print(self.img_A_names[idx])
+                
         # read theta
         if self.random_sample==False:
             theta = self.theta_array[idx, :]

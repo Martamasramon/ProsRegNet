@@ -1,0 +1,44 @@
+Use Cuda?  True
+cuda: 0
+Creating CNN model...
+Using SSD loss...
+Starting training...
+--- Epoch 1 ---
+Traceback (most recent call last):
+  File "train.py", line 161, in <module>
+    train_loss = train(model, loss, dataloader_train, pair_generation_tnf, optimizer)
+  File "/home/mmasramo/ProsRegNet/util/train_test_fn.py", line 13, in train
+    for _, batch in enumerate(dataloader):
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/dataloader.py", line 521, in __next__
+    data = self._next_data()
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/dataloader.py", line 1203, in _next_data
+    return self._process_data(data)
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/dataloader.py", line 1229, in _process_data
+    data.reraise()
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/_utils.py", line 434, in reraise
+    raise exception
+FileNotFoundError: Caught FileNotFoundError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/_utils/worker.py", line 287, in _worker_loop
+    data = fetcher.fetch(index)
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/_utils/fetch.py", line 49, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/_utils/fetch.py", line 49, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/mmasramo/ProsRegNet/data/synth_dataset.py", line 56, in __getitem__
+    image_A = io.imread(img_A_name)
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/skimage/io/_io.py", line 48, in imread
+    img = call_plugin('imread', fname, plugin=plugin, **plugin_args)
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/skimage/io/manage_plugins.py", line 209, in call_plugin
+    return func(*args, **kwargs)
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/skimage/io/_plugins/imageio_plugin.py", line 10, in imread
+    return np.asarray(imageio_imread(*args, **kwargs))
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/imageio/core/functions.py", line 159, in imread
+    with imopen(uri, "ri", plugin=format) as file:
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/imageio/core/imopen.py", line 161, in imopen
+    request = Request(uri, io_mode, format_hint=format_hint)
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/imageio/core/request.py", line 248, in __init__
+    self._parse_uri(uri)
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/imageio/core/request.py", line 388, in _parse_uri
+    raise FileNotFoundError("No such file: '%s'" % fn)
+FileNotFoundError: No such file: '/home/mmasramo/ProsRegNet/datasets/training/b90_HMU_011_MQ_06.png'

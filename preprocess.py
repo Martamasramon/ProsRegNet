@@ -2,8 +2,16 @@ import numpy as np
 import cv2 
 import SimpleITK as sitk 
 from collections import OrderedDict
+from landmark_functions import *
 import os 
 
+
+def make_dir(dir):
+    try: 
+        os.mkdir(dir)   
+    except: 
+        pass 
+    
 def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta, dH, dW, h, w, x, y, x_offset, y_offset, fIC=''): 
     rotated = np.zeros((dH, dW, 3))   
     try:
@@ -39,10 +47,7 @@ def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta
     except: 
         pass
     
-    try: 
-        os.mkdir(preprocess_moving_dest + case)
-    except: 
-        pass 
+    make_dir(preprocess_moving_dest + case)
     
     outputPath = preprocess_moving_dest + case + '/' + region + '_' + case + '_' + slice +'.png'
     # ex. region = mask, case = aaa0069, slice = slice1
@@ -52,16 +57,18 @@ def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta
 
 # preprocess_hist into hist slices here
 def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC=''): 
+    landmarks   = {}
+    count       = 0
     for slice in moving_dict:
         s = moving_dict[slice]
         
         # Read image
-        img = cv2.imread(s['filename'], )
+        img  = cv2.imread(s['filename'], )
+        row, col, _ = img.shape
 
         # multiply by mask
-        prosPath = s['regions']['mask']['filename']
-        mask = cv2.imread(prosPath)
-        img = img*(mask/255)
+        mask    = cv2.imread(s['regions']['mask']['filename'])
+        img     = img*(mask/255)
 
         # find rotation
         try: 
@@ -69,8 +76,8 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC='
         except: 
             theta = 0
     
-        img  = np.pad(img,((img.shape[0],img.shape[0]),(img.shape[1],img.shape[1]),(0,0)),'constant', constant_values=0)
-        mask = np.pad(mask,((mask.shape[0],mask.shape[0]),(mask.shape[1],mask.shape[1]),(0,0)),'constant', constant_values=0)
+        img         = np.pad(img,((img.shape[0],img.shape[0]),(img.shape[1],img.shape[1]),(0,0)),'constant', constant_values=0)
+        mask        = np.pad(mask,((mask.shape[0],mask.shape[0]),(mask.shape[1],mask.shape[1]),(0,0)),'constant', constant_values=0)
         
         # Rotate image
         rows, cols, _   = img.shape
@@ -99,7 +106,6 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC='
         y, x, h, w = cv2.boundingRect(points)           # create a rectangle around those points
         
         crop = rotated_hist[x:x+w, y:y+h,:]
-        
         if h>w:
             y_offset = int(h*0.15)
             x_offset = int((h - w + 2*y_offset)/2)
@@ -110,18 +116,17 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC='
         # pad image
         padHist = np.zeros((w + 2*x_offset, h + 2*y_offset, 3)) 
         padHist[x_offset:crop.shape[0]+x_offset, y_offset:crop.shape[1]+y_offset, :] = crop
-        
+
         # downsample image
-        size_low  = 240
         size_high = 1024
         padHist_high_res    = cv2.resize(padHist, (size_high, size_high), interpolation=cv2.INTER_CUBIC)
         
         ### Keep???? 
         if dwi:
             padHist         = cv2.resize(padHist, (100, 100), interpolation=cv2.INTER_CUBIC)
+        size_low  = 240
         padHist_low_res     = cv2.resize(padHist, (size_low, size_low), interpolation=cv2.INTER_CUBIC)
         
-
         # Transform all regions
         for region in s['regions']:
             transformAndSaveRegion(pre_process_moving_dest, case, slice,               s, region, theta, size_low,  size_low,  h, w, x, y, x_offset, y_offset, fIC=fIC)
@@ -131,12 +136,30 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC='
         cv2.imwrite(pre_process_moving_dest + case + '/hist_' + case + '_' + slice +'.png', padHist_low_res)
         cv2.imwrite(pre_process_moving_dest + case + '_high_res' + '/hist_' + case + '_high_res_' + slice +'.png', padHist_high_res)
 
+        #try:
+        dims                = x, y, w, h, x_offset, y_offset
+        landmarks[count]    = preprocess_landmarks(s, row, col, M, fIC, dims, 240)
+        
+        for i in range(8):
+            cv2.imwrite(pre_process_moving_dest + case + '/' + case + '_landmark_'+str(i)+'_slice_' + slice +'.png', landmarks[count][:,:,i]*255)
+        count              += 1
+        #except:
+        #    print('fail')
+        #    pass
+        
+    return landmarks
+        
+
+def getArray(img_path):
+    img     = sitk.ReadImage(img_path)
+    array   = sitk.GetArrayFromImage(img)
+    return array
     
 #preprocess mri mha files to slices here
-def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False, dwi_map='', fIC=False):     
-    imMri       = sitk.ReadImage(fixed_img_mha)
-    imMri       = sitk.GetArrayFromImage(imMri)
-    
+def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False, dwi_map='', fIC=False, cancer=None, landmarks=None):     
+    make_dir(pre_process_fixed_dest + case)
+
+    imMri = getArray(fixed_img_mha)
     if len(imMri.shape) > 3:
         imMri = np.squeeze(imMri[0,:,:,:])
         
@@ -144,8 +167,18 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
     maskArray   = sitk.GetArrayFromImage(imMriMask)
     
     if dwi_map:
-        im_dwi_map = sitk.ReadImage(dwi_map)
-        im_dwi_map = sitk.GetArrayFromImage(im_dwi_map)
+        im_dwi_map  = getArray(dwi_map)
+    
+    if cancer:
+        im_cancer   = getArray(cancer)
+    
+    if landmarks:
+        make_dir(pre_process_fixed_dest + case + '/landmarks/')
+
+        landmark_list =  [pos for pos in sorted(os.listdir(landmarks))]
+        landmark_imgs = {}
+        for i in range(len(landmark_list)):
+            landmark_imgs[i] = getArray(landmarks + landmark_list[i])
     
     #### resample mri mask to be the same size as mri
     if (imMri.shape[1]!=maskArray.shape[1] or imMri.shape[2]!=maskArray.shape[2]):
@@ -167,6 +200,7 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
     coord[case]['w'] = []
     coord[case]['slice']  = []
     
+        
     for slice in range(imMri.shape[0]):
         if np.sum(np.ndarray.flatten(imMriMask[slice, :, :])) == 0: 
             continue
@@ -224,12 +258,7 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         
         upsMri  = cv2.resize(cropMri.astype('float32'), (upsHeight,  upsWidth), interpolation=cv2.INTER_CUBIC)
         upsMask = cv2.resize(cropMask.astype('float32'), (upsHeight,  upsWidth), interpolation=cv2.INTER_CUBIC)
-                
-        try: 
-            os.mkdir(pre_process_fixed_dest + case)
-        except: 
-            pass 
-        
+
         # write to a file        
         cv2.imwrite(pre_process_fixed_dest + case + '/mri_' + case + '_' + str(slice).zfill(2) +'.jpg', upsMri)  
         if crop_mask:
@@ -241,13 +270,22 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         if dwi_map:
             if fIC:
                 ####### NOTE: we are scaling the pixel values ####### 
-                im_dwi_map[slice, :, :] = im_dwi_map[slice, :, :] / 2 * 255
+                im_dwi_map_slice = im_dwi_map[slice, :, :] / 2 * 255
                 tag = '/fIC_'
             else:
-                im_dwi_map[slice, :, :] = im_dwi_map[slice, :, :] / 3 * 255
+                im_dwi_map_slice = im_dwi_map[slice, :, :] / 3 * 255
                 tag = '/ADC_'
             
-            cv2.imwrite(pre_process_fixed_dest + case + tag + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_dwi_map[slice,:,:]))
+            cv2.imwrite(pre_process_fixed_dest + case + tag + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_dwi_map_slice))
+            
+        if cancer:
+            im_cancer_slice = im_cancer[slice, :, :] * 255
+            cv2.imwrite(pre_process_fixed_dest + case + '/cancer_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_cancer_slice))
+        
+        if landmarks:
+            dims = (min_x,x,w,x_offset,min_y,y,h,y_offset, upsHeight, upsWidth)
+            preprocess_mri_landmarks(landmark_imgs, dims, case, slice, pre_process_fixed_dest + case + '/landmarks/')
+            
         
     coord = OrderedDict(coord)
     
