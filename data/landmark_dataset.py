@@ -8,50 +8,7 @@ from torch.utils.data           import Dataset
 from geotnf.transformation      import GeometricTnf
 from skimage                    import io
 from torch.autograd             import Variable
-
-
-def list_to_image(dims, x_array, y_array, m, tensor=False, use_cuda=True):
-    # Use the landmark coordinates to create histo 'landmarks image'
-    num_landmarks   = len(x_array)
-    landmarks       = np.zeros((dims[0], dims[1], num_landmarks))
-    
-    # Make square to ensure resized image still contains landmark
-    # Use 5x5 for histo and 3x3 for mri, since different amount of resizing
-    for i in range(num_landmarks):
-        x, y = (x_array[i],y_array[i])
-        landmarks[int(x-m):int(x+m),int(y-m):int(y+m),i] = 1
-        
-    if tensor:
-        # make arrays float tensor for subsequent processing
-        landmarks = torch.Tensor(landmarks.astype(np.float32))
-        # permute order of image to CHW
-        landmarks = landmarks.transpose(1,2).transpose(0,1)
-        landmarks = Variable(landmarks.unsqueeze(0),requires_grad=False)
-        if use_cuda:
-            landmarks = landmarks.cuda()
-            
-    return landmarks
-            
-def image_to_list(landmarks, use_cuda=False):
-    if use_cuda:
-        landmarks = torch.squeeze(landmarks).cpu().detach()
-        
-    num_landmarks = landmarks.shape[0]
-    landmarks     = landmarks.transpose(0,1).transpose(1,2) # Shape is now 240 x 240 x N
-    landmark_list = np.zeros((2,num_landmarks))
-           
-    # Find non-zero locations. Average over all of them. 
-    for i in range(num_landmarks):
-        non_zero           = np.argwhere(landmarks[:,:,i]).double()
-        x, y               = torch.ceil(torch.mean(non_zero,axis=1))
-        landmark_list[:,i] = [int(x),int(y)]
-      
-    landmark_list = torch.Tensor(landmark_list.astype(np.float32)) 
-    
-    if use_cuda:
-        landmark_list = landmark_list.cuda()
-       
-    return landmark_list
+from landmark_functions         import *
 
 
 class LandmarkDataset(Dataset):

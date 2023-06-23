@@ -1,0 +1,30 @@
+Use Cuda?  True
+cuda: 0
+Creating CNN model...
+Using SSD loss...
+Starting training...
+--- Epoch 1 ---
+Traceback (most recent call last):
+  File "train.py", line 161, in <module>
+    train_loss = train(model, loss, dataloader_train, pair_generation_tnf, optimizer)
+  File "/home/mmasramo/ProsRegNet/util/train_test_fn.py", line 13, in train
+    for _, batch in enumerate(dataloader):
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/dataloader.py", line 521, in __next__
+    data = self._next_data()
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/dataloader.py", line 1203, in _next_data
+    return self._process_data(data)
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/dataloader.py", line 1229, in _process_data
+    data.reraise()
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/_utils.py", line 434, in reraise
+    raise exception
+ValueError: Caught ValueError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/_utils/worker.py", line 287, in _worker_loop
+    data = fetcher.fetch(index)
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/_utils/fetch.py", line 49, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/utils/data/_utils/fetch.py", line 49, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/mmasramo/ProsRegNet/data/synth_dataset.py", line 70, in __getitem__
+    image_A[:,:,i] = temp_A
+ValueError: could not broadcast input array from shape (595,607,3) into shape (595,607)

@@ -1,0 +1,10 @@
+Use Cuda?  True
+cuda: 0
+Creating CNN model...
+Using SSD loss...
+Starting training...
+--- Epoch 1 ---
+Train set: Average loss: 0.133745
+Test set: Average loss: 0.160070
+Test set: Dice: 0.942462
+lr [0.0003]

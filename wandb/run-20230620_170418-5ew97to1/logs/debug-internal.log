@@ -1,0 +1,76 @@
+2023-06-20 17:04:19,160 INFO    StreamThr :98542 [internal.py:wandb_internal():89] W&B internal server running at pid: 98542, started at: 2023-06-20 17:04:19.159791
+2023-06-20 17:04:19,163 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: status
+2023-06-20 17:04:19,175 INFO    WriterThread:98542 [datastore.py:open_for_write():85] open: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/run-5ew97to1.wandb
+2023-06-20 17:04:19,177 DEBUG   SenderThread:98542 [sender.py:send():369] send: header
+2023-06-20 17:04:19,198 DEBUG   SenderThread:98542 [sender.py:send():369] send: run
+2023-06-20 17:04:20,368 INFO    SenderThread:98542 [dir_watcher.py:__init__():211] watching files in: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files
+2023-06-20 17:04:20,370 INFO    SenderThread:98542 [sender.py:_start_run_threads():1103] run started: 5ew97to1 with start time 1687277059.163463
+2023-06-20 17:04:20,370 DEBUG   SenderThread:98542 [sender.py:send_request():396] send_request: summary_record
+2023-06-20 17:04:20,371 INFO    SenderThread:98542 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-06-20 17:04:20,381 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: check_version
+2023-06-20 17:04:20,381 DEBUG   SenderThread:98542 [sender.py:send_request():396] send_request: check_version
+2023-06-20 17:04:20,497 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: run_start
+2023-06-20 17:04:20,508 DEBUG   HandlerThread:98542 [system_info.py:__init__():31] System info init
+2023-06-20 17:04:20,508 DEBUG   HandlerThread:98542 [system_info.py:__init__():46] System info init done
+2023-06-20 17:04:20,508 INFO    HandlerThread:98542 [system_monitor.py:start():181] Starting system monitor
+2023-06-20 17:04:20,509 INFO    SystemMonitor:98542 [system_monitor.py:_start():145] Starting system asset monitoring threads
+2023-06-20 17:04:20,509 INFO    HandlerThread:98542 [system_monitor.py:probe():201] Collecting system info
+2023-06-20 17:04:20,510 INFO    SystemMonitor:98542 [interfaces.py:start():190] Started cpu monitoring
+2023-06-20 17:04:20,511 INFO    SystemMonitor:98542 [interfaces.py:start():190] Started disk monitoring
+2023-06-20 17:04:20,514 INFO    SystemMonitor:98542 [interfaces.py:start():190] Started gpu monitoring
+2023-06-20 17:04:20,515 INFO    SystemMonitor:98542 [interfaces.py:start():190] Started memory monitoring
+2023-06-20 17:04:20,516 INFO    SystemMonitor:98542 [interfaces.py:start():190] Started network monitoring
+2023-06-20 17:04:20,538 DEBUG   HandlerThread:98542 [system_info.py:probe():195] Probing system
+2023-06-20 17:04:20,540 DEBUG   HandlerThread:98542 [system_info.py:_probe_git():180] Probing git
+2023-06-20 17:04:20,569 DEBUG   HandlerThread:98542 [system_info.py:_probe_git():188] Probing git done
+2023-06-20 17:04:20,570 DEBUG   HandlerThread:98542 [system_info.py:probe():240] Probing system done
+2023-06-20 17:04:20,570 DEBUG   HandlerThread:98542 [system_monitor.py:probe():210] {'os': 'Linux-3.10.0-1160.88.1.el7.x86_64-x86_64-with-centos-7.9.2009-Core', 'python': '3.6.9', 'heartbeatAt': '2023-06-20T16:04:20.538370', 'startedAt': '2023-06-20T16:04:18.976185', 'docker': None, 'cuda': None, 'args': ('--geometric-model', 'tps', '-n', 'hist-mri-dwi', '-t', 'histo_mri_dwi_train.csv', '-p', 'datasets/training'), 'state': 'running', 'program': 'train.py', 'codePath': 'train.py', 'git': {'remote': 'https://github.com/Martamasramon/ProsRegNet.git', 'commit': '369ca6ee097a4183bc561a0c240215aacefb6943'}, 'email': 'marta.masramon@gmail.com', 'root': '/home/mmasramo/ProsRegNet', 'host': 'ernie.local', 'username': 'mmasramo', 'executable': '/share/apps/python-3.6.9-tkinter/bin/python3', 'cpu_count': 8, 'cpu_count_logical': 8, 'cpu_freq': {'current': 1211.9286249999998, 'min': 1200.0, 'max': 3700.0}, 'cpu_freq_per_core': [{'current': 1199.926, 'min': 1200.0, 'max': 3700.0}, {'current': 1295.507, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.146, 'min': 1200.0, 'max': 3700.0}, {'current': 1199.926, 'min': 1200.0, 'max': 3700.0}, {'current': 1199.926, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.146, 'min': 1200.0, 'max': 3700.0}, {'current': 1199.926, 'min': 1200.0, 'max': 3700.0}, {'current': 1199.926, 'min': 1200.0, 'max': 3700.0}], 'disk': {'total': 47.936073303222656, 'used': 36.616519927978516}, 'gpu': 'NVIDIA GeForce GTX TITAN X', 'gpu_count': 4, 'gpu_devices': [{'name': 'NVIDIA GeForce GTX TITAN X', 'memory_total': 12884901888}, {'name': 'NVIDIA GeForce RTX 2080', 'memory_total': 8589934592}, {'name': 'NVIDIA GeForce RTX 2080', 'memory_total': 8589934592}, {'name': 'NVIDIA GeForce RTX 2080', 'memory_total': 8589934592}], 'memory': {'total': 92.74982070922852}}
+2023-06-20 17:04:20,570 INFO    HandlerThread:98542 [system_monitor.py:probe():211] Finished collecting system info
+2023-06-20 17:04:20,570 INFO    HandlerThread:98542 [system_monitor.py:probe():214] Publishing system info
+2023-06-20 17:04:20,570 DEBUG   HandlerThread:98542 [system_info.py:_save_pip():52] Saving list of pip packages installed into the current environment
+2023-06-20 17:04:20,572 DEBUG   HandlerThread:98542 [system_info.py:_save_pip():67] Saving pip packages done
+2023-06-20 17:04:20,574 INFO    HandlerThread:98542 [system_monitor.py:probe():216] Finished publishing system info
+2023-06-20 17:04:20,603 DEBUG   SenderThread:98542 [sender.py:send():369] send: files
+2023-06-20 17:04:20,604 INFO    SenderThread:98542 [sender.py:_save_file():1354] saving file wandb-metadata.json with policy now
+2023-06-20 17:04:20,619 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: stop_status
+2023-06-20 17:04:20,620 DEBUG   SenderThread:98542 [sender.py:send_request():396] send_request: stop_status
+2023-06-20 17:04:20,762 DEBUG   SenderThread:98542 [sender.py:send():369] send: telemetry
+2023-06-20 17:04:21,098 INFO    wandb-upload_0:98542 [upload_job.py:push():133] Uploaded file /tmp/9967156.1.gpu.q/tmpo8evlrppwandb/9fe69i3n-wandb-metadata.json
+2023-06-20 17:04:21,381 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_created():272] file/dir created: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/requirements.txt
+2023-06-20 17:04:21,381 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_created():272] file/dir created: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/wandb-summary.json
+2023-06-20 17:04:21,382 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_created():272] file/dir created: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/output.log
+2023-06-20 17:04:21,382 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_created():272] file/dir created: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/wandb-metadata.json
+2023-06-20 17:04:23,379 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/output.log
+2023-06-20 17:04:24,267 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: status_report
+2023-06-20 17:04:25,384 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/output.log
+2023-06-20 17:04:27,539 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/output.log
+2023-06-20 17:04:29,364 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: status_report
+2023-06-20 17:04:34,365 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: status_report
+2023-06-20 17:04:35,620 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: stop_status
+2023-06-20 17:04:35,621 DEBUG   SenderThread:98542 [sender.py:send_request():396] send_request: stop_status
+2023-06-20 17:04:39,739 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: status_report
+2023-06-20 17:04:44,740 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: status_report
+2023-06-20 17:04:49,396 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/output.log
+2023-06-20 17:04:49,967 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: status_report
+2023-06-20 17:04:49,972 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: partial_history
+2023-06-20 17:04:50,619 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: stop_status
+2023-06-20 17:04:50,769 DEBUG   SenderThread:98542 [sender.py:send():369] send: history
+2023-06-20 17:04:50,769 DEBUG   SenderThread:98542 [sender.py:send_request():396] send_request: summary_record
+2023-06-20 17:04:50,775 INFO    SenderThread:98542 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-06-20 17:04:50,776 DEBUG   SenderThread:98542 [sender.py:send_request():396] send_request: stop_status
+2023-06-20 17:04:51,417 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/wandb-summary.json
+2023-06-20 17:04:51,417 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/output.log
+2023-06-20 17:04:51,417 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/config.yaml
+2023-06-20 17:04:53,419 INFO    Thread-12 :98542 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20230620_170418-5ew97to1/files/output.log
+2023-06-20 17:04:56,231 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: status_report
+2023-06-20 17:05:01,232 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: status_report
+2023-06-20 17:05:05,621 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: stop_status
+2023-06-20 17:05:05,622 DEBUG   SenderThread:98542 [sender.py:send_request():396] send_request: stop_status
+2023-06-20 17:05:06,735 DEBUG   HandlerThread:98542 [handler.py:handle_request():144] handle_request: status_report
+2023-06-20 17:05:10,552 INFO    cpu       :98542 [interfaces.py:monitor():140] Process cpu has exited.
+2023-06-20 17:05:10,553 DEBUG   SystemMonitor:98542 [system_monitor.py:_start():159] Starting system metrics aggregation loop
+2023-06-20 17:05:10,553 DEBUG   SystemMonitor:98542 [system_monitor.py:_start():166] Finished system metrics aggregation loop
+2023-06-20 17:05:10,554 DEBUG   SystemMonitor:98542 [system_monitor.py:_start():170] Publishing last batch of metrics
+2023-06-20 17:05:10,556 INFO    memory    :98542 [interfaces.py:monitor():140] Process proc.memory.rssMB has exited.
+2023-06-20 17:05:10,557 DEBUG   SenderThread:98542 [sender.py:send():369] send: stats
+2023-06-20 17:05:11,511 INFO    MainThread:98542 [internal.py:handle_exit():76] Internal process exited

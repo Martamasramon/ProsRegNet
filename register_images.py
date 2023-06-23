@@ -11,6 +11,7 @@ from geotnf.point_tnf           import *
 from process_img                import *
 from preprocess                 import *
 from register_functions         import *
+from landmark_functions         import *
 
 sys.path.insert(0, '../parse_data/parse_json')
 from parse_registration_json import ParserRegistrationJson
@@ -82,11 +83,13 @@ def main():
         sid             = studyParser.id
         fixed_img_mha   = studyParser.fixed_filename
         fixed_seg       = studyParser.fixed_segmentation_filename
+        mri_cancer      = studyParser.cancer
         moving_dict     = studyParser.ReadMovingImage()
         dwi             = studyParser.DWI
         fIC             = studyParser.fIC   
         dwi_map         = studyParser.DWI_map
-
+        landmarks       = studyParser.landmarks
+        
         for slice in moving_dict:
             regions = moving_dict[slice]['regions']
             break
@@ -95,15 +98,15 @@ def main():
         preprocess_moving_dest = outputPath + '/preprocess/hist/'
         if dwi:
             if fIC:
-                preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b0/'
-                coord_path             = 'coord_dwi_b0.txt'
-            else:
                 preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b90/'
                 coord_path             = 'coord_dwi_b90.txt'
+            else:
+                preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b0/'
+                coord_path             = 'coord_dwi_b0.txt'
         else:
             preprocess_fixed_dest  = outputPath + '/preprocess/mri/'
             coord_path             = 'coord.txt'
-            
+        
         try:
             with open(coord_path) as f:
                 coord = json.load(f)    
@@ -113,14 +116,14 @@ def main():
         ###### PREPROCESSING HISTOLOGY HERE #############################################################
         if preprocess_moving == True: 
             print('Preprocessing moving sid:', sid, '...')
-            preprocess_hist(moving_dict, preprocess_moving_dest, sid, dwi=dwi, fIC=fIC)
+            landmarks_histo = preprocess_hist(moving_dict, preprocess_moving_dest, sid, dwi=dwi, fIC=fIC)
             print('Finished preprocessing', sid)
 
 
         ###### PREPROCESSING MRI HERE #############################################################
         if preprocess_fixed == True:
             print ("Preprocessing fixed case:", sid, '...')
-            coord = preprocess_mri(fixed_img_mha, fixed_seg, preprocess_fixed_dest, coord, sid, dwi_map=dwi_map, fIC=fIC)
+            coord = preprocess_mri(fixed_img_mha, fixed_seg, preprocess_fixed_dest, coord, sid, dwi_map=dwi_map, fIC=fIC, cancer=mri_cancer, landmarks=landmarks)
             print("Finished processing fixed mha", sid)
 
             with open(coord_path, 'w') as json_file: 
@@ -141,15 +144,21 @@ def main():
 
             ##### REGISTER
             start          = time.time()
-            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, regions, fIC=fIC)
+            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, regions, landmarks_histo, landmarks, fIC=fIC)
             end            = time.time()
             
-            out3Dhist, out3Dmri, out3Dhist_regions, out3Dmri_mask, scaling, transforms = output3D_cache
+            out3Dhist, out3Dmri, out3Dmri_cancer, out3Dhist_regions, out3Dmri_mask, scaling, transforms, landmark_image_mri, landmark_image_histo = output3D_cache
             print("\nRegistration done in {:6.3f}(min)".format((end-start)/60.0))
             
             #### CALCULATE ERROR
             calc_dice(out3Dhist_regions['mask'], out3Dmri_mask)
             hausdorff(out3Dhist_regions['mask'], out3Dmri_mask)
+            try:
+                print('\nCancer...')
+                calc_dice(out3Dhist_regions['cancer'], out3Dmri_cancer[:,:,:,0])
+                hausdorff(out3Dhist_regions['cancer'], out3Dmri_cancer[:,:,:,0])
+            except:
+                pass
             
             #### SAVE RESULTS
             imMri           = sitk.ReadImage(fixed_img_mha)
@@ -175,24 +184,35 @@ def main():
                 tag     = '_T2'
             save_path = outputPath + 'registration/' + folder
             
-            output_results(save_path, out3Dmri,  sid, tag +'_fixed.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
+            ## Output histology
             output_results(save_path, out3Dhist, sid, tag + '_moved.', histSpatialInfo, model=opt.trained_models_name, extension = extension)
             for region in regions:
                 output_results(save_path, out3Dhist_regions[region], sid, tag + '_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
             output_results(save_path, 1-out3Dhist_regions['mask'], sid, tag + '_moved_reverse_mask.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
-
             
+            if dwi and fIC:
+                output_results(save_path, out3Dhist_regions['fIC'], sid, '_fIC_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+                output_results(save_path, 1-out3Dhist_regions['fIC-mask'], sid, '_fIC_reverse_mask_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+            if landmarks:
+                output_results(save_path+'landmarks/', landmark_image_histo, '', tag +'_landmarks_moved.', histSpatialInfo,   model=opt.trained_models_name, extension = extension)  
+                       
+            ## Output MRI 
+            output_results(save_path, out3Dmri,  sid, tag +'_fixed.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
             if dwi:
                 if fIC:
-                    output_results(save_path, out3Dhist_regions['fIC'], sid, '_fIC_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
-                    output_results(save_path, 1-out3Dhist_regions['fIC-mask'], sid, '_fIC_reverse_mask_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
                     text = 'fIC'
                 else:
                     text = 'ADC'
-                
-                out_fIC  = get_map(preprocess_fixed_dest + sid + '/', text)
-                output_results(save_path, out_fIC,  sid, '_'+text+'.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
-                
+                out_map  = get_map(preprocess_fixed_dest + sid + '/', text)
+                output_results(save_path, out_map,  sid, '_'+text+'.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
+            
+            if mri_cancer:
+                output_results(save_path, out3Dmri_cancer,  sid, tag +'_cancer.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)   
+            
+            if landmarks:
+                output_results(save_path+'landmarks/', landmark_image_mri,   '', tag +'_landmarks_fixed.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)   
+                 
+            ## Save transforms 
             save_all_transforms(transforms, sid, imSpatialInfo, scaling, folder)
 
             timings[s] = (end-start)/60.0

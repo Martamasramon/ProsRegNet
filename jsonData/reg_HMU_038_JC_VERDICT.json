@@ -3,6 +3,7 @@
     "moving-type":          "stack",
     "fixed":                "./datasets/testing/DWI/HMU_038_JC/DWI-b90.nii.gz",
     "fixed-segmentation":   "./datasets/testing/DWI/HMU_038_JC/DWI-b90-mask.nii.gz",
+    "cancer":               "./datasets/testing/DWI/HMU_038_JC/DWI-b90-cancer.nii.gz",
     "DWI":                  "True",
     "fIC":                  "True",
     "DWI-map":              "./datasets/testing/DWI/HMU_038_JC/FIT_fIC.nii.gz",

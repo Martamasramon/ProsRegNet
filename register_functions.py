@@ -14,6 +14,7 @@ from process_img                import *
 from skimage                    import io
 from preprocess                 import *
 from register_functions         import *
+from landmark_functions         import *
 from model.ProsRegNet_model     import ProsRegNet
 from collections                import OrderedDict
 from scipy.spatial.distance     import directed_hausdorff
@@ -142,13 +143,18 @@ def calc_dice(histo_mask, mri_mask):
             numerator   = 2 * np.sum(np.multiply(histo,mri))
             denominator = np.sum(histo + mri)
             dice        = np.sum(numerator/(denominator + 0.00001)) 
-            print('Slice ' + str(i) + ': ' + str(dice))
+            
+            if count > 1:
+                print('Slice ' + str(i) + ': ' + str(dice))
         except:
             try:
                 numerator   = 2 * torch.sum(torch.multiply(histo,mri))
                 denominator = torch.sum(histo + mri)
                 dice        = torch.sum(numerator/(denominator + 0.00001)) 
                 dice        = dice.data.cpu().numpy()
+                
+                if count > 1:
+                    print('Slice ' + str(i) + ': ' + str(dice))
             except:
                 dice = 1
                 print('Error calculating DICE.')
@@ -195,7 +201,8 @@ def hausdorff(mask_A, mask_B):
             
             hausdorff   = (hausdorff_A[0] + hausdorff_B[0])/2
             
-            print('Slice ' + str(i) + ': ', hausdorff)
+            if count > 1:
+                print('Slice ' + str(i) + ': ', hausdorff)
   
         except:
             hausdorff = 1
@@ -282,14 +289,15 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out
     
     if do_aff and do_tps:
         ######## TPS registration - low res images 
-        theta_aff_tps           = model_tps({'source_image': warped_image_aff, 'target_image': batch['target_image']})   
-        warped_image_aff_tps    = tpsTnf(warped_image_aff,theta_aff_tps)
+        theta_tps               = model_tps({'source_image': warped_image_aff, 'target_image': batch['target_image']})   
+        warped_image_aff_tps    = tpsTnf(warped_image_aff,theta_tps)
 
         warped_aff_tps  = {}
         for region in histo_regions:
-            warped_aff_tps[region] = tpsTnf(warped_aff[region], theta_aff_tps)
+            warped_aff_tps[region] = tpsTnf(warped_aff[region], theta_tps)
                    
-    transform = save_transform(theta_aff_1,theta_aff_2,theta_aff_tps)
+    transforms_json = save_transform(theta_aff_1,theta_aff_2,theta_tps)
+    transforms      = (theta_aff_1,theta_aff_2,theta_tps)
 
     ### Un-normalize images and convert to numpy
     if do_aff and do_tps:
@@ -309,7 +317,7 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out
     # Ignore negative values
     warped_image_np[warped_image_np < 0]         = 0    
    
-    return warped_image_np, warped_regions_np, transform
+    return warped_image_np, warped_regions_np, transforms_json, transforms
 
 def get_map(preprocess_fixed_dest, text='fIC'):
     
@@ -325,71 +333,97 @@ def get_map(preprocess_fixed_dest, text='fIC'):
     return out3D
 
    
-def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, half_out_size = 120, mri=False, fIC=''):     
-    ####### grab files that were preprocessed 
-    if fIC:
-        reverse = True
-    else:
-        reverse = False
+def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, landmarks_histo, landmarks_mri, half_out_size = 120, mri=False, fIC=None):     
+    
+    ### Grab MRI files that were preprocessed    
     mri_files = [pos_mri for pos_mri in sorted(os.listdir(preprocess_fixed_dest)) if pos_mri.endswith('.jpg') ]
     
-    hist_case   = []
     mri_case    = []
     mri_highRes = []
     mri_mask    = []
+    mri_cancer  = []
     
-    if mri:
-        hist_case  = getFiles(preprocess_moving_dest, 'mri_', sid, reverse =reverse )
-        
-    else:
-        hist_case  = getFiles(preprocess_moving_dest, 'hist', sid, reverse =reverse)
-        
-    cases = {}
-    for region in regions:
-        cases[region] = getFiles(preprocess_moving_dest, region, sid, reverse =reverse)
-    
-    print('\nRegions in registration:')
-    for region in regions:
-        print(region)
-
+    # Classify MRI images
     for mri_file in mri_files: 
         if sid in mri_file: 
             if 'Uncropped_' in mri_file: 
                 mri_highRes.append(mri_file)
             elif 'mriMask' in mri_file: 
                 mri_mask.append(mri_file)
-            else: 
+            elif 'cancer' in (mri_file):
+                mri_cancer.append(mri_file)
+            else:  
                 mri_case.append(mri_file)
+           
+                
+    ### Grab histology files that were preprocessed     
+    if fIC:
+        reverse = True
+    else:
+        reverse = False
+    if mri:
+        hist_case  = getFiles(preprocess_moving_dest, 'mri_', sid, reverse =reverse )
+    else:
+        hist_case  = getFiles(preprocess_moving_dest, 'hist', sid, reverse =reverse)
+        
+    cases = {}
+    for region in regions:
+        cases[region] = getFiles(preprocess_moving_dest, region, sid, reverse =reverse)
+
+    # Print out regions in histology
+    print('\nRegions in registration:')
+    for region in regions:
+        print(region)
 
     
-    w, h, _ = (cv2.imread(preprocess_fixed_dest + mri_highRes[0])).shape
-    count = min(len(hist_case), len(mri_case))
-    
-    padding_factor = int(round(max(np.add(coord[sid]['h'],np.multiply(2,coord[sid]['y_offset'])))/(coord[sid]['h'][0]+2*coord[sid]['y_offset'][0])))
+    ### Create empty arrays to store warped images
+    # Find dimensions
+    w, h, _         = (cv2.imread(preprocess_fixed_dest + mri_highRes[0])).shape
+    count           = min(len(hist_case), len(mri_case))
+    padding_factor  = int(round(max(np.add(coord[sid]['h'],np.multiply(2,coord[sid]['y_offset'])))/(coord[sid]['h'][0]+2*coord[sid]['y_offset'][0])))
 
     y_s = (half_out_size*(2+2*padding_factor))/h
     x_s = (half_out_size*(2+2*padding_factor))/w  
     
-    empty_histo     = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor),3))
-    empty_mask      = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor)))
+    array_size = half_out_size*(2+2*padding_factor)
 
-    out3Dhist       = empty_histo
+    # Create arrays
+    out3Dhist       = np.zeros((count, array_size, array_size, 3))
     out3Dmri        = np.zeros((count, w, h, 3))
     out3Dmri_mask   = np.zeros((count, w, h, 3)[:-1])
-
+    if len(mri_cancer)>0:
+        out3Dmri_cancer = np.zeros((count, w, h, 3))
+    
     out3D_regions = {}
     for region in regions:
-        out3D_regions[region]       = empty_mask
+        out3D_regions[region]       = np.zeros((count, array_size, array_size))
         
     if fIC:
-        out3D_regions['fIC']        = empty_histo
-        out3D_regions['fIC-mask']   = empty_histo
+        out3D_regions['fIC']        = np.zeros((count, array_size, array_size, 3))
+        out3D_regions['fIC-mask']   = np.zeros((count, array_size, array_size))
+        if len(mri_cancer)>0:
+            out3D_regions['fIC-cancer']  = np.zeros((count, array_size, array_size))
+            
+    if landmarks_mri:
+        landmark_list   = ([pos for pos in sorted(os.listdir(preprocess_fixed_dest + 'landmarks/'))])
+        landmark_image  = np.zeros((count, w, h, 3))
+        
+        landmark_cropped  = {}
+        landmark_highRes  = {}
+        for landmark_num in landmark_list:
+            landmark_cropped[landmark_num]  = ([pos for pos in sorted(os.listdir(preprocess_fixed_dest + 'landmarks/' + landmark_num)) if 'cropped' in pos])
+            landmark_highRes[landmark_num]  = ([pos for pos in sorted(os.listdir(preprocess_fixed_dest + 'landmarks/' + landmark_num)) if 'highRes' in pos])
     
+        all_landmarks_histo = np.zeros((count, array_size, array_size,3 ))
+    
+    ## Transform each slice
     all_transforms = {}
     for idx in range(count): 
+        # Get image paths
         source_image_path = preprocess_moving_dest + hist_case[idx]
         target_image_path = preprocess_fixed_dest  + mri_case[idx]
         
+        # Read data from coord.txt
         x_prime         = coord[sid]['x'][idx]
         y_prime         = coord[sid]['y'][idx]
         x_offset_prime  = coord[sid]['x_offset'][idx]
@@ -397,24 +431,22 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         h_prime         = coord[sid]['h'][idx]
         w_prime         = coord[sid]['w'][idx]
         
-        w_new = int(w_prime * x_s) + 2*int(x_offset_prime * x_s)
-        h_new = int(h_prime * y_s) + 2*int(y_offset_prime * y_s)
-        
+        # Calculate new dimensions
+        w_new   = int(w_prime * x_s) + 2*int(x_offset_prime * x_s)
+        h_new   = int(h_prime * y_s) + 2*int(y_offset_prime * y_s)
         start_x = int(x_prime * x_s) - int(x_offset_prime * x_s)
         end_x   = int(x_prime * x_s) + int(w_prime * x_s) + int(x_offset_prime * x_s)
         start_y = int(y_prime * y_s) - int(y_offset_prime * y_s)
         end_y   = int(y_prime * y_s) + int(h_prime * y_s) + int(y_offset_prime * y_s)
         
+        # Get histology regions
         imHisto         = {}
         for region in regions:
             imHisto[region] = cv2.imread(preprocess_moving_dest + cases[region][idx])
-
-        imMri_highRes   = cv2.imread(preprocess_fixed_dest  + mri_highRes[idx])
-        imMriMask       = cv2.imread(preprocess_fixed_dest  + mri_mask[idx])
         
-        ######## REGISTER
-        affTps, regions_aff_tps, transform = runCnn(model_cache, source_image_path, target_image_path, imHisto, out_size=2*half_out_size, mri=mri) 
-        all_transforms[idx] = transform
+        ######## REGISTER ########
+        affTps, regions_aff_tps, transforms_json, transforms = runCnn(model_cache, source_image_path, target_image_path, imHisto, out_size=2*half_out_size, mri=mri) 
+        all_transforms[idx] = transforms_json
         
         # Transform main histology & regions to MRI space    
         affTps = cv2.resize(affTps*255, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
@@ -439,19 +471,66 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             out3D_regions[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :, 0])
     
         if fIC:
-            temp_img = np.zeros((half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor),3))
-            temp_img[start_x:end_x, start_y:end_y,:]    = affTps
-            out3D_regions['fIC'][idx,:,:,:]             = np.uint8(cv2.flip(temp_img, 0))
+            out3D_regions['fIC'][idx,:,:,:]     = np.uint8(cv2.flip(out3Dhist[idx,:,:,:], 0))
+            out3D_regions['fIC-mask'][idx,:,:]  = np.uint8(cv2.flip(out3D_regions['mask'][idx,:,:], 0))
+            try:
+                out3D_regions['fIC-cancer'][idx,:,:]  = np.uint8(cv2.flip(out3D_regions['cancer'][idx,:,:], 0))
+            except:
+                pass   
             
-            temp_mask = np.zeros((half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor),3))
-            temp_mask[start_x:end_x, start_y:end_y,:]   = mask_image3d
-            out3D_regions['fIC-mask'][idx,:,:,:]        = np.uint8(cv2.flip(temp_mask, 0))
-        
+        # Transform & output histology landmarks
+        if landmarks_histo:
+            landmark_loc_histo = transform_landmarks(landmarks_histo[idx], transforms)
+            
+            # To save as NIFTI
+            landmark_histo_img = list_to_image((240,240), landmark_loc_histo[0,:], landmark_loc_histo[1,:], 2, compact=True)
+            landmark_histo_img = cv2.resize(landmark_histo_img, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
+            all_landmarks_histo[idx,start_x:end_x, start_y:end_y,:] = np.uint8(landmark_histo_img)
+            
+            # For error calc
+            temp_all      = np.zeros((array_size, array_size, landmark_loc_histo.shape[1]))
+            landmark_temp = list_to_image((240,240), landmark_loc_histo[0,:], landmark_loc_histo[1,:], 2)
+            landmark_temp = cv2.resize(landmark_temp, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
+            temp_all[start_x:end_x, start_y:end_y,:] = np.uint8(landmark_temp)
+            landmark_loc_histo = image_to_list(temp_all,  hist=False)
+                
         # Output MRI
-        out3Dmri[idx, :, :,:]    = np.uint8(imMri_highRes)
-        out3Dmri_mask[idx, :, :] = np.uint8((imMriMask[:, :, 0] > 255/2.0))
-
-    output3D_cache = (out3Dhist, out3Dmri, out3D_regions, out3Dmri_mask, [x_s,y_s], all_transforms)
+        imMri_highRes   = cv2.imread(preprocess_fixed_dest  + mri_highRes[idx])
+        imMriMask       = cv2.imread(preprocess_fixed_dest  + mri_mask[idx])
+        
+        out3Dmri[idx,:,:,:]         = np.uint8(imMri_highRes)
+        out3Dmri_mask[idx, :, :]    = np.uint8((imMriMask[:, :, 0] > 255/2.0))
+        
+        try:
+            imMriCancer = cv2.imread(preprocess_fixed_dest  + mri_cancer[idx])
+            out3Dmri_cancer[idx, :, :, :] = np.uint8(imMriCancer)
+        except:
+            print('error with cancer mask')
+            out3Dmri_cancer = np.zeros(())
+        
+        if landmarks_mri:
+            ## Use preprocessed imgs to calculate error
+            all_landmarks   = np.zeros((480,480,len(landmark_list)))
+            
+            for landmark_num in landmark_list:
+                img_highRes  = cv2.imread(preprocess_fixed_dest + 'landmarks/' + landmark_num + '/' + landmark_highRes[landmark_num][idx])
+                # For saving
+                landmark_image[:,:,:,0] += img_highRes[:,:,0]
+                # For error calc
+                img_landmark = cv2.resize(img_highRes, (480, 480), interpolation=cv2.INTER_CUBIC)
+                all_landmarks[:,:,int(landmark_num)] = img_landmark[:,:,0]
+            
+            landmark_loc_mri    = image_to_list(all_landmarks, hist=False)    
+            landmark_loc_histo  = landmark_loc_histo.cpu().detach()
+            
+            landmark_MSE = torch.mean((landmark_loc_mri - landmark_loc_histo)*(landmark_loc_mri - landmark_loc_histo))
+            print('MSE: ', landmark_MSE.numpy())
+            print('SE per point: ', torch.mean((landmark_loc_mri - landmark_loc_histo)*(landmark_loc_mri - landmark_loc_histo),0).numpy())
+        else:
+            landmark_image = {}
+            landmark_MSE   = 0
+            
+    output3D_cache = (out3Dhist, out3Dmri, out3Dmri_cancer, out3D_regions, out3Dmri_mask, [x_s,y_s], all_transforms, landmark_image, all_landmarks_histo)
     
     return output3D_cache
     

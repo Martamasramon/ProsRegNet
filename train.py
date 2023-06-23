@@ -163,7 +163,6 @@ for epoch in range(1, args.num_epochs+1):
 
     wandb.log({"train_loss":    train_loss, 
                "test_loss":     test_loss})
-    print('lr', scheduler.get_lr())
 
     scheduler.step()
     
