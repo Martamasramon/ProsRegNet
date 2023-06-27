@@ -123,23 +123,32 @@ def calc_dice(histo_mask, mri_mask):
     """
     calculate DICE coefficient between masks
     """
-    count, h, w = histo_mask.shape
+    
+    histo_mask[histo_mask > 0.5]  = 1
+    histo_mask[histo_mask <= 0.5] = 0   
+    
+    count, h, w = histo_mask.shape  
     dice_total  = 0
     
     if count > 1:
         print('---- DICE coefficient ----')
+    
+    if np.max(mri_mask) > 1:
+        mri_mask /= 255
         
-    for i in range(count):
+    for i in range(count):        
         if histo_mask.shape != mri_mask.shape:
             # Resize so same dimensions
             mri = cv2.resize(mri_mask[i,:,:], (w, h), interpolation=cv2.INTER_CUBIC)
+            mri[mri > 0.5]  = 1
+            mri[mri <= 0.5] = 0 
         else:
             mri = mri_mask[i,:,:]
-        
+            
         histo = histo_mask[i,:,:]
         
         # Calculate DICE
-        try:
+        try:            
             numerator   = 2 * np.sum(np.multiply(histo,mri))
             denominator = np.sum(histo + mri)
             dice        = np.sum(numerator/(denominator + 0.00001)) 
@@ -167,17 +176,26 @@ def calc_dice(histo_mask, mri_mask):
 def hausdorff(mask_A, mask_B):
     """
     calculate DICE coefficient between masks
-    """
+    """ 
+          
+    mask_A[mask_A > 0.5]  = 1
+    mask_A[mask_A <= 0.5] = 0
+        
     count, h, w = mask_A.shape
-    total  = 0
+    total       = 0
     
     if count > 1:
         print('---- Hausdorff distance ----')
+        
+    if np.max(mask_B) > 1:
+        mask_B /= 255
         
     for i in range(count):
         if mask_A.shape != mask_B.shape:
             # Resize so same dimensions
             B = cv2.resize(mask_B[i,:,:], (w, h), interpolation=cv2.INTER_CUBIC)
+            B[B > 0.5]  = 1
+            B[B <= 0.5] = 0 
         else:
             B = mask_B[i,:,:]
         
@@ -334,7 +352,11 @@ def get_map(preprocess_fixed_dest, text='fIC'):
 
    
 def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, landmarks_histo, landmarks_mri, half_out_size = 120, mri=False, fIC=None):     
-    
+    if landmarks_histo and landmarks_mri:
+        landmarks = True
+    else:
+        landmarks = False
+        
     ### Grab MRI files that were preprocessed    
     mri_files = [pos_mri for pos_mri in sorted(os.listdir(preprocess_fixed_dest)) if pos_mri.endswith('.jpg') ]
     
@@ -404,7 +426,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         if len(mri_cancer)>0:
             out3D_regions['fIC-cancer']  = np.zeros((count, array_size, array_size))
             
-    if landmarks_mri:
+    if landmarks:
         landmark_list   = ([pos for pos in sorted(os.listdir(preprocess_fixed_dest + 'landmarks/'))])
         landmark_image  = np.zeros((count, w, h, 3))
         
@@ -452,9 +474,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         affTps = cv2.resize(affTps*255, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
         for region in regions:
             regions_aff_tps[region] = cv2.resize(regions_aff_tps[region]*255, (h_new, w_new), interpolation=cv2.INTER_CUBIC)
-
-            if region != 'cancer':
-                regions_aff_tps[region] = regions_aff_tps[region] >255/1.5
+            regions_aff_tps[region] = regions_aff_tps[region] >255/1.5
             
         ## Create mask for warped histology
         mask_image3d  = np.zeros((affTps.shape[0], affTps.shape[1], 3), dtype=int)
@@ -479,7 +499,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
                 pass   
             
         # Transform & output histology landmarks
-        if landmarks_histo:
+        if landmarks:
             landmark_loc_histo = transform_landmarks(landmarks_histo[idx], transforms)
             
             # To save as NIFTI
@@ -508,7 +528,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             print('error with cancer mask')
             out3Dmri_cancer = np.zeros(())
         
-        if landmarks_mri:
+        if landmarks:
             ## Use preprocessed imgs to calculate error
             all_landmarks   = np.zeros((480,480,len(landmark_list)))
             
@@ -527,6 +547,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             print('MSE: ', landmark_MSE.numpy())
             print('SE per point: ', torch.mean((landmark_loc_mri - landmark_loc_histo)*(landmark_loc_mri - landmark_loc_histo),0).numpy())
         else:
+            all_landmarks_histo = {}
             landmark_image = {}
             landmark_MSE   = 0
             

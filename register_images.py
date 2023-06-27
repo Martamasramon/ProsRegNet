@@ -167,22 +167,20 @@ def main():
                 
             mriSpace        = imMri.GetSpacing()
             histSpace       = [mriSpace[0]/scaling[0], mriSpace[1]/scaling[1], mriSpace[2]]
-            mriDirection    = imMri.GetDirection() # direction = ( x ,0.0,0.0,0.0, y ,0.0,0.0,0.0, z )
+            mriDirection    = imMri.GetDirection() 
             mriOrigin       = imMri[:,:,coord[sid]['slice'][0]:coord[sid]['slice'][-1]].GetOrigin()
             imSpatialInfo   = (mriOrigin, mriSpace, mriDirection)
             histSpatialInfo = (mriOrigin, histSpace, mriDirection)
             
             # Write outputs as 3D volumes (.nii.gz format)   
             if dwi:
-                folder = 'histo-DWI/'  
                 if fIC:
                     tag = '_b90'     
                 else:
                     tag = '_b0'  
             else:
-                folder  = 'histo-T2/' 
                 tag     = '_T2'
-            save_path = outputPath + 'registration/' + folder
+            save_path = outputPath + 'registration/histo-' + tag[1:] + '/'
             
             ## Output histology
             output_results(save_path, out3Dhist, sid, tag + '_moved.', histSpatialInfo, model=opt.trained_models_name, extension = extension)
@@ -194,7 +192,7 @@ def main():
                 output_results(save_path, out3Dhist_regions['fIC'], sid, '_fIC_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
                 output_results(save_path, 1-out3Dhist_regions['fIC-mask'], sid, '_fIC_reverse_mask_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
             if landmarks:
-                output_results(save_path+'landmarks/', landmark_image_histo, '', tag +'_landmarks_moved.', histSpatialInfo,   model=opt.trained_models_name, extension = extension)  
+                output_results(save_path, landmark_image_histo, sid, tag +'_landmarks_moved.', histSpatialInfo,   model=opt.trained_models_name, extension = extension)  
                        
             ## Output MRI 
             output_results(save_path, out3Dmri,  sid, tag +'_fixed.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
@@ -210,10 +208,10 @@ def main():
                 output_results(save_path, out3Dmri_cancer,  sid, tag +'_cancer.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)   
             
             if landmarks:
-                output_results(save_path+'landmarks/', landmark_image_mri,   '', tag +'_landmarks_fixed.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)   
+                output_results(save_path, landmark_image_mri, sid, tag +'_landmarks_fixed.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)   
                  
             ## Save transforms 
-            save_all_transforms(transforms, sid, imSpatialInfo, scaling, folder)
+            save_all_transforms(transforms, sid, imSpatialInfo, scaling, 'histo-' + tag[1:] + '/')
 
             timings[s] = (end-start)/60.0
             print('Done!\n')
