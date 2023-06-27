@@ -7,7 +7,7 @@
     },
     "output_path": "./results/",
     "studies2process": {
-        "HMU_038_JC_1": "./jsonData/reg_HMU_038_JC_mpMRI.json"
+        "HMU_038_JC_0": "./jsonData/reg_HMU_038_JC.json"
     },
     "studies": {
         "HMU_038_JC_0": "./jsonData/reg_HMU_038_JC.json",
