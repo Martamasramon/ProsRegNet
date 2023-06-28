@@ -374,7 +374,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
                 mri_mask.append(mri_file)
             elif 'cancer' in (mri_file):
                 mri_cancer.append(mri_file)
-            else:  
+            elif 'mri' in (mri_file):  
                 mri_case.append(mri_file)
            
                 
