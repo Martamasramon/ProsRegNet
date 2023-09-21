@@ -1,0 +1,22 @@
+Use Cuda?  True
+cuda: 0
+Creating CNN model...
+Using SSD loss...
+Starting training...
+--- Epoch 1 ---
+Traceback (most recent call last):
+  File "train.py", line 161, in <module>
+    train_loss = train(model, loss, dataloader_train, pair_generation_tnf, optimizer)
+  File "/home/mmasramo/ProsRegNet/util/train_test_fn.py", line 16, in train
+    tnf_batch   = pair_generation_tnf(batch)
+  File "/home/mmasramo/ProsRegNet/geotnf/transformation.py", line 100, in __call__
+    warped_image_batch = self.geometricTnf(image_batch_B,theta_batch,self.padding_factor,self.crop_factor)
+  File "/home/mmasramo/ProsRegNet/geotnf/transformation.py", line 40, in __call__
+    sampling_grid = self.gridGen(theta_batch)
+  File "/home/mmasramo/.local/lib/python3.6/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/mmasramo/ProsRegNet/geotnf/transformation.py", line 192, in forward
+    warped_grid = self.apply_transformation(theta,torch.cat((self.grid_X,self.grid_Y),3))
+  File "/home/mmasramo/ProsRegNet/geotnf/transformation.py", line 240, in apply_transformation
+    W_X = torch.bmm(self.Li[:,:self.N,:self.N].expand((batch_size,self.N,self.N)),Q_X)
+RuntimeError: batch1 dim 2 must match batch2 dim 1

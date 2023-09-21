@@ -1,0 +1,15 @@
+{
+    "id": "HMU_066_JF_landmarks",
+    "invivo-accession": "",
+    "exvivo-accession": "",
+    "fixed": "./datasets/testing/MRI/HMU_066_JF_landmarks/HMU_066_JF_landmarks.nii.gz",
+    "fixed-segmentation": "./datasets/testing/MRI/HMU_066_JF_landmarks/HMU_066_JF_landmarks_mask.nii.gz",
+    "fixed-landmarks2": "",
+    "fixed-landmarks3": "",
+    "fixed-landmarks1": "",
+    "moving-type": "stack",
+    "moving": "./datasets/testing/Histology/HMU_066_JF_landmarks.json",
+    "T2w": "",
+    "ADC": "",
+    "DWI": ""
+}

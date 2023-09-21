@@ -10,12 +10,14 @@ class ParserStudyDict:
         self.fixed_segmentation_filename= None
         self.moving_type                = None
         self.moving_filename            = None
+        self.moving_segmentation_filename = None
         self.moving_dict                = None
         self.fIC                        = None
         self.DWI                        = None
         self.DWI_map                    = None
         self.cancer                     = None
         self.landmarks                  = None
+        self.exvivo                     = None
         
         self.SetFromDict()
         
@@ -39,6 +41,10 @@ class ParserStudyDict:
 
         try:
             self.moving_filename                = self.dict['moving']
+        except :
+            pass
+        try:
+            self.moving_segmentation_filename   = self.dict['moving-segmentation']
         except :
             pass
             
@@ -71,6 +77,11 @@ class ParserStudyDict:
         
         try:
             self.landmarks                      = self.dict['landmarks']                   
+        except :
+            pass
+        
+        try:
+            self.exvivo                         = self.dict['ex-vivo']                   
         except :
             pass
             

@@ -7,13 +7,19 @@
     },
     "output_path": "./results/",
     "studies2process": {
-        "HMU_038_JC_0": "./jsonData/reg_HMU_038_JC.json",
-        "HMU_038_JC_1": "./jsonData/reg_HMU_038_JC_mpMRI.json",
-        "HMU_038_JC_2": "./jsonData/reg_HMU_038_JC_VERDICT.json"
+        "HMU_007_TN_ex_in":     "./jsonData/exvivo-invivo/reg_HMU_007_TN.json"
     },
     "studies": {
-        "HMU_038_JC_0": "./jsonData/reg_HMU_038_JC.json",
-        "HMU_038_JC_1": "./jsonData/reg_HMU_038_JC_mpMRI.json",
-        "HMU_038_JC_2": "./jsonData/reg_HMU_038_JC_VERDICT.json"
+        "HMU_007_TN_ex_in":     "./jsonData/exvivo-invivo/reg_HMU_007_TN.json",
+        "HMU_007_TN":           "./jsonData/histo-exvivo/reg_HMU_007_TN.json",
+        "HMU_010_FH":           "./jsonData/histo-invivo-T2/reg_HMU_010_FH.json",
+        "HMU_113_MT":           "./jsonData/histo-invivo-T2/reg_HMU_113_MT.json",
+        "HMU_116_BC":           "./jsonData/histo-invivo-T2/reg_HMU_116_BC.json",
+        "HMU_119_MM":           "./jsonData/histo-invivo-T2/reg_HMU_119_MM.json",
+        "HMU_010_FH_verdict":   "./jsonData/histo-invivo-VERDICT/reg_HMU_010_FH.json",
+        "HMU_113_MT_verdict":   "./jsonData/histo-invivo-VERDICT/reg_HMU_113_MT.json",
+        "HMU_116_BC_verdict":   "./jsonData/histo-invivo-VERDICT/reg_HMU_116_BC.json",
+        "HMU_119_MM_verdict":   "./jsonData/histo-invivo-VERDICT/reg_HMU_119_MM.json",
+        "HMU_010_FH_mpmri":     "./jsonData/histo-invivo-mpMRI/reg_HMU_010_FH.json"
     }
 }

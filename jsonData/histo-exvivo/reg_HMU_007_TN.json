@@ -1,0 +1,12 @@
+{
+    "id":                   "HMU_007_TN",
+    "moving-type":          "stack",
+    "fixed":                "./datasets/testing/exvivo/HMU_007_TN/HMU_007_TN_ProstateVIEW.nii.gz",
+    "fixed-segmentation":   "./datasets/testing/exvivo/HMU_007_TN/HMU_007_TN_ProstateVIEW_mask.nii.gz",
+    "cancer":               "",
+    "DWI":                  "",
+    "fIC":                  "",
+    "DWI-map":              "",
+    "moving":               "./datasets/testing/Histology/HMU_007_TN.json",
+    "ex-vivo":              "True"
+}
