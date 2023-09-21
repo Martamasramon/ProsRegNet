@@ -8,11 +8,11 @@ import os
 
 def make_dir(dir):
     try: 
-        os.mkdir(dir)   
+        os.mkdir(dir)  
     except: 
         pass 
     
-def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta, dH, dW, h, w, x, y, x_offset, y_offset, fIC=''): 
+def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta, dH, dW, h, w, x, y, x_offset, y_offset): 
     rotated = np.zeros((dH, dW, 3))   
     try:
         path = s['regions'][region]['filename']
@@ -31,17 +31,20 @@ def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta
             # flip image horizontally
             if s['transform']['flip_h'] == 1: 
                 rotated_ann = cv2.flip(rotated_ann, 1)
-            if fIC: 
-                rotated_ann = cv2.flip(rotated_ann, 1)
         except: 
             pass 
         
-        # find edge and downsample
-        rotated_ann[rotated_ann > 0] = 1
+        if region != 'density':
+            # find edge and downsample
+            rotated_ann[rotated_ann > 0] = 1
 
-        # set edge to outline 
-        padRegion = np.zeros((w + 2*x_offset, h + 2*y_offset, 3))
-        padRegion[x_offset:w + x_offset, y_offset:h + y_offset,:] = (rotated_ann[x:x+w,y:y+h]>0)*255 
+            # set edge to outline 
+            padRegion = np.zeros((w + 2*x_offset, h + 2*y_offset, 3))
+            padRegion[x_offset:w + x_offset, y_offset:h + y_offset,:] = (rotated_ann[x:x+w,y:y+h]>0)*255 
+        else:
+            # set edge to outline 
+            padRegion = np.zeros((w + 2*x_offset, h + 2*y_offset))
+            padRegion[x_offset:w + x_offset, y_offset:h + y_offset] = rotated_ann[x:x+w,y:y+h,0]
         
         rotated = cv2.resize(padRegion, (dH, dW), interpolation=cv2.INTER_CUBIC)
     except: 
@@ -94,16 +97,13 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC='
             if s['transform']['flip_h'] == 1: 
                 rotated_hist = cv2.flip(rotated_hist, 1)
                 rotated_mask = cv2.flip(rotated_mask, 1)
-            if fIC: 
-                rotated_hist = cv2.flip(rotated_hist, 1)
-                rotated_mask = cv2.flip(rotated_mask, 1)
         except: 
             pass 
 
         # use mask to create a bounding box around slice
-        points = np.argwhere(rotated_mask[:,:,0] != 0)
-        points = np.fliplr(points)                      # store in x,y coordinates instead of row,col indices
-        y, x, h, w = cv2.boundingRect(points)           # create a rectangle around those points
+        points      = np.argwhere(rotated_mask[:,:,0] != 0)
+        points      = np.fliplr(points)                      # store in x,y coordinates instead of row,col indices
+        y, x, h, w  = cv2.boundingRect(points)           # create a rectangle around those points
         
         crop = rotated_hist[x:x+w, y:y+h,:]
         if h>w:
@@ -118,8 +118,8 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC='
         padHist[x_offset:crop.shape[0]+x_offset, y_offset:crop.shape[1]+y_offset, :] = crop
 
         # downsample image
-        size_high = 1024
-        padHist_high_res    = cv2.resize(padHist, (size_high, size_high), interpolation=cv2.INTER_CUBIC)
+        #size_high = 1024
+        #padHist_high_res    = cv2.resize(padHist, (size_high, size_high), interpolation=cv2.INTER_CUBIC)
         
         ### Keep???? 
         if dwi:
@@ -129,23 +129,22 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC='
         
         # Transform all regions
         for region in s['regions']:
-            transformAndSaveRegion(pre_process_moving_dest, case, slice,               s, region, theta, size_low,  size_low,  h, w, x, y, x_offset, y_offset, fIC=fIC)
-            transformAndSaveRegion(pre_process_moving_dest, case + '_high_res', slice, s, region, theta, size_high, size_high, h, w, x, y, x_offset, y_offset, fIC=fIC)
+            transformAndSaveRegion(pre_process_moving_dest, case, slice,               s, region, theta, size_low,  size_low,  h, w, x, y, x_offset, y_offset)
+            #transformAndSaveRegion(pre_process_moving_dest, case + '_high_res', slice, s, region, theta, size_high, size_high, h, w, x, y, x_offset, y_offset)
 
         # Write images, with new filename
         cv2.imwrite(pre_process_moving_dest + case + '/hist_' + case + '_' + slice +'.png', padHist_low_res)
-        cv2.imwrite(pre_process_moving_dest + case + '_high_res' + '/hist_' + case + '_high_res_' + slice +'.png', padHist_high_res)
+        #cv2.imwrite(pre_process_moving_dest + case + '_high_res' + '/hist_' + case + '_high_res_' + slice +'.png', padHist_high_res)
 
-        #try:
-        dims                = x, y, w, h, x_offset, y_offset
-        landmarks[count]    = preprocess_landmarks(s, row, col, M, fIC, dims, 240)
-        
-        for i in range(8):
-            cv2.imwrite(pre_process_moving_dest + case + '/' + case + '_landmark_'+str(i)+'_slice_' + slice +'.png', landmarks[count][:,:,i]*255)
-        count              += 1
-        #except:
-        #    print('fail')
-        #    pass
+        try:
+            dims                = x, y, w, h, x_offset, y_offset
+            landmarks[count]    = preprocess_landmarks(s, row, col, M, fIC, dims, 240)
+            
+            for i in range(8): # NOT 8, NUM LANDMARKS!
+                cv2.imwrite(pre_process_moving_dest + case + '/' + case + '_landmark_'+str(i)+'_slice_' + slice +'.png', landmarks[count][:,:,i]*255)
+            count              += 1
+        except:
+            pass
         
     return landmarks
         
@@ -156,7 +155,7 @@ def getArray(img_path):
     return array
     
 #preprocess mri mha files to slices here
-def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False, dwi_map='', fIC=False, cancer=None, landmarks=None):     
+def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False, dwi_map='', fIC=False, cancer=None, landmarks=None, exvivo=False):     
     make_dir(pre_process_fixed_dest + case)
 
     imMri = getArray(fixed_img_mha)
@@ -199,7 +198,6 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
     coord[case]['h'] = []
     coord[case]['w'] = []
     coord[case]['slice']  = []
-    
         
     for slice in range(imMri.shape[0]):
         if np.sum(np.ndarray.flatten(imMriMask[slice, :, :])) == 0: 

@@ -1,0 +1,106 @@
+{
+    "os": "Linux-3.10.0-1160.92.1.el7.x86_64-x86_64-with-centos-7.9.2009-Core",
+    "python": "3.6.9",
+    "heartbeatAt": "2023-09-20T18:00:42.891723",
+    "startedAt": "2023-09-20T18:00:41.945337",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--geometric-model",
+        "tps",
+        "-n",
+        "mri_high_res",
+        "-t",
+        "mri_train_2.csv",
+        "-s",
+        "mri_test_2.csv"
+    ],
+    "state": "running",
+    "program": "train.py",
+    "codePath": "train.py",
+    "git": {
+        "remote": "https://github.com/Martamasramon/ProsRegNet.git",
+        "commit": "e9acefd3159461d057adfdaff427cdef793e2daf"
+    },
+    "email": "marta.masramon@gmail.com",
+    "root": "/home/mmasramo/ProsRegNet",
+    "host": "ernie.local",
+    "username": "mmasramo",
+    "executable": "/share/apps/python-3.6.9-tkinter/bin/python3",
+    "cpu_count": 8,
+    "cpu_count_logical": 8,
+    "cpu_freq": {
+        "current": 1225.0847499999998,
+        "min": 1200.0,
+        "max": 3700.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 1199.926,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1318.359,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1282.763,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1199.926,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1199.926,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1199.926,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1199.926,
+            "min": 1200.0,
+            "max": 3700.0
+        },
+        {
+            "current": 1199.926,
+            "min": 1200.0,
+            "max": 3700.0
+        }
+    ],
+    "disk": {
+        "total": 47.936073303222656,
+        "used": 36.25941467285156
+    },
+    "gpu": "NVIDIA GeForce GTX TITAN X",
+    "gpu_count": 4,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce GTX TITAN X",
+            "memory_total": 12884901888
+        },
+        {
+            "name": "NVIDIA GeForce RTX 2080",
+            "memory_total": 8589934592
+        },
+        {
+            "name": "NVIDIA GeForce RTX 2080",
+            "memory_total": 8589934592
+        },
+        {
+            "name": "NVIDIA GeForce RTX 2080",
+            "memory_total": 8589934592
+        }
+    ],
+    "memory": {
+        "total": 92.74982070922852
+    }
+}

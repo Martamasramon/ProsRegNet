@@ -17,6 +17,9 @@ export LD_LIBRARY_PATH=/share/apps/python-3.6.9-tkinter/lib:$LD_LIBRARY_PATH
 
 python3 register_images.py -i jsonData/TCIA_FUSION.json -v -pm -pf -r  -n 'hist-mri-dwi2'
 
+python3 transform_histo.py -m 'T2'
+python3 transform_histo.py -m 'b0'
+python3 transform_histo.py -m 'b90'
 # -v: verbose, -pf: process fixed (MRI), -pm: process moving (histo), -r: register
 
 date
