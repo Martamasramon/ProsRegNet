@@ -16,6 +16,7 @@ class ParserStudyDict:
         self.DWI                        = None
         self.DWI_map                    = None
         self.cancer                     = None
+        self.healthy                    = None
         self.landmarks                  = None
         self.exvivo                     = None
         
@@ -25,8 +26,7 @@ class ParserStudyDict:
         try:
             self.fixed_filename                 = self.dict['fixed']
         except :
-            pass
-            
+            pass  
         try:
             self.fixed_segmentation_filename    = self.dict['fixed-segmentation']
         except :
@@ -74,6 +74,10 @@ class ParserStudyDict:
             self.cancer                         = self.dict['cancer']                   
         except :
             pass
+        try:
+            self.healthy                        = self.dict['healthy']                   
+        except :
+            pass
         
         try:
             self.landmarks                      = self.dict['landmarks']                   
@@ -104,7 +108,6 @@ class ParserStudyDict:
     def ReadMovingImage(self):   
         
         if self.moving_type and self.moving_type.lower()=="stack":
-            #print(self.moving_filename)
             with open(self.moving_filename) as f:
                 self.moving_dict = json.load(f)
         else:

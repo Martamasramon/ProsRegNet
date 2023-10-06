@@ -1,0 +1,15 @@
+{
+    "version": "0.1",
+    "type": "registration",
+    "method": {
+        "type": "3DRegistration",
+        "params": "-da -dd"
+    },
+    "output_path": "./results/",
+    "studies2process": {
+        "HMU_113_MT":       "./jsonData/T2-DWI/reg_HMU_113_MT.json"
+    },
+    "studies": {
+        "HMU_113_MT":       "./jsonData/T2-DWI/reg_HMU_113_MT.json"
+    }
+}

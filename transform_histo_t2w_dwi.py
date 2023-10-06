@@ -13,10 +13,10 @@ def main():
         half_out_size = 512
         
         # Get info from json files
-        json_path_histo_ex_vivo     = './transforms/transform_' + sid + '.json'
-        json_path_ex_vivo_in_vivo   = './transforms/transform_' + sid + '_ex_vivo_in_vivo.json'
-        json_data_histo_ex_vivo     = get_data(json_path_histo_ex_vivo)
-        json_data_ex_vivo_in_vivo   = get_data(json_path_ex_vivo_in_vivo)
+        json_path_histo_t2  = './transforms/transform_' + sid + '.json'
+        json_path_t2_dwi    = './transforms/transform_' + sid + '_T2_DWI.json'
+        json_data_histo_t2  = get_data(json_path_histo_t2)
+        json_data_t2_dwi    = get_data(json_path_t2_dwi)
         
         # Get image paths
         img_path   = os.path.join('./results/preprocess/hist' , sid+'_high_res/')
@@ -26,20 +26,21 @@ def main():
         count               = len(all_paths['_histo'])
         
         # Get coordinate information of dwi
-        with open('coord.txt') as f:
+        with open('coord_dwi.txt') as f:
             coord = json.load(f)
         slices = coord[sid]['slice']
         
-        in_vivo_path    = os.path.join('./results/preprocess/mri/' , sid, 'mriUncropped_' + sid + '_' + str(slices[0]).zfill(2) + '.jpg')
-        w, h, _         = (cv2.imread(in_vivo_path)).shape
+        dwi_path        = os.path.join('./results/preprocess/dwi/' , sid, 'mriUncropped_' + sid + '_' + str(slices[0]).zfill(2) + '.jpg')
+        w, h, _         = (cv2.imread(dwi_path)).shape
         padding_factor  = int(round(max(np.add(coord[sid]['h'],np.multiply(2,coord[sid]['y_offset'])))/(coord[sid]['h'][0]+2*coord[sid]['y_offset'][0])))
         y_s             = (half_out_size*(2+2*padding_factor))/h
         x_s             = (half_out_size*(2+2*padding_factor))/w  
+        #scale = 2*half_out_size/80
                     
         # Get sid params
-        origin      = json_data_ex_vivo_in_vivo["origin"]        
-        direction   = json_data_ex_vivo_in_vivo["direction"]    
-        spacing     = json_data_ex_vivo_in_vivo["spacing"]       
+        origin      = json_data_t2_dwi["origin"]        
+        direction   = json_data_t2_dwi["direction"]    
+        spacing     = json_data_t2_dwi["spacing"]       
         
         hist_space  = [spacing[0]/x_s, spacing[1]/y_s, spacing[2]]
         spatialInfo = (origin, hist_space, direction)
@@ -52,13 +53,13 @@ def main():
 
         # Get transformation params
         for i in range(count):
-            theta_aff_1 = json_data_histo_ex_vivo[str(i)]["affine_1"]
-            theta_aff_2 = json_data_histo_ex_vivo[str(i)]["affine_2"]
-            theta_tps_1 = json_data_histo_ex_vivo[str(i)]["tps"]
+            theta_aff_1 = json_data_histo_t2[str(i)]["affine_1"]
+            theta_aff_2 = json_data_histo_t2[str(i)]["affine_2"]
+            theta_tps_1 = json_data_histo_t2[str(i)]["tps"]
             
-            theta_aff_3 = json_data_ex_vivo_in_vivo[str(i)]["affine_1"]
-            theta_aff_4 = json_data_ex_vivo_in_vivo[str(i)]["affine_2"]
-            theta_tps_2 = json_data_ex_vivo_in_vivo[str(i)]["tps"]
+            theta_aff_3 = json_data_t2_dwi[str(i)]["affine_1"]
+            theta_aff_4 = json_data_t2_dwi[str(i)]["affine_2"]
+            theta_tps_2 = json_data_t2_dwi[str(i)]["tps"]
             transforms  = (create_tensor(theta_aff_1), create_tensor(theta_aff_2), create_tensor(theta_tps_1), 
                             create_tensor(theta_aff_3), create_tensor(theta_aff_4), create_tensor(theta_tps_2))
             
@@ -73,6 +74,6 @@ def main():
 
         # Save images
         for annot in all_paths:
-            output_results('./results/registration/histo-ex-in-vivo/', out_histo[annot], sid, annot, spatialInfo, 'final', extension = '.nii.gz')
+            output_results('./results/registration/histo-DWI/', out_histo[annot], sid, annot, spatialInfo, 'final', extension = '.nii.gz')
     
 main()

@@ -1,10 +1,10 @@
 {
     "id":                       "HMU_007_TN",
     "fixed":                    "./datasets/testing/MRI/HMU_007_TN/HMU_007_TN_T2.nii.gz", 
-    "fixed-segmentation":       "./datasets/testing/MRI/HMU_007_TN/HMU_007_TN_T2_mask.nii.gz", 
+    "fixed-segmentation":       "./datasets/testing/MRI/HMU_007_TN/HMU_007_TN_T2_mask_2.nii.gz", 
     "moving-type":              "stack",
     "moving":                   "./datasets/testing/exvivo/HMU_007_TN/HMU_007_TN_ProstateVIEW.nii.gz", 
-    "moving-segmentation":      "./datasets/testing/exvivo/HMU_007_TN/HMU_007_TN_ProstateVIEW_mask.nii.gz", 
+    "moving-segmentation":      "./datasets/testing/exvivo/HMU_007_TN/HMU_007_TN_ProstateVIEW_mask_2.nii.gz", 
     "T2w": "",
     "ADC": "",
     "DWI": ""

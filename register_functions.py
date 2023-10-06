@@ -232,7 +232,7 @@ def hausdorff(mask_A, mask_B):
     print('Average Hausdorff distance: ' + str(total))
     return total
 
-def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out_size=240, mri=False):
+def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out_size=240, mri=False, exvivo=False):
     """
     Run the cnn on images and return 3D images
     """
@@ -241,7 +241,7 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out
     model_aff, model_tps, do_aff, do_tps, use_cuda = model_cache
     
     affTnf = GeometricTnf(geometric_model='affine', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
-    if mri:
+    if mri and not exvivo:
         tpsTnf = GeometricTnf(geometric_model='tps-mri', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
     else:
         tpsTnf = GeometricTnf(geometric_model='tps', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
@@ -268,6 +268,7 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out
     ##### Preprocess masks 
     source_image_mask_var = process_image(source_image, use_cuda, out_size=out_size, mask=True)
     target_image_mask_var = process_image(target_image, use_cuda, out_size=out_size, mask=True)
+    
 
     #### Preprocess images 
     source_image_var = process_image(source_image, use_cuda, out_size=out_size)
@@ -352,7 +353,7 @@ def get_map(preprocess_fixed_dest, text='fIC'):
     return out3D
 
    
-def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, landmarks_histo=None, landmarks_mri=None, half_out_size = 120, mri=False, fIC=None):     
+def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, landmarks_histo=None, landmarks_mri=None, half_out_size = 120, mri=False, exvivo=False, fIC=None):     
     if landmarks_histo and landmarks_mri:
         landmarks = True
     else:
@@ -369,9 +370,9 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     # Classify MRI images
     for mri_file in mri_files: 
         if sid in mri_file: 
-            if 'Uncropped_' in mri_file: 
+            if 'uncropped' in mri_file: 
                 mri_highRes.append(mri_file)
-            elif 'mriMask' in mri_file: 
+            elif 'mask' in mri_file: 
                 mri_mask.append(mri_file)
             elif 'cancer' in (mri_file):
                 mri_cancer.append(mri_file)
@@ -398,7 +399,6 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     for region in regions:
         print(region)
 
-    
     ### Create empty arrays to store warped images
     # Find dimensions
     w, h, _         = (cv2.imread(preprocess_fixed_dest + mri_highRes[0])).shape
@@ -423,16 +423,12 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         
     if fIC:
         out3D_regions['fIC']        = np.zeros((count, array_size, array_size, 3))
-        out3D_regions['fIC-mask']   = np.zeros((count, array_size, array_size))
-        if len(mri_cancer)>0:
-            out3D_regions['fIC-cancer']  = np.zeros((count, array_size, array_size))
-        try:
-            density                       = out3D_regions['density']
-            out3D_regions['fIC-density']  = np.zeros((count, array_size, array_size))
-        except:
-            pass
+        for region in regions:
+            if region != 'density':
+                out3D_regions['fIC_'+region] = np.zeros((count, array_size, array_size))
+            else:
+                out3D_regions['fIC_'+region] = np.zeros((count, array_size, array_size, 3))
         
-            
     if landmarks:
         landmark_list   = ([pos for pos in sorted(os.listdir(preprocess_fixed_dest + 'landmarks/'))])
         landmark_image  = np.zeros((count, w, h, 3))
@@ -475,7 +471,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             imHisto[region] = cv2.imread(preprocess_moving_dest + cases[region][idx])
         
         ######## REGISTER ########
-        affTps, regions_aff_tps, transforms_json, transforms = runCnn(model_cache, source_image_path, target_image_path, imHisto, out_size=2*half_out_size, mri=mri) 
+        affTps, regions_aff_tps, transforms_json, transforms = runCnn(model_cache, source_image_path, target_image_path, imHisto, out_size=2*half_out_size, mri=mri, exvivo=exvivo) 
         all_transforms[idx] = transforms_json
         
         # Transform main histology & regions to MRI space    
@@ -492,10 +488,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         ## Create mask for warped histology
         mask_image3d  = np.zeros((affTps.shape[0], affTps.shape[1], 3), dtype=int)
         for i in range(3):
-            if mri:
-                mask_image3d[:, :, i]  = regions_aff_tps['Mask'][:, :, 0]
-            else:
-                mask_image3d[:, :, i]  = regions_aff_tps['mask'][:, :, 0]
+            mask_image3d[:, :, i]  = regions_aff_tps['mask'][:, :, 0]
         affTps = np.multiply(affTps,mask_image3d)   
             
         # Output histology & regions
@@ -503,17 +496,13 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         for region in regions:
             out3D_regions[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :, 0])
     
-        if fIC:
-            out3D_regions['fIC'][idx,:,:,:]     = np.uint8(cv2.flip(cv2.flip(out3Dhist[idx,:,:,:], 0),1))
-            out3D_regions['fIC-mask'][idx,:,:]  = np.uint8(cv2.flip(cv2.flip(out3D_regions['mask'][idx,:,:], 0),1))
-            try:
-                out3D_regions['fIC-cancer'][idx,:,:]  = np.uint8(cv2.flip(cv2.flip(out3D_regions['cancer'][idx,:,:], 0),1))
-            except:
-                pass   
-            try:
-                out3D_regions['fIC-density'][idx,:,:]  = np.uint8(cv2.flip(cv2.flip(out3D_regions['density'][idx,:,:], 0),1))
-            except:
-                pass  
+        if fIC:            
+            out3D_regions['fIC'][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(cv2.flip(affTps, -1))
+            for region in regions:
+                if region != 'density':
+                    out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y]  = np.uint8(cv2.flip(np.float32(regions_aff_tps[region][:, :, 0]), -1))   
+                else:
+                    out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(cv2.flip(regions_aff_tps[region], -1))   
             
         # Transform & output histology landmarks
         if landmarks:
