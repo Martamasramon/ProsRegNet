@@ -64,6 +64,12 @@ def main():
     else: 
         extension = 'nii.gz'
 
+    try:
+        with open(coord_path) as f:
+            coord = json.load(f)    
+    except:
+        coord = {}
+        
     ############### START REGISTRATION HERE
     studies     = json_obj.studies
     toProcess   = json_obj.ToProcess
@@ -90,7 +96,6 @@ def main():
         dwi_map         = studyParser.DWI_map
         landmarks       = studyParser.landmarks
         exvivo          = studyParser.exvivo
-        print('exvivo', exvivo)
         
         for slice in moving_dict:
             regions = moving_dict[slice]['regions']
@@ -112,12 +117,6 @@ def main():
             else:  
                 preprocess_fixed_dest  = outputPath + '/preprocess/mri/'
                 coord_path             = 'coord.txt'
-        
-        try:
-            with open(coord_path) as f:
-                coord = json.load(f)    
-        except:
-            coord = {}
 
         ###### PREPROCESSING HISTOLOGY HERE #############################################################
         if preprocess_moving == True: 
@@ -127,11 +126,10 @@ def main():
         else:
             landmarks_histo = {}
 
-
         ###### PREPROCESSING MRI HERE #############################################################
         if preprocess_fixed == True:
             print ("Preprocessing fixed case:", sid, '...')
-            coord = preprocess_mri(fixed_img_mha, fixed_seg, preprocess_fixed_dest, coord, sid, dwi_map=dwi_map, fIC=fIC, cancer=mri_cancer, landmarks=landmarks, exvivo=exvivo)
+            coord = preprocess_mri(fixed_img_mha, fixed_seg, preprocess_fixed_dest, coord, sid, dwi_map=dwi_map, fIC=fIC, cancer=mri_cancer, landmarks=landmarks)
             print("Finished preprocessing fixed image", sid)
 
             with open(coord_path, 'w') as json_file: 
@@ -201,16 +199,14 @@ def main():
             ## Output histology
             output_results(save_path, out3Dhist, sid, tag + '_moved.', histSpatialInfo, model=opt.trained_models_name, extension = extension)
             for region in regions:
-                output_results(save_path, out3Dhist_regions[region], sid, tag + '_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
-            #output_results(save_path, 1-out3Dhist_regions['mask'], sid, tag + '_moved_reverse_mask.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+                if 'fIC' not in region:
+                    output_results(save_path, out3Dhist_regions[region], sid, tag + '_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
             
             if dwi and fIC:
                 output_results(save_path, out3Dhist_regions['fIC'], sid, '_fIC_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
-                output_results(save_path, out3Dhist_regions['fIC-mask'], sid, '_fIC_mask_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
-                try:
-                    output_results(save_path, out3Dhist_regions['fIC-density'], sid, '_fIC_density_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
-                except:
-                    pass
+                for region in regions:
+                    if 'fIC' in region:
+                        output_results(save_path, out3Dhist_regions[region], sid, '_' + region + '_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
                 
             if landmarks:
                 output_results(save_path, landmark_image_histo, sid, tag +'_landmarks_moved.', histSpatialInfo,   model=opt.trained_models_name, extension = extension)  
@@ -230,10 +226,10 @@ def main():
                     print("Couldn't get DWI map")
                     
             if mri_cancer:
-                output_results(save_path, out3Dmri_cancer,  sid, tag +'_cancer.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)   
+                output_results(save_path, out3Dmri_cancer,  sid, tag +'_fixed_cancer.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)   
 
                 if fIC:
-                    output_results(save_path, fIC_cancer,  sid, '_fIC_cancer.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)   
+                    output_results(save_path, fIC_cancer,  sid, '_fIC_fixed_cancer.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)   
 
             if landmarks:
                 output_results(save_path, landmark_image_mri, sid, tag +'_landmarks_fixed.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)   

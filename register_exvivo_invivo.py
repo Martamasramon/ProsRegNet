@@ -101,7 +101,7 @@ def main():
         ###### PREPROCESSING EX-VIVO IMAGES HERE #############################################################
         if preprocess_moving == True: 
             print('Preprocessing moving sid:', sid, '...')
-            coord_exvivo = preprocess_mri(moving_img, moving_seg, preprocess_moving_dest, coord, sid, crop_mask=True)
+            coord_exvivo = preprocess_mri(moving_img, moving_seg, preprocess_moving_dest, coord_exvivo, sid, crop_mask=True, exvivo=True)
             print('Finished preprocessing moving image (ex-vivo)', sid)
             
             with open('coord_exvivo.txt', 'w') as json_file: 
@@ -111,7 +111,7 @@ def main():
         ###### PREPROCESSING IN-VIVO IMAGES HERE #############################################################
         if preprocess_fixed == True:
             print ("Preprocessing fixed case:", sid, '...')
-            coord = preprocess_mri(fixed_img, fixed_seg, preprocess_fixed_dest, coord_exvivo, sid)
+            coord = preprocess_mri(fixed_img, fixed_seg, preprocess_fixed_dest, coord, sid)
             print("Finished processing fixed image (in-vivo)", sid)
 
             with open('coord.txt', 'w') as json_file: 
@@ -132,24 +132,23 @@ def main():
 
             ##### REGISTER
             start          = time.time()
-            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord_exvivo, model_cache, sid, regions, mri=True)
+            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, regions, mri=True, exvivo=True)
             end            = time.time()
             
             out3D_exvivo, out3D_invivo, _, out3D_exvivo_regions, out3D_invivo_mask, scaling, transforms, _, _ = output3D_cache
-            
             print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
             
-            #### CALCULATE DICE
+            #### CALCULATE ERROR
             calc_dice(out3D_exvivo_regions['Mask'], out3D_invivo_mask)
-            
+            hausdorff(out3D_exvivo_regions['Mask'], out3D_invivo_mask)
+
             #### SAVE RESULTS
             image_invivo    = sitk.ReadImage(fixed_img)
             
-            invivo_space    = image_invivo.GetSpacing()
-            exvivo_space    = [invivo_space[0]/scaling[0], invivo_space[1]/scaling[1], invivo_space[2]]
-            mriDirection    = image_invivo.GetDirection()
-            mriOrigin       = image_invivo[:,:,coord_exvivo[sid]['slice'][0]:coord_exvivo[sid]['slice'][-1]].GetOrigin()
-            
+            invivo_space        = image_invivo.GetSpacing()
+            exvivo_space        = [invivo_space[0]/scaling[0], invivo_space[1]/scaling[1], invivo_space[2]]
+            mriDirection        = image_invivo.GetDirection()
+            mriOrigin           = image_invivo[:,:,coord[sid]['slice'][0]:coord[sid]['slice'][-1]].GetOrigin()
             invivo_SpatialInfo  = (mriOrigin, invivo_space, mriDirection)
             exvivo_SpatialInfo  = (mriOrigin, exvivo_space, mriDirection)
             
@@ -160,7 +159,7 @@ def main():
             output_results(save_path, out3D_exvivo,                 sid, '_moved.',      exvivo_SpatialInfo,  model=opt.trained_models_name, extension = extension)
             output_results(save_path, out3D_exvivo_regions['Mask'], sid, '_moved_mask.', exvivo_SpatialInfo,  model=opt.trained_models_name, extension = extension)
             
-            save_all_transforms(transforms, sid, invivo_SpatialInfo, scaling, '_exvivo_invivo')
+            save_all_transforms(transforms, sid, invivo_SpatialInfo, scaling, '/exvivo_invivo/')
 
             timings[s] = (end-start)/60.0
             print('Done!')

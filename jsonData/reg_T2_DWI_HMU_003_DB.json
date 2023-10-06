@@ -1,7 +1,0 @@
-{
-    "fixed-segmentation": "./datasets/testing/DWI/HMU_003_DB/DWI_HMU_003_DB_mask.nii.gz", 
-    "moving": "./datasets/testing/MRI/HMU_003_DB/MRI_in_vivo_HMU_003_DB.nii.gz", 
-    "fixed": "./datasets/testing/DWI/HMU_003_DB/DWI_HMU_003_DB.nii.gz", 
-    "id": "HMU_003_DB", 
-    "moving-segmentation": "./datasets/testing/MRI/HMU_003_DB/MRI_in_vivo_HMU_003_DB_mask.nii.gz"
-}

@@ -65,7 +65,7 @@ def main():
     except:
         coord = {}
     try:
-        with open('coord_dwi.txt') as f:
+        with open('coord_dwi_b90.txt') as f:
             coord_dwi = json.load(f)    
     except:
         coord_dwi = {}
@@ -77,7 +77,7 @@ def main():
 
     ###### PREPROCESSING DESTINATIONS ######################################
     preprocess_moving_dest = outputPath + '/preprocess/mri/'
-    preprocess_fixed_dest  = outputPath + '/preprocess/dwi/'
+    preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b90/'
 
     # start doing preprocessing on each case and register
     for s in studies:
@@ -95,13 +95,22 @@ def main():
         fixed_seg   = studyParser.fixed_segmentation_filename
         moving_img  = studyParser.moving_filename
         moving_seg  = studyParser.moving_segmentation_filename
+        fIC_path    = studyParser.fIC
+        cancer      = studyParser.cancer
+        healthy     = studyParser.healthy
 
-        regions = ['Mask']
+        regions = []
+        if moving_seg:
+            regions.append('mask')
+        if cancer:
+            regions.append('cancer')
+        if healthy:
+            regions.append('healthy')
 
         ###### PREPROCESSING T2 HERE #############################################################
         if preprocess_moving == True: 
             print('Preprocessing moving sid:', sid, '...')
-            coord = preprocess_mri(moving_img, moving_seg, preprocess_moving_dest, coord, sid, crop_mask=True)
+            coord = preprocess_mri(moving_img, moving_seg, preprocess_moving_dest, coord, sid, crop_mask=True, cancer=cancer, healthy=healthy)
             print('Finished preprocessing', sid)
             
             with open('coord.txt', 'w') as json_file: 
@@ -114,7 +123,7 @@ def main():
             coord_dwi = preprocess_mri(fixed_img, fixed_seg, preprocess_fixed_dest, coord_dwi, sid)
             print("Finished processing fixed mha", sid)
 
-            with open('coord_dwi.txt', 'w') as json_file: 
+            with open('coord_dwi_b90.txt', 'w') as json_file: 
                 json.dump(coord_dwi, json_file)
                 
                 
@@ -122,26 +131,27 @@ def main():
         if run_registration == True: 
 
             ##### LOAD MODELS
-            print('.'*10, 'Begin deep learning registration for ' + sid + '.'*10)
+            print('\n' + '.'*10, 'Begin deep learning registration for ' + sid + '.'*10)
             print('Using trained model: ' + opt.trained_models_name)
 
-            feature_extraction_cnn = 'resnet101'
-            model_cache = load_models(feature_extraction_cnn, model_aff_path, model_tps_path,do_deformable=True,tps_type='tps-mri',mri=True)
+            model_cache = load_models(model_aff_path, model_tps_path,do_deformable=True,tps_type='tps-mri',mri=True)
 
             ##### REGISTER
             start          = time.time()
             output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord_dwi, model_cache, sid, regions, half_out_size=40, mri=True)
             end            = time.time()
             
-            out3D_T2, out3D_DWI, out3D_T2_regions, out3D_DWI_mask, scaling, transforms = output3D_cache
-            print("Registration done in {:6.3f}(min)".format((end-start)/60.0))
+            out3D_T2, out3D_DWI, _, out3D_T2_regions, out3D_DWI_mask, scaling, transforms, _, _ = output3D_cache
+
+            print("\nRegistration done in {:6.3f}(min)".format((end-start)/60.0))
             
             #### CALCULATE DICE
-            calc_dice(out3D_T2_regions['Mask'], out3D_DWI_mask)
+            calc_dice(out3D_T2_regions['mask'], out3D_DWI_mask)
+            hausdorff(out3D_T2_regions['mask'], out3D_DWI_mask)
+
             
             #### SAVE RESULTS
-            imDWI           = sitk.ReadImage(fixed_img)
-            #imT2            = sitk.ReadImage(moving_img)
+            imDWI           = sitk.ReadImage(fIC_path)
             
             DWISpace        = imDWI.GetSpacing()
             T2Space         = [DWISpace[0]/scaling[0], DWISpace[1]/scaling[1], DWISpace[2]]
@@ -154,10 +164,11 @@ def main():
             # Write outputs as 3D volumes (.nii.gz format)   
             save_path = outputPath + 'registration/' + opt.save_path + '/'                    
             output_results(save_path, out3D_DWI,                sid, '_fixed.',      dwiSpatialInfo, model=opt.trained_models_name, extension = extension)
+            output_results(save_path, out3D_DWI_mask,           sid, '_fixed_mask.', dwiSpatialInfo, model=opt.trained_models_name, extension = extension)
             output_results(save_path, out3D_T2,                 sid, '_moved.',      t2SpatialInfo,  model=opt.trained_models_name, extension = extension)
-            output_results(save_path, out3D_T2_regions['Mask'], sid, '_moved_mask.', t2SpatialInfo,  model=opt.trained_models_name, extension = extension)
+            output_results(save_path, out3D_T2_regions['mask'], sid, '_moved_mask.', t2SpatialInfo,  model=opt.trained_models_name, extension = extension)
             
-            save_all_transforms(transforms, sid + '_T2_DWI', dwiSpatialInfo, scaling)
+            save_all_transforms(transforms, sid, dwiSpatialInfo, scaling, '/T2-DWI/')
 
             timings[s] = (end-start)/60.0
             print('Done!')
@@ -167,6 +178,6 @@ def main():
 if __name__=="__main__":
     timings = main()
 
-    print("studyID",",", "Runtime (min)")
+    print("\nstudyID",",", "Runtime (min)")
     for s in timings:
         print(s,",", timings[s])

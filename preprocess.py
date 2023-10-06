@@ -155,7 +155,7 @@ def getArray(img_path):
     return array
     
 #preprocess mri mha files to slices here
-def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False, dwi_map='', fIC=False, cancer=None, landmarks=None, exvivo=False):     
+def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False, dwi_map='', fIC=False, cancer=None, healthy=None, landmarks=None, exvivo=False):     
     make_dir(pre_process_fixed_dest + case)
 
     imMri = getArray(fixed_img_mha)
@@ -170,6 +170,9 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
     
     if cancer:
         im_cancer   = getArray(cancer)
+        
+    if healthy:
+        im_healthy  = getArray(healthy)
     
     if landmarks:
         make_dir(pre_process_fixed_dest + case + '/landmarks/')
@@ -215,13 +218,16 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         imMri[slice, :, :] = imMri[slice, :, :] / np.max(imMri[slice, :, :]) * 255
         mri = imMri[slice, :, :]*imMriMask[slice, :, :]
    
+        if exvivo:
+            mri         = cv2.flip(mri, 1)
+            mri_mask    = cv2.flip(mri_mask, 1)
+            
         if h>w:
             y_offset = int(h*0.15)
             x_offset = int((h - w + 2*y_offset)/2)
         else:
             y_offset = int(h*0.2)
             x_offset = int((h - w + 2*y_offset)/2)
-        
         
         # save x, y, x_offset, y_offset, h, w for each slice in dictionary 'coord' (coordinates)
         coord[case]['x'].append(x)
@@ -257,13 +263,14 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         upsMri  = cv2.resize(cropMri.astype('float32'), (upsHeight,  upsWidth), interpolation=cv2.INTER_CUBIC)
         upsMask = cv2.resize(cropMask.astype('float32'), (upsHeight,  upsWidth), interpolation=cv2.INTER_CUBIC)
 
+            
         # write to a file        
         cv2.imwrite(pre_process_fixed_dest + case + '/mri_' + case + '_' + str(slice).zfill(2) +'.jpg', upsMri)  
         if crop_mask:
-            cv2.imwrite(pre_process_fixed_dest + case + '/mriMask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(upsMask))
+            cv2.imwrite(pre_process_fixed_dest + case + '/mri_mask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(upsMask))
         else:
-            cv2.imwrite(pre_process_fixed_dest + case + '/mriMask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(mri_mask))
-            cv2.imwrite(pre_process_fixed_dest + case + '/mriUncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])
+            cv2.imwrite(pre_process_fixed_dest + case + '/mri_mask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(mri_mask))
+            cv2.imwrite(pre_process_fixed_dest + case + '/mri_uncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])
         
         if dwi_map:
             if fIC:
@@ -280,6 +287,10 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
             im_cancer_slice = im_cancer[slice, :, :] * 255
             cv2.imwrite(pre_process_fixed_dest + case + '/cancer_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_cancer_slice))
         
+        if healthy:
+            im_healthy_slice = im_healthy[slice, :, :] * 255
+            cv2.imwrite(pre_process_fixed_dest + case + '/healthy_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_healthy_slice))
+            
         if landmarks:
             dims = (min_x,x,w,x_offset,min_y,y,h,y_offset, upsHeight, upsWidth)
             preprocess_mri_landmarks(landmark_imgs, dims, case, slice, pre_process_fixed_dest + case + '/landmarks/')
