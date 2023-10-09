@@ -87,7 +87,7 @@ def main():
         studyParser = ParserStudyDict(studyDict)
 
         sid             = studyParser.id
-        fixed_img_mha   = studyParser.fixed_filename
+        fixed_img   = studyParser.fixed_filename
         fixed_seg       = studyParser.fixed_segmentation_filename
         mri_cancer      = studyParser.cancer
         moving_dict     = studyParser.ReadMovingImage()
@@ -129,7 +129,7 @@ def main():
         ###### PREPROCESSING MRI HERE #############################################################
         if preprocess_fixed == True:
             print ("Preprocessing fixed case:", sid, '...')
-            coord = preprocess_mri(fixed_img_mha, fixed_seg, preprocess_fixed_dest, coord, sid, dwi_map=dwi_map, fIC=fIC, cancer=mri_cancer, landmarks=landmarks)
+            coord = preprocess_mri(fixed_img, fixed_seg, preprocess_fixed_dest, coord, sid, dwi_map=dwi_map, fIC=fIC, cancer=mri_cancer, landmarks=landmarks)
             print("Finished preprocessing fixed image", sid)
 
             with open(coord_path, 'w') as json_file: 
@@ -172,7 +172,7 @@ def main():
                 pass
             
             #### SAVE RESULTS
-            imMri           = sitk.ReadImage(fixed_img_mha)
+            imMri           = sitk.ReadImage(fixed_img)
             if fIC:
                 imMri       = sitk.ReadImage(dwi_map)
                 
@@ -205,8 +205,7 @@ def main():
             if dwi and fIC:
                 output_results(save_path, out3Dhist_regions['fIC'], sid, '_fIC_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
                 for region in regions:
-                    if 'fIC' in region:
-                        output_results(save_path, out3Dhist_regions[region], sid, '_' + region + '_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+                    output_results(save_path, out3Dhist_regions['fIC_'+region], sid, '_fIC_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
                 
             if landmarks:
                 output_results(save_path, landmark_image_histo, sid, tag +'_landmarks_moved.', histSpatialInfo,   model=opt.trained_models_name, extension = extension)  
@@ -221,7 +220,8 @@ def main():
                     text = 'ADC'
                 try:
                     out_map  = get_map(preprocess_fixed_dest + sid + '/', text)
-                    output_results(save_path, out_map,  sid, '_'+text+'.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
+                    output_results(save_path, out_map,  sid, '_'+text+'_fixed.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
+                    output_results(save_path, out3Dmri_mask,    sid, '_'+text +'_fixed_mask.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)
                 except:
                     print("Couldn't get DWI map")
                     

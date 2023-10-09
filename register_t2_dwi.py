@@ -95,7 +95,7 @@ def main():
         fixed_seg   = studyParser.fixed_segmentation_filename
         moving_img  = studyParser.moving_filename
         moving_seg  = studyParser.moving_segmentation_filename
-        fIC_path    = studyParser.fIC
+        fIC         = studyParser.fIC
         cancer      = studyParser.cancer
         healthy     = studyParser.healthy
 
@@ -110,7 +110,7 @@ def main():
         ###### PREPROCESSING T2 HERE #############################################################
         if preprocess_moving == True: 
             print('Preprocessing moving sid:', sid, '...')
-            coord = preprocess_mri(moving_img, moving_seg, preprocess_moving_dest, coord, sid, crop_mask=True, cancer=cancer, healthy=healthy)
+            coord = preprocess_mri(moving_img, moving_seg, preprocess_moving_dest, coord, sid, crop_mask=True, cancer=cancer, healthy=healthy, fIC=fIC)
             print('Finished preprocessing', sid)
             
             with open('coord.txt', 'w') as json_file: 
@@ -138,20 +138,22 @@ def main():
 
             ##### REGISTER
             start          = time.time()
-            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord_dwi, model_cache, sid, regions, half_out_size=40, mri=True)
+            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord_dwi, model_cache, sid, regions, half_out_size=40, mri=True, fIC=fIC)
             end            = time.time()
             
             out3D_T2, out3D_DWI, _, out3D_T2_regions, out3D_DWI_mask, scaling, transforms, _, _ = output3D_cache
 
             print("\nRegistration done in {:6.3f}(min)".format((end-start)/60.0))
             
-            #### CALCULATE DICE
+            #### CALCULATE ERROR
             calc_dice(out3D_T2_regions['mask'], out3D_DWI_mask)
             hausdorff(out3D_T2_regions['mask'], out3D_DWI_mask)
 
             
             #### SAVE RESULTS
-            imDWI           = sitk.ReadImage(fIC_path)
+            imDWI           = sitk.ReadImage(fixed_img)
+            if fIC:
+                imDWI       = sitk.ReadImage(fIC)
             
             DWISpace        = imDWI.GetSpacing()
             T2Space         = [DWISpace[0]/scaling[0], DWISpace[1]/scaling[1], DWISpace[2]]
@@ -162,11 +164,27 @@ def main():
             t2SpatialInfo   = (mriOrigin, T2Space, mriDirection)
             
             # Write outputs as 3D volumes (.nii.gz format)   
-            save_path = outputPath + 'registration/' + opt.save_path + '/'                    
-            output_results(save_path, out3D_DWI,                sid, '_fixed.',      dwiSpatialInfo, model=opt.trained_models_name, extension = extension)
-            output_results(save_path, out3D_DWI_mask,           sid, '_fixed_mask.', dwiSpatialInfo, model=opt.trained_models_name, extension = extension)
-            output_results(save_path, out3D_T2,                 sid, '_moved.',      t2SpatialInfo,  model=opt.trained_models_name, extension = extension)
-            output_results(save_path, out3D_T2_regions['mask'], sid, '_moved_mask.', t2SpatialInfo,  model=opt.trained_models_name, extension = extension)
+            save_path = outputPath + 'registration/' + opt.save_path + '/'       
+            
+            # T2W    
+            output_results(save_path, out3D_T2,  sid, '_b90_moved.',      t2SpatialInfo,  model=opt.trained_models_name, extension = extension)
+            for region in regions:
+                output_results(save_path, out3D_T2_regions[region], sid, '_b90_moved_'+region+'.', t2SpatialInfo,  model=opt.trained_models_name, extension = extension)
+            
+            if fIC:
+                output_results(save_path, out3D_T2_regions['fIC'], sid, '_fIC_moved.' , t2SpatialInfo, model=opt.trained_models_name, extension = extension)
+                for region in regions:
+                    output_results(save_path, out3D_T2_regions['fIC_'+region], sid, '_fIC_moved_' + region + '.' , t2SpatialInfo, model=opt.trained_models_name, extension = extension)
+                
+            # DWI 
+            output_results(save_path, out3D_DWI,                sid, '_b90_fixed.',      dwiSpatialInfo, model=opt.trained_models_name, extension = extension)
+            output_results(save_path, out3D_DWI_mask,           sid, '_b90_fixed_mask.', dwiSpatialInfo, model=opt.trained_models_name, extension = extension)
+            
+            if fIC:
+                out_map  = get_map(preprocess_fixed_dest + sid + '/', 'fIC')
+                output_results(save_path, out_map,        sid, '_fIC_fixed.',      dwiSpatialInfo,   model=opt.trained_models_name, extension = extension)
+                output_results(save_path, out3D_DWI_mask, sid, '_fIC_fixed_mask.', dwiSpatialInfo,   model=opt.trained_models_name, extension = extension)
+                
             
             save_all_transforms(transforms, sid, dwiSpatialInfo, scaling, '/T2-DWI/')
 
