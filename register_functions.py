@@ -58,9 +58,9 @@ def load_models(model_aff_path, model_tps_path, do_deformable=True, tps_type='tp
     
     do_aff = not model_aff_path==''
     do_tps = do_deformable
-
+    
     # Create model
-    print('Creating CNN model...')
+    print('Creating CNN model...')    
     if do_aff:
         model_aff = ProsRegNet(use_cuda=use_cuda,geometric_model='affine',feature_extraction_cnn=feature_extraction_cnn, mri=mri)
     if do_tps:
@@ -265,12 +265,12 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out
     target_image = np.copy(target_image3d)
 
 
-    ##### Preprocess masks 
+    ##### Preprocess #####
+    # Masks 
     source_image_mask_var = process_image(source_image, use_cuda, out_size=out_size, mask=True)
     target_image_mask_var = process_image(target_image, use_cuda, out_size=out_size, mask=True)
     
-
-    #### Preprocess images 
+    # Images 
     source_image_var = process_image(source_image, use_cuda, out_size=out_size)
     target_image_var = process_image(source_image, use_cuda, out_size=out_size)
     
@@ -278,7 +278,7 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out
     for region in histo_regions:
         histo_image_var[region]  = process_image(histo_regions[region], use_cuda, out_size=out_size)
 
-    ##### Evaluate models
+    ##### Evaluate models #####
     if do_aff:
         model_aff.eval()
     if do_tps:
@@ -386,7 +386,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     else:
         reverse = False
     if mri:
-        hist_case  = getFiles(preprocess_moving_dest, 'mri_', sid, reverse=reverse)
+        hist_case  = getFiles(preprocess_moving_dest, 'mri_'+sid, sid, reverse=reverse)
     else:
         hist_case  = getFiles(preprocess_moving_dest, 'hist', sid, reverse=reverse)
         
@@ -497,12 +497,12 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             out3D_regions[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :, 0])
     
         if fIC:            
-            out3D_regions['fIC'][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(cv2.flip(affTps, -1))
+            out3D_regions['fIC'][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(cv2.flip(affTps, 0))
             for region in regions:
                 if region != 'density':
-                    out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y]  = np.uint8(cv2.flip(np.float32(regions_aff_tps[region][:, :, 0]), -1))   
+                    out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y]  = np.uint8(cv2.flip(np.float32(regions_aff_tps[region][:, :, 0]), 0))   
                 else:
-                    out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(cv2.flip(regions_aff_tps[region], -1))   
+                    out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(cv2.flip(regions_aff_tps[region], 0))   
             
         # Transform & output histology landmarks
         if landmarks:
