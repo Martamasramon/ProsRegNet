@@ -276,7 +276,10 @@ def runCnn(model_cache, source_image_path, target_image_path, histo_regions, out
     
     histo_image_var  = {}
     for region in histo_regions:
-        histo_image_var[region]  = process_image(histo_regions[region], use_cuda, out_size=out_size)
+        if region == 'density':
+            histo_image_var[region]  = process_image(histo_regions[region], use_cuda, out_size=out_size)
+        else:
+            histo_image_var[region]  = process_image(histo_regions[region], use_cuda, out_size=out_size, mask=True)
 
     ##### Evaluate models #####
     if do_aff:
