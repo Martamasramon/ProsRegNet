@@ -96,6 +96,7 @@ def main():
         moving_img  = studyParser.moving_filename
         moving_seg  = studyParser.moving_segmentation_filename
         fIC         = studyParser.fIC
+        fIC_slice   = studyParser.fIC_slice
         cancer      = studyParser.cancer
         healthy     = studyParser.healthy
 
@@ -110,7 +111,7 @@ def main():
         ###### PREPROCESSING T2 HERE #############################################################
         if preprocess_moving == True: 
             print('Preprocessing moving sid:', sid, '...')
-            coord = preprocess_mri(moving_img, moving_seg, preprocess_moving_dest, coord, sid, cancer=cancer, healthy=healthy, fIC=fIC, target=False)
+            coord = preprocess_mri(moving_img, moving_seg, preprocess_moving_dest, coord, sid, cancer=cancer, healthy=healthy, target=False)
             print('Finished preprocessing', sid)
             
             with open('coord.txt', 'w') as json_file: 
@@ -120,7 +121,7 @@ def main():
         ###### PREPROCESSING DWI HERE #############################################################
         if preprocess_fixed == True:
             print ("Preprocessing fixed case:", sid, '...')
-            coord_dwi = preprocess_mri(fixed_img, fixed_seg, preprocess_fixed_dest, coord_dwi, sid)
+            coord_dwi = preprocess_mri(fixed_img, fixed_seg, preprocess_fixed_dest, coord_dwi, sid, fIC=fIC, dwi_map=fIC, fIC_slice=fIC_slice)
             print("Finished processing fixed mha", sid)
 
             with open('coord_dwi_b90.txt', 'w') as json_file: 

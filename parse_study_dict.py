@@ -13,6 +13,7 @@ class ParserStudyDict:
         self.moving_segmentation_filename = None
         self.moving_dict                = None
         self.fIC                        = None
+        self.fIC_slice                  = None
         self.DWI                        = None
         self.DWI_map                    = None
         self.cancer                     = None
@@ -67,6 +68,10 @@ class ParserStudyDict:
             
         try:
             self.fIC                            = self.dict['fIC']                   
+        except :
+            pass
+        try:
+            self.fIC_slice                      = self.dict['fIC-slice']                   
         except :
             pass
             

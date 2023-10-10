@@ -155,7 +155,7 @@ def getArray(img_path):
     return array
     
 #preprocess mri mha files to slices here
-def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, dwi_map='', fIC=False, cancer=None, healthy=None, landmarks=None, exvivo=False, target=True):     
+def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, dwi_map='', fIC=False, cancer=None, healthy=None, landmarks=None, exvivo=False, target=True, fIC_slice=None):     
     make_dir(pre_process_fixed_dest + case)
 
     imMri = getArray(fixed_img_mha)
@@ -266,14 +266,13 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         else:
             cv2.imwrite(pre_process_fixed_dest + case + '/mri_mask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(upsMask))
             
-        
         if dwi_map:
             if fIC:
                 ####### NOTE: we are scaling the pixel values ####### 
-                im_dwi_map_slice = im_dwi_map[slice, :, :] / 2 * 255
+                im_dwi_map_slice = im_dwi_map[int(fIC_slice), :, :] / 2 * 255
                 tag = '/fIC_'
             else:
-                im_dwi_map_slice = im_dwi_map[slice, :, :] / 3 * 255
+                im_dwi_map_slice = im_dwi_map[int(fIC_slice), :, :] / 3 * 255
                 tag = '/ADC_'
             
             cv2.imwrite(pre_process_fixed_dest + case + tag + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_dwi_map_slice))
