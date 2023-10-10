@@ -110,7 +110,7 @@ def main():
         ###### PREPROCESSING T2 HERE #############################################################
         if preprocess_moving == True: 
             print('Preprocessing moving sid:', sid, '...')
-            coord = preprocess_mri(moving_img, moving_seg, preprocess_moving_dest, coord, sid, crop_mask=True, cancer=cancer, healthy=healthy, fIC=fIC)
+            coord = preprocess_mri(moving_img, moving_seg, preprocess_moving_dest, coord, sid, cancer=cancer, healthy=healthy, fIC=fIC, target=False)
             print('Finished preprocessing', sid)
             
             with open('coord.txt', 'w') as json_file: 

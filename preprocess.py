@@ -155,7 +155,7 @@ def getArray(img_path):
     return array
     
 #preprocess mri mha files to slices here
-def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, crop_mask=False, dwi_map='', fIC=False, cancer=None, healthy=None, landmarks=None, exvivo=False):     
+def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, dwi_map='', fIC=False, cancer=None, healthy=None, landmarks=None, exvivo=False, target=True):     
     make_dir(pre_process_fixed_dest + case)
 
     imMri = getArray(fixed_img_mha)
@@ -252,25 +252,20 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         cropMri     = cropMri*25.5/(np.max(cropMri)/10)
         cropMask    = mri_mask[min_x:x+w+x_offset, min_y:y+h +y_offset]
         
-        h = h + 2*y_offset
-        w = w + 2*x_offset
+        new_h = int(h + 2*y_offset)
+        new_w = int(w + 2*x_offset)
         
-        # upsample slice to approx 500 px in width
-        ups = 1; 
-        upsHeight = int(h*ups)
-        upsWidth = int(w*ups)
-        
-        upsMri  = cv2.resize(cropMri.astype('float32'), (upsHeight,  upsWidth), interpolation=cv2.INTER_CUBIC)
-        upsMask = cv2.resize(cropMask.astype('float32'), (upsHeight,  upsWidth), interpolation=cv2.INTER_CUBIC)
-
+        upsMri  = cv2.resize(cropMri.astype('float32'), (new_h,  new_w), interpolation=cv2.INTER_CUBIC)
+        upsMask = cv2.resize(cropMask.astype('float32'), (new_h,  new_w), interpolation=cv2.INTER_CUBIC)
             
         # write to a file        
         cv2.imwrite(pre_process_fixed_dest + case + '/mri_' + case + '_' + str(slice).zfill(2) +'.jpg', upsMri)  
-        if crop_mask:
-            cv2.imwrite(pre_process_fixed_dest + case + '/mri_mask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(upsMask))
-        else:
+        cv2.imwrite(pre_process_fixed_dest + case + '/mri_uncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])
+        if target:
             cv2.imwrite(pre_process_fixed_dest + case + '/mri_mask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(mri_mask))
-            cv2.imwrite(pre_process_fixed_dest + case + '/mri_uncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])
+        else:
+            cv2.imwrite(pre_process_fixed_dest + case + '/mri_mask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(upsMask))
+            
         
         if dwi_map:
             if fIC:
@@ -284,15 +279,30 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
             cv2.imwrite(pre_process_fixed_dest + case + tag + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_dwi_map_slice))
             
         if cancer:
-            im_cancer_slice = im_cancer[slice, :, :] * 255
-            cv2.imwrite(pre_process_fixed_dest + case + '/cancer_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_cancer_slice))
+            cancer_slice = im_cancer[slice, :,:]
+            if np.amax(cancer_slice) == 1:
+                cancer_slice *= 255
+            ups_cancer   = cv2.resize(cancer_slice[min_x:x+w+x_offset, min_y:y+h +y_offset].astype('float32'), (new_h,  new_w), interpolation=cv2.INTER_CUBIC)
+            
+            if target:
+                cv2.imwrite(pre_process_fixed_dest + case + '/cancer_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(cancer_slice))
+            else:
+                cv2.imwrite(pre_process_fixed_dest + case + '/cancer_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(ups_cancer))
+
         
         if healthy:
-            im_healthy_slice = im_healthy[slice, :, :] * 255
-            cv2.imwrite(pre_process_fixed_dest + case + '/healthy_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_healthy_slice))
+            healthy_slice = im_healthy[slice, :,:]
+            if np.amax(healthy_slice) == 1:
+                healthy_slice *= 255
+            ups_healthy   = cv2.resize(healthy_slice[min_x:x+w+x_offset, min_y:y+h +y_offset].astype('float32'), (new_h,  new_w), interpolation=cv2.INTER_CUBIC)
+            
+            if target:
+                cv2.imwrite(pre_process_fixed_dest + case + '/healthy_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(healthy_slice))
+            else:
+                cv2.imwrite(pre_process_fixed_dest + case + '/healthy_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(ups_healthy))
             
         if landmarks:
-            dims = (min_x,x,w,x_offset,min_y,y,h,y_offset, upsHeight, upsWidth)
+            dims = (min_x,x,w,x_offset,min_y,y,h,y_offset, h, w)
             preprocess_mri_landmarks(landmark_imgs, dims, case, slice, pre_process_fixed_dest + case + '/landmarks/')
             
         
