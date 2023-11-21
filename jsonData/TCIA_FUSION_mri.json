@@ -7,9 +7,13 @@
     },
     "output_path": "./results/",
     "studies2process": {
-        "HMU_113_MT":       "./jsonData/T2-DWI/reg_HMU_113_MT.json"
+        "HMU_113_MT":       "./jsonData/T2-DWI/reg_HMU_113_MT.json",
+        "HMU_176_IJ":       "./jsonData/T2-DWI/reg_HMU_176_IJ.json",
+        "HMU_180_FK":       "./jsonData/T2-DWI/reg_HMU_180_KF.json"
     },
     "studies": {
-        "HMU_113_MT":       "./jsonData/T2-DWI/reg_HMU_113_MT.json"
+        "HMU_113_MT":       "./jsonData/T2-DWI/reg_HMU_113_MT.json",
+        "HMU_176_IJ":       "./jsonData/T2-DWI/reg_HMU_176_IJ.json",
+        "HMU_180_FK":       "./jsonData/T2-DWI/reg_HMU_180_KF.json"
     }
 }

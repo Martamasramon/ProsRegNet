@@ -57,8 +57,7 @@ def transform_histo(transforms, path, flip_v, flip_h, use_cuda=True, out_size = 
     
     # Preprocess image 
     source_image     = cv2.imread(path)
-    if flip_h:
-        source_image = cv2.flip(source_image,1)
+    
     source_image_var = process_image(source_image, use_cuda, out_size=out_size)
 
     # Apply transformations 
@@ -69,6 +68,9 @@ def transform_histo(transforms, path, flip_v, flip_h, use_cuda=True, out_size = 
     # Un-normalize images and convert to numpy
     warped_image_np = normalize_image(warped_image,forward=False).data.squeeze(0).transpose(0,1).transpose(1,2).cpu().numpy()
     
+    if flip_h:
+        warped_image_np = cv2.flip(warped_image_np,1)
+        
     # Ignore negative values
     warped_image_np[warped_image_np < 0] = 0 
 

@@ -7,11 +7,13 @@
     },
     "output_path": "./results/",
     "studies2process": {
-        "HMU_113_MT":           "./jsonData/histo-invivo-T2/reg_HMU_113_MT.json",
-        "HMU_113_MT_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_113_MT.json"
+        "HMU_113_MT_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_113_MT.json",
+        "HMU_119_MM_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_119_MM.json"  
     },
     "studies": {
-        "HMU_113_MT":           "./jsonData/histo-invivo-T2/reg_HMU_113_MT.json",
-        "HMU_113_MT_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_113_MT.json"
+        "HMU_113_MT_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_113_MT.json",
+        "HMU_119_MM_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_119_MM.json",
+        "HMU_176_IJ_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_176_IJ.json",
+        "HMU_180_FK_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_180_KF.json"
     }
 }

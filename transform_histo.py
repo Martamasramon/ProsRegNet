@@ -6,6 +6,8 @@ from register_functions     import output_results
 import argparse
 import cv2
 
+samples = ['HMU_113_MT', 'HMU_119_MM']
+
 def main():
     
     ###### INPUTS
@@ -15,10 +17,12 @@ def main():
     opt     = parser.parse_args()
     flip_v  = False
     flip_h  = False
+    reverse = False
     if opt.mri == 'T2':
         folder      = 'histo-T2/'
         coord_path  = 'coord.txt'
         mri_folder  = 'mri/'
+        reverse     = True
     elif opt.mri == 'b0':
         folder      = 'histo-b0/'
         coord_path  = 'coord_dwi_b0.txt'
@@ -46,16 +50,25 @@ def main():
         # Get image paths
         img_path   = os.path.join('./results/preprocess/hist' , sid+'_high_res/')
         all_paths = {}
-        all_paths['histo'] = sorted(glob(img_path + 'hist*.png'))
-        all_paths['mask']  = sorted(glob(img_path + 'mask*.png'))
-        count              = len(all_paths['histo'])
+        all_paths['histo']      = sorted(glob(img_path + 'hist*.png'),      reverse=reverse)
+        all_paths['mask']       = sorted(glob(img_path + 'mask*.png'),      reverse=reverse)
+        all_paths['density']    = sorted(glob(img_path + 'density*.png'),   reverse=reverse)
+        all_paths['cancer']     = sorted(glob(img_path + 'cancer*.png'),    reverse=reverse)
+        all_paths['BPH']        = sorted(glob(img_path + 'BPH*.png'),       reverse=reverse)
+        
+        paths = dict(all_paths)
+        for annot in all_paths:
+            if len(all_paths[annot])==0:
+                del paths[annot]
+                
+        count = len(paths['histo'])
         
         # Get coordinate information of MRI
         with open(coord_path) as f:
             coord = json.load(f)
         slices = coord[sid]['slice']
         
-        mri_path        = os.path.join('./results/preprocess/' + mri_folder, sid, 'mriUncropped_' + sid + '_' + str(slices[0]).zfill(2) + '.jpg')
+        mri_path        = os.path.join('./results/preprocess/' + mri_folder, sid, 'mri_uncropped_' + sid + '_' + str(slices[0]).zfill(2) + '.jpg')
         w, h, _         = (cv2.imread(mri_path)).shape
         padding_factor  = int(round(max(np.add(coord[sid]['h'],np.multiply(2,coord[sid]['y_offset'])))/(coord[sid]['h'][0]+2*coord[sid]['y_offset'][0])))
         y_s             = (half_out_size*(2+2*padding_factor))/h
@@ -72,7 +85,7 @@ def main():
         
         warped_imgs = {}
         out_histo   = {}
-        for annot in all_paths:
+        for annot in paths:
             warped_imgs[annot] = np.zeros((count, 2*half_out_size, 2*half_out_size, 3))
             out_histo[annot]   = np.zeros((count, half_out_size*(2+2*padding_factor), half_out_size*(2+2*padding_factor), 3))
 
@@ -84,19 +97,19 @@ def main():
             
             transforms  = (create_tensor(theta_aff_1), create_tensor(theta_aff_2), create_tensor(theta_tps))
             
-            for annot in all_paths:
-                warped_imgs[annot][i,:,:,:] = transform_histo(transforms, all_paths[annot][i], flip_v, flip_h, use_cuda=True, out_size=2*half_out_size)
+            for annot in paths:
+                warped_imgs[annot][i,:,:,:] = transform_histo(transforms, paths[annot][i], flip_v, flip_h, use_cuda=True, out_size=2*half_out_size)
             
             # Transform to MRI space
             new_size, start_x, end_x, start_y, end_y = resize_from_coord(coord, sid, i, x_s, y_s)
                         
-            for annot in all_paths:
+            for annot in paths:
                 out_histo[annot][i, start_x:end_x, start_y:end_y, :] = cv2.resize(warped_imgs[annot][i,:,:,:], new_size, interpolation=cv2.INTER_CUBIC)  
                 if flip_v:
                     out_histo[annot][i,:,:,:] = cv2.flip(out_histo[annot][i,:,:,:] , 0)
 
         # Save images
-        for annot in all_paths:
+        for annot in paths:
             output_results('./results/registration/' + folder, out_histo[annot], sid, '_final_' + opt.mri + '_' + annot, spatialInfo, 'final', extension = '.nii.gz')
 
         print('Finished processing sample. \n')

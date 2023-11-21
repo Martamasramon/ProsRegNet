@@ -153,16 +153,22 @@ def main():
             
             #### SAVE RESULTS
             imDWI           = sitk.ReadImage(fixed_img)
-            if fIC:
-                imDWI       = sitk.ReadImage(fIC)
+            #if fIC:
+            #    imDWI       = sitk.ReadImage(fIC)
             
-            DWISpace        = imDWI.GetSpacing()
-            T2Space         = [DWISpace[0]/scaling[0], DWISpace[1]/scaling[1], DWISpace[2]]
-            mriDirection    = imDWI.GetDirection()
-            mriOrigin       = imDWI[:,:,coord_dwi[sid]['slice'][0]:coord_dwi[sid]['slice'][-1]].GetOrigin()
-            
+            try:
+                DWISpace        = imDWI.GetSpacing()
+                mriDirection    = imDWI.GetDirection()
+                mriOrigin       = imDWI[:,:,coord_dwi[sid]['slice'][0]:coord_dwi[sid]['slice'][-1]].GetOrigin()
+            except:
+                imDWI           = sitk.ReadImage(fixed_seg)
+                DWISpace        = imDWI.GetSpacing()
+                mriDirection    = imDWI.GetDirection()
+                mriOrigin       = imDWI[:,:,coord_dwi[sid]['slice'][0]:coord_dwi[sid]['slice'][-1]].GetOrigin()
             dwiSpatialInfo  = (mriOrigin, DWISpace, mriDirection)
-            t2SpatialInfo   = (mriOrigin, T2Space, mriDirection)
+            
+            t2Space         = [DWISpace[0]/scaling[0], DWISpace[1]/scaling[1], DWISpace[2]]
+            t2SpatialInfo   = (mriOrigin, t2Space, mriDirection)
             
             # Write outputs as 3D volumes (.nii.gz format)   
             save_path = outputPath + 'registration/' + opt.save_path + '/'       

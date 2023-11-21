@@ -118,8 +118,8 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC='
         padHist[x_offset:crop.shape[0]+x_offset, y_offset:crop.shape[1]+y_offset, :] = crop
 
         # downsample image
-        #size_high = 1024
-        #padHist_high_res    = cv2.resize(padHist, (size_high, size_high), interpolation=cv2.INTER_CUBIC)
+        size_high = 1024
+        padHist_high_res    = cv2.resize(padHist, (size_high, size_high), interpolation=cv2.INTER_CUBIC)
         
         ### Keep???? 
         if dwi:
@@ -130,11 +130,11 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC='
         # Transform all regions
         for region in s['regions']:
             transformAndSaveRegion(pre_process_moving_dest, case, slice,               s, region, theta, size_low,  size_low,  h, w, x, y, x_offset, y_offset)
-            #transformAndSaveRegion(pre_process_moving_dest, case + '_high_res', slice, s, region, theta, size_high, size_high, h, w, x, y, x_offset, y_offset)
+            transformAndSaveRegion(pre_process_moving_dest, case + '_high_res', slice, s, region, theta, size_high, size_high, h, w, x, y, x_offset, y_offset)
 
         # Write images, with new filename
         cv2.imwrite(pre_process_moving_dest + case + '/hist_' + case + '_' + slice +'.png', padHist_low_res)
-        #cv2.imwrite(pre_process_moving_dest + case + '_high_res' + '/hist_' + case + '_high_res_' + slice +'.png', padHist_high_res)
+        cv2.imwrite(pre_process_moving_dest + case + '_high_res' + '/hist_' + case + '_high_res_' + slice +'.png', padHist_high_res)
 
         try:
             dims                = x, y, w, h, x_offset, y_offset
@@ -155,7 +155,7 @@ def getArray(img_path):
     return array
     
 #preprocess mri mha files to slices here
-def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, dwi_map='', fIC=False, cancer=None, healthy=None, landmarks=None, exvivo=False, target=True, fIC_slice=None):     
+def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, dwi_map='', fIC=False, cancer=None, healthy=None, landmarks=None, exvivo=False, target=True, fIC_slice=None):  
     make_dir(pre_process_fixed_dest + case)
 
     imMri = getArray(fixed_img_mha)
@@ -267,12 +267,15 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
             cv2.imwrite(pre_process_fixed_dest + case + '/mri_mask_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(upsMask))
             
         if dwi_map:
+            if fIC_slice == None or fIC_slice == '':
+                map_slice = slice
+            
             if fIC:
                 ####### NOTE: we are scaling the pixel values ####### 
-                im_dwi_map_slice = im_dwi_map[int(fIC_slice), :, :] / 2 * 255
+                im_dwi_map_slice = im_dwi_map[int(map_slice), :, :] / 2 * 255
                 tag = '/fIC_'
             else:
-                im_dwi_map_slice = im_dwi_map[int(fIC_slice), :, :] / 3 * 255
+                im_dwi_map_slice = im_dwi_map[int(map_slice), :, :] / 3 * 255
                 tag = '/ADC_'
             
             cv2.imwrite(pre_process_fixed_dest + case + tag + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_dwi_map_slice))

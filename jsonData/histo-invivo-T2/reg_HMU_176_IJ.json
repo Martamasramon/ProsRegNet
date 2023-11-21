@@ -1,0 +1,9 @@
+{
+    "id":                   "HMU_176_IJ",
+    "moving-type":          "stack",
+    "fixed":                "./datasets/testing/MRI/HMU_176_IJ/HMU_176_IJ_T2W.nii.gz",
+    "fixed-segmentation":   "./datasets/testing/MRI/HMU_176_IJ/HMU_176_IJ_T2W_mask.nii.gz",
+    "cancer":               "./datasets/testing/MRI/HMU_176_IJ/HMU_176_IJ_T2W_cancer.nii.gz",
+    "healthy":              "",
+    "moving":               "./datasets/testing/Histology/HMU_176_IJ.json"
+}

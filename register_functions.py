@@ -385,14 +385,14 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
                 
     ### Grab histology files that were preprocessed     
     if fIC or mri:
-        reverse = True
-    else:
         reverse = False
+    else:
+        reverse = True
     if mri:
         hist_case  = getFiles(preprocess_moving_dest, 'mri_'+sid, sid, reverse=reverse)
     else:
         hist_case  = getFiles(preprocess_moving_dest, 'hist', sid, reverse=reverse)
-        
+    
     cases = {}
     for region in regions:
         cases[region] = getFiles(preprocess_moving_dest, region, sid, reverse=reverse)
@@ -499,13 +499,24 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         for region in regions:
             out3D_regions[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :, 0])
     
-        if fIC:            
+        """if fIC:            
             out3D_regions['fIC'][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(cv2.flip(affTps, 0))
             for region in regions:
                 if region != 'density':
                     out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y]  = np.uint8(cv2.flip(np.float32(regions_aff_tps[region][:, :, 0]), 0))   
                 else:
-                    out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(cv2.flip(regions_aff_tps[region], 0))   
+                    out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(cv2.flip(regions_aff_tps[region], 0))   """
+                    
+        if fIC:            
+            out3D_regions['fIC'][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(affTps)
+            out3D_regions['fIC'][idx, :,:,:] = cv2.flip(out3D_regions['fIC'][idx, :,:,:],0)
+            for region in regions:
+                if region != 'density':
+                    out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y]  = np.uint8(regions_aff_tps[region][:, :, 0])
+                    out3D_regions['fIC_'+region ][idx, :,:] = cv2.flip(out3D_regions['fIC_'+region ][idx, :,:],0)
+                else:
+                    out3D_regions['fIC_'+region][idx, start_x:end_x, start_y:end_y, :] = np.uint8(regions_aff_tps[region])
+                    out3D_regions['fIC_'+region][idx, :,:,:] = cv2.flip(out3D_regions['fIC_'+region][idx, :,:,:],0)
             
         # Transform & output histology landmarks
         if landmarks:
