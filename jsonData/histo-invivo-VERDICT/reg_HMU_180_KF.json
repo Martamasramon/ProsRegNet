@@ -1,0 +1,11 @@
+{
+    "id":                   "HMU_180_KF",
+    "moving-type":          "stack",
+    "fixed":                "./datasets/testing/DWI/HMU_180_KF/HMU_180_KF_b3000.nii.gz",
+    "fixed-segmentation":   "./datasets/testing/DWI/HMU_180_KF/HMU_180_KF_DWI_VERDICT_mask.nii.gz",
+    "cancer":               "./datasets/testing/DWI/HMU_180_KF/HMU_180_KF_fIC_cancer.nii.gz",
+    "DWI":                  "True",
+    "fIC":                  "True",
+    "DWI-map":              "./datasets/testing/DWI/HMU_180_KF/HMU_180_KF_fIC.nii.gz",
+    "moving":               "./datasets/testing/Histology/HMU_180_KF.json"
+}

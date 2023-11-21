@@ -87,7 +87,7 @@ def main():
         studyParser = ParserStudyDict(studyDict)
 
         sid             = studyParser.id
-        fixed_img   = studyParser.fixed_filename
+        fixed_img       = studyParser.fixed_filename
         fixed_seg       = studyParser.fixed_segmentation_filename
         mri_cancer      = studyParser.cancer
         moving_dict     = studyParser.ReadMovingImage()
@@ -104,19 +104,24 @@ def main():
         ###### PREPROCESSING DESTINATIONS ######################################
         preprocess_moving_dest = outputPath + '/preprocess/hist/'
         if dwi:
-            if fIC:
+            if 'b3000' in fixed_img:
                 preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b90/'
                 coord_path             = 'coord_dwi_b90.txt'
+                tag = '_b90'  
             else:
                 preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b0/'
                 coord_path             = 'coord_dwi_b0.txt'
+                tag = '_b0'  
         else:
             if exvivo:
                 preprocess_fixed_dest  = outputPath + '/preprocess/exvivo/'
                 coord_path             = 'coord_exvivo.txt'
+                tag = '_exvivo'
             else:  
                 preprocess_fixed_dest  = outputPath + '/preprocess/mri/'
                 coord_path             = 'coord.txt'
+                tag = '_T2'
+        print('Saving in...', tag[1:], '\n')                        
 
         ###### PREPROCESSING HISTOLOGY HERE #############################################################
         if preprocess_moving == True: 
@@ -175,25 +180,22 @@ def main():
             imMri           = sitk.ReadImage(fixed_img)
             if fIC:
                 imMri       = sitk.ReadImage(dwi_map)
-                
-            mriSpace        = imMri.GetSpacing()
-            histSpace       = [mriSpace[0]/scaling[0], mriSpace[1]/scaling[1], mriSpace[2]]
-            mriDirection    = imMri.GetDirection() 
-            mriOrigin       = imMri[:,:,coord[sid]['slice'][0]:coord[sid]['slice'][-1]].GetOrigin()
+            
+            try:
+                mriSpace        = imMri.GetSpacing()
+                mriDirection    = imMri.GetDirection() 
+                mriOrigin       = imMri[:,:,coord[sid]['slice'][0]:coord[sid]['slice'][-1]].GetOrigin()
+            except:
+                imMri           = sitk.ReadImage(fixed_seg)   
+                mriSpace        = imMri.GetSpacing()
+                mriDirection    = imMri.GetDirection() 
+                mriOrigin       = imMri[:,:,coord[sid]['slice'][0]:coord[sid]['slice'][-1]].GetOrigin()
             imSpatialInfo   = (mriOrigin, mriSpace, mriDirection)
+            
+            histSpace       = [mriSpace[0]/scaling[0], mriSpace[1]/scaling[1], mriSpace[2]]
             histSpatialInfo = (mriOrigin, histSpace, mriDirection)
             
-            # Write outputs as 3D volumes (.nii.gz format)   
-            if dwi:
-                if fIC:
-                    tag = '_b90'     
-                else:
-                    tag = '_b0'  
-            else:
-                if exvivo:
-                    tag = '_exvivo'
-                else:
-                    tag = '_T2'
+            #### Write outputs as 3D volumes (.nii.gz format) ####
             save_path = outputPath + 'registration/histo-' + tag[1:] + '/'
             
             ## Output histology

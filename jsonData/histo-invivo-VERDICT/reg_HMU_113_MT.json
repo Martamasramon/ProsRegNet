@@ -1,8 +1,8 @@
 {
     "id":                   "HMU_113_MT",
     "moving-type":          "stack",
-    "fixed":                "./datasets/testing/DWI/HMU_113_MT/HMU_113_MT_b90.nii.gz",
-    "fixed-segmentation":   "./datasets/testing/DWI/HMU_113_MT/HMU_113_MT_b90_mask.nii.gz",
+    "fixed":                "./datasets/testing/DWI/HMU_113_MT/HMU_113_MT_b3000.nii.gz",
+    "fixed-segmentation":   "./datasets/testing/DWI/HMU_113_MT/HMU_113_MT_b3000_mask.nii.gz",
     "cancer":               "./datasets/testing/DWI/HMU_113_MT/HMU_113_MT_fIC_cancer.nii.gz",
     "DWI":                  "True",
     "fIC":                  "True",
