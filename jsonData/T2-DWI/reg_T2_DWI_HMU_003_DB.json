@@ -1,7 +1,9 @@
 {
-    "fixed-segmentation": "./datasets/testing/DWI/HMU_003_DB/DWI_HMU_003_DB_mask.nii.gz", 
-    "moving": "./datasets/testing/MRI/HMU_003_DB/MRI_in_vivo_HMU_003_DB.nii.gz", 
-    "fixed": "./datasets/testing/DWI/HMU_003_DB/DWI_HMU_003_DB.nii.gz", 
-    "id": "HMU_003_DB", 
-    "moving-segmentation": "./datasets/testing/MRI/HMU_003_DB/MRI_in_vivo_HMU_003_DB_mask.nii.gz"
+    "id":                   "HMU_003_DB",
+    "moving-type":          "stack",
+    "fixed":                "./datasets/testing/DWI/HMU_003_DB/HMU_003_DB_b3000.nii.gz",
+    "fixed-segmentation":   "./datasets/testing/DWI/HMU_003_DB/HMU_003_DB_b3000_mask.nii.gz",
+    "fIC":                  "./datasets/testing/DWI/HMU_003_DB/HMU_003_DB_fIC_DL.nii.gz",
+    "moving":               "./datasets/testing/MRI/HMU_003_DB/HMU_003_DB_T2W.nii.gz",
+    "moving-segmentation":  "./datasets/testing/MRI/HMU_003_DB/HMU_003_DB_T2W_mask.nii.gz"
 }

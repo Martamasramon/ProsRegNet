@@ -1,0 +1,101 @@
+Use Cuda?  True
+cuda: 0
+Creating CNN model...
+Using SSD loss...
+Starting training...
+--- Epoch 1 ---
+Train set: Average loss: 0.137873
+Test set: Average loss: 0.124485
+Test set: Dice: 0.818191
+--- Epoch 2 ---
+Train set: Average loss: 0.117054
+Test set: Average loss: 0.112320
+Test set: Dice: 0.833065
+--- Epoch 3 ---
+Train set: Average loss: 0.103588
+Test set: Average loss: 0.096870
+Test set: Dice: 0.851568
+--- Epoch 4 ---
+Train set: Average loss: 0.096496
+Test set: Average loss: 0.093335
+Test set: Dice: 0.858099
+--- Epoch 5 ---
+Train set: Average loss: 0.091463
+Test set: Average loss: 0.092985
+Test set: Dice: 0.857437
+--- Epoch 6 ---
+Train set: Average loss: 0.087718
+Test set: Average loss: 0.095135
+Test set: Dice: 0.855727
+--- Epoch 7 ---
+Train set: Average loss: 0.084540
+Test set: Average loss: 0.093105
+Test set: Dice: 0.859941
+--- Epoch 8 ---
+Train set: Average loss: 0.082058
+Test set: Average loss: 0.088297
+Test set: Dice: 0.863569
+--- Epoch 9 ---
+Train set: Average loss: 0.079856
+Test set: Average loss: 0.089910
+Test set: Dice: 0.860894
+--- Epoch 10 ---
+Train set: Average loss: 0.078360
+Test set: Average loss: 0.090808
+Test set: Dice: 0.862330
+--- Epoch 11 ---
+Train set: Average loss: 0.076683
+Test set: Average loss: 0.086536
+Test set: Dice: 0.870233
+--- Epoch 12 ---
+Train set: Average loss: 0.074364
+Test set: Average loss: 0.086667
+Test set: Dice: 0.869228
+--- Epoch 13 ---
+Train set: Average loss: 0.073426
+Test set: Average loss: 0.085924
+Test set: Dice: 0.870766
+--- Epoch 14 ---
+Train set: Average loss: 0.071499
+Test set: Average loss: 0.085747
+Test set: Dice: 0.869123
+--- Epoch 15 ---
+Train set: Average loss: 0.070928
+Test set: Average loss: 0.083633
+Test set: Dice: 0.874079
+--- Epoch 16 ---
+Train set: Average loss: 0.069949
+Test set: Average loss: 0.087986
+Test set: Dice: 0.866773
+--- Epoch 17 ---
+Train set: Average loss: 0.069593
+Test set: Average loss: 0.087071
+Test set: Dice: 0.866851
+--- Epoch 18 ---
+Train set: Average loss: 0.068230
+Test set: Average loss: 0.084047
+Test set: Dice: 0.870221
+--- Epoch 19 ---
+Train set: Average loss: 0.066692
+Test set: Average loss: 0.082013
+Test set: Dice: 0.875879
+--- Epoch 20 ---
+Train set: Average loss: 0.066645
+Test set: Average loss: 0.081944
+Test set: Dice: 0.877139
+--- Epoch 21 ---
+Train set: Average loss: 0.066080
+Test set: Average loss: 0.082208
+Test set: Dice: 0.875024
+--- Epoch 22 ---
+Train set: Average loss: 0.064764
+Test set: Average loss: 0.082905
+Test set: Dice: 0.880018
+--- Epoch 23 ---
+Train set: Average loss: 0.062612
+Test set: Average loss: 0.081604
+Test set: Dice: 0.876082
+--- Epoch 24 ---
+Train set: Average loss: 0.062441
+Test set: Average loss: 0.083142
+Test set: Dice: 0.875859

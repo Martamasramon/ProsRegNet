@@ -1,0 +1,362 @@
+2023-12-01 14:44:18,162 INFO    StreamThr :190808 [internal.py:wandb_internal():89] W&B internal server running at pid: 190808, started at: 2023-12-01 14:44:18.161121
+2023-12-01 14:44:18,164 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status
+2023-12-01 14:44:18,201 INFO    WriterThread:190808 [datastore.py:open_for_write():85] open: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/run-3qyjpw3c.wandb
+2023-12-01 14:44:18,203 DEBUG   SenderThread:190808 [sender.py:send():369] send: header
+2023-12-01 14:44:18,247 DEBUG   SenderThread:190808 [sender.py:send():369] send: run
+2023-12-01 14:44:18,859 INFO    SenderThread:190808 [dir_watcher.py:__init__():211] watching files in: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files
+2023-12-01 14:44:18,861 INFO    SenderThread:190808 [sender.py:_start_run_threads():1103] run started: 3qyjpw3c with start time 1701441858.179295
+2023-12-01 14:44:18,861 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:44:18,862 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:44:18,869 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: check_version
+2023-12-01 14:44:18,870 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: check_version
+2023-12-01 14:44:18,957 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: run_start
+2023-12-01 14:44:18,969 DEBUG   HandlerThread:190808 [system_info.py:__init__():31] System info init
+2023-12-01 14:44:18,969 DEBUG   HandlerThread:190808 [system_info.py:__init__():46] System info init done
+2023-12-01 14:44:18,969 INFO    HandlerThread:190808 [system_monitor.py:start():181] Starting system monitor
+2023-12-01 14:44:18,970 INFO    SystemMonitor:190808 [system_monitor.py:_start():145] Starting system asset monitoring threads
+2023-12-01 14:44:18,971 INFO    HandlerThread:190808 [system_monitor.py:probe():201] Collecting system info
+2023-12-01 14:44:18,972 INFO    SystemMonitor:190808 [interfaces.py:start():190] Started cpu monitoring
+2023-12-01 14:44:18,973 INFO    SystemMonitor:190808 [interfaces.py:start():190] Started disk monitoring
+2023-12-01 14:44:18,975 INFO    SystemMonitor:190808 [interfaces.py:start():190] Started gpu monitoring
+2023-12-01 14:44:18,976 INFO    SystemMonitor:190808 [interfaces.py:start():190] Started memory monitoring
+2023-12-01 14:44:18,978 INFO    SystemMonitor:190808 [interfaces.py:start():190] Started network monitoring
+2023-12-01 14:44:18,993 DEBUG   HandlerThread:190808 [system_info.py:probe():195] Probing system
+2023-12-01 14:44:18,995 DEBUG   HandlerThread:190808 [system_info.py:_probe_git():180] Probing git
+2023-12-01 14:44:19,020 DEBUG   HandlerThread:190808 [system_info.py:_probe_git():188] Probing git done
+2023-12-01 14:44:19,021 DEBUG   HandlerThread:190808 [system_info.py:probe():240] Probing system done
+2023-12-01 14:44:19,021 DEBUG   HandlerThread:190808 [system_monitor.py:probe():210] {'os': 'Linux-3.10.0-1160.92.1.el7.x86_64-x86_64-with-centos-7.9.2009-Core', 'python': '3.6.9', 'heartbeatAt': '2023-12-01T14:44:18.993851', 'startedAt': '2023-12-01T14:44:18.076799', 'docker': None, 'cuda': None, 'args': ('--geometric-model', 'tps', '-n', 'fIC', '-t', 'fIC_TPS_train.csv', '-s', 'fIC_TPS_test.csv'), 'state': 'running', 'program': 'train.py', 'codePath': 'train.py', 'git': {'remote': 'https://github.com/Martamasramon/ProsRegNet.git', 'commit': 'ca6ee05d25f7d7788a568842a182760f76368fe6'}, 'email': 'marta.masramon@gmail.com', 'root': '/home/mmasramo/ProsRegNet', 'host': 'scooter.local', 'username': 'mmasramo', 'executable': '/share/apps/python-3.6.9-tkinter/bin/python3', 'cpu_count': 8, 'cpu_count_logical': 8, 'cpu_freq': {'current': 1251.8365, 'min': 1200.0, 'max': 3700.0}, 'cpu_freq_per_core': [{'current': 1199.926, 'min': 1200.0, 'max': 3700.0}, {'current': 1199.926, 'min': 1200.0, 'max': 3700.0}, {'current': 1242.114, 'min': 1200.0, 'max': 3700.0}, {'current': 1199.926, 'min': 1200.0, 'max': 3700.0}, {'current': 1213.11, 'min': 1200.0, 'max': 3700.0}, {'current': 1199.926, 'min': 1200.0, 'max': 3700.0}, {'current': 1559.838, 'min': 1200.0, 'max': 3700.0}, {'current': 1199.926, 'min': 1200.0, 'max': 3700.0}], 'disk': {'total': 47.936073303222656, 'used': 36.25954055786133}, 'gpu': 'NVIDIA GeForce RTX 2080 Ti', 'gpu_count': 2, 'gpu_devices': [{'name': 'NVIDIA GeForce RTX 2080 Ti', 'memory_total': 11811160064}, {'name': 'NVIDIA GeForce RTX 2080 Ti', 'memory_total': 11811160064}], 'memory': {'total': 92.74982070922852}}
+2023-12-01 14:44:19,021 INFO    HandlerThread:190808 [system_monitor.py:probe():211] Finished collecting system info
+2023-12-01 14:44:19,021 INFO    HandlerThread:190808 [system_monitor.py:probe():214] Publishing system info
+2023-12-01 14:44:19,021 DEBUG   HandlerThread:190808 [system_info.py:_save_pip():52] Saving list of pip packages installed into the current environment
+2023-12-01 14:44:19,023 DEBUG   HandlerThread:190808 [system_info.py:_save_pip():67] Saving pip packages done
+2023-12-01 14:44:19,024 INFO    HandlerThread:190808 [system_monitor.py:probe():216] Finished publishing system info
+2023-12-01 14:44:19,636 DEBUG   SenderThread:190808 [sender.py:send():369] send: files
+2023-12-01 14:44:19,636 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-metadata.json with policy now
+2023-12-01 14:44:19,651 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:44:19,652 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:44:19,811 DEBUG   SenderThread:190808 [sender.py:send():369] send: telemetry
+2023-12-01 14:44:19,864 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_created():272] file/dir created: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:44:19,864 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_created():272] file/dir created: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:44:19,864 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_created():272] file/dir created: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-metadata.json
+2023-12-01 14:44:19,865 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_created():272] file/dir created: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/requirements.txt
+2023-12-01 14:44:20,032 INFO    wandb-upload_0:190808 [upload_job.py:push():133] Uploaded file /tmp/3207557.1.test.gpu.q/tmpdkpq5prkwandb/fh2rkpkf-wandb-metadata.json
+2023-12-01 14:44:21,862 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:44:23,816 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:44:28,817 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:44:33,818 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:44:34,652 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:44:34,653 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:44:39,812 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:44:44,813 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:44:49,651 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:44:49,652 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:44:49,861 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:44:50,170 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/config.yaml
+2023-12-01 14:44:52,172 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:44:55,924 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:00,925 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:04,180 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:45:04,653 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:45:04,654 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:45:05,140 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:45:05,143 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:45:05,143 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:45:05,144 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:45:05,181 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:45:05,970 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:06,182 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:45:08,184 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:45:10,972 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:15,973 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:18,196 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:45:18,532 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:45:18,533 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:45:18,533 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:45:18,534 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:45:18,978 DEBUG   SystemMonitor:190808 [system_monitor.py:_start():159] Starting system metrics aggregation loop
+2023-12-01 14:45:18,981 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:45:19,196 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:45:19,653 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:45:19,654 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:45:20,198 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:45:21,827 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:26,828 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:31,778 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:45:31,780 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:45:31,780 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:45:31,782 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:45:32,208 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:45:32,209 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:45:32,456 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:34,210 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:45:34,653 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:45:34,654 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:45:37,829 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:42,830 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:44,217 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:45:44,961 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:45:44,963 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:45:44,963 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:45:44,965 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:45:45,228 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:45:46,230 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:45:48,233 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:45:48,570 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:48,982 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:45:49,654 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:45:49,655 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:45:53,839 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:58,242 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:45:58,380 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:45:58,381 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:45:58,382 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:45:58,407 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:45:59,045 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:45:59,243 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:46:00,244 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:46:04,047 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:46:04,654 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:46:04,655 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:46:09,824 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:46:12,177 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:46:12,179 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:46:12,180 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:46:13,900 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:46:13,940 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:46:14,901 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:46:14,902 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:46:15,263 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:46:16,903 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:46:18,984 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:46:19,654 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:46:19,656 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:46:20,840 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:46:26,228 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:46:26,910 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:46:27,065 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:46:27,066 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:46:27,067 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:46:27,068 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:46:27,911 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:46:28,912 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:46:31,507 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:46:34,654 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:46:34,655 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:46:36,789 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:46:40,317 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:46:40,319 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:46:40,319 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:46:40,320 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:46:40,921 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:46:40,922 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:46:41,908 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:46:42,923 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:46:46,909 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:46:48,985 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:46:49,656 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:46:49,657 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:46:52,802 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:46:53,641 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:46:53,642 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:46:53,642 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:46:53,644 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:46:53,958 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:46:54,959 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:46:56,961 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:46:57,961 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:47:02,962 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:47:04,656 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:47:04,657 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:47:06,555 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:47:06,557 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:47:06,558 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:47:06,702 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:47:07,514 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:47:07,514 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:47:08,587 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:47:08,764 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:47:11,310 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:47:13,588 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:47:18,589 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:47:18,987 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:47:19,657 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:47:19,658 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:47:24,180 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:47:24,191 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:47:24,192 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:47:24,192 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:47:24,193 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:47:24,320 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:47:24,321 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:47:26,321 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:47:29,818 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:47:34,658 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:47:34,659 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:47:34,826 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:47:37,442 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:47:37,443 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:47:37,444 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:47:37,445 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:47:38,330 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:47:38,331 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:47:40,331 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:47:40,794 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:47:45,795 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:47:48,989 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:47:49,658 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:47:49,659 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:47:50,339 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:47:50,454 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:47:50,455 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:47:50,455 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:47:50,456 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:47:51,035 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:47:51,340 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:47:52,341 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:47:56,036 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:01,037 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:04,442 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:48:04,658 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:48:04,659 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:48:05,177 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:48:05,179 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:48:05,180 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:48:05,239 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:48:05,459 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:48:06,240 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:06,460 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:48:08,468 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:48:11,368 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:16,369 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:18,990 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:48:19,138 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:48:19,140 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:48:19,140 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:48:19,657 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:48:20,001 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:48:21,495 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:48:21,495 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:48:21,495 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:48:21,496 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:48:21,496 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:22,495 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:48:25,032 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:48:27,121 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:32,122 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:34,659 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:48:34,659 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:48:37,896 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:40,379 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:48:40,381 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:48:40,381 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:48:40,397 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:48:40,699 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:48:40,699 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:48:42,700 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:48:43,731 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:48,732 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:48,992 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:48:49,659 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:48:49,660 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:48:52,712 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:48:53,626 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:48:53,628 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:48:53,628 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:48:53,641 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:48:53,712 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:48:53,947 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:48:54,714 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:48:56,717 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:48:58,949 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:49:03,950 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:49:04,659 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:49:04,660 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:49:06,704 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:49:06,705 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:49:06,706 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:49:06,718 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:49:06,725 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:49:06,726 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:49:08,732 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:49:09,040 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:49:14,041 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:49:18,994 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:49:19,660 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:49:19,661 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:49:19,829 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:49:19,884 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:49:19,884 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:49:19,884 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:49:19,921 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:49:21,005 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:49:21,005 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:49:23,007 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:49:25,249 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:49:30,250 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:49:34,039 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:49:34,041 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:49:34,041 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:49:34,043 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:49:34,080 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:49:34,717 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:49:34,717 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:49:35,086 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:49:35,970 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:49:37,087 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:49:40,971 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:49:46,529 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:49:47,095 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:49:47,561 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:49:47,563 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:49:47,563 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:49:47,565 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:49:48,095 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:49:48,995 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:49:49,097 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:49:49,662 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:49:49,663 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:49:51,490 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:49:51,835 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:49:56,836 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:50:01,837 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:50:04,649 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:50:04,650 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:50:04,651 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:50:04,652 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:50:04,661 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:50:04,662 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:50:05,183 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:50:05,183 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:50:06,974 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:50:07,184 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:50:11,975 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:50:17,612 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:50:17,630 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:50:17,632 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:50:17,632 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:50:17,634 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:50:18,217 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:50:18,997 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:50:19,218 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:50:19,662 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:50:19,663 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:50:21,522 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:50:22,803 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:50:27,804 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:50:32,614 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: partial_history
+2023-12-01 14:50:32,616 DEBUG   SenderThread:190808 [sender.py:send():369] send: history
+2023-12-01 14:50:32,616 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: summary_record
+2023-12-01 14:50:32,618 INFO    SenderThread:190808 [sender.py:_save_file():1354] saving file wandb-summary.json with policy end
+2023-12-01 14:50:32,805 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:50:32,805 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/wandb-summary.json
+2023-12-01 14:50:33,053 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:50:34,662 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: stop_status
+2023-12-01 14:50:34,663 DEBUG   SenderThread:190808 [sender.py:send_request():396] send_request: stop_status
+2023-12-01 14:50:34,806 INFO    Thread-12 :190808 [dir_watcher.py:_on_file_modified():289] file/dir modified: /home/mmasramo/ProsRegNet/wandb/run-20231201_144418-3qyjpw3c/files/output.log
+2023-12-01 14:50:38,840 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:50:43,841 DEBUG   HandlerThread:190808 [handler.py:handle_request():144] handle_request: status_report
+2023-12-01 14:50:45,140 INFO    memory    :190808 [interfaces.py:monitor():140] Process proc.memory.rssMB has exited.
+2023-12-01 14:50:45,141 DEBUG   SystemMonitor:190808 [system_monitor.py:_start():166] Finished system metrics aggregation loop
+2023-12-01 14:50:45,141 DEBUG   SystemMonitor:190808 [system_monitor.py:_start():170] Publishing last batch of metrics
+2023-12-01 14:50:45,144 DEBUG   SenderThread:190808 [sender.py:send():369] send: stats
+2023-12-01 14:50:47,070 INFO    MainThread:190808 [internal.py:handle_exit():76] Internal process exited

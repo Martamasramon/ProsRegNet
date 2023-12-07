@@ -7,13 +7,20 @@
     },
     "output_path": "./results/",
     "studies2process": {
-        "HMU_113_MT_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_113_MT.json",
-        "HMU_119_MM_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_119_MM.json"  
+        "HMU_180_FK":   "./jsonData/histo-invivo-VERDICT/reg_HMU_180_KF.json"
     },
     "studies": {
-        "HMU_113_MT_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_113_MT.json",
-        "HMU_119_MM_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_119_MM.json",
-        "HMU_176_IJ_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_176_IJ.json",
-        "HMU_180_FK_VERDICT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_180_KF.json"
+        "HMU_003_DB":   "./jsonData/histo-invivo-VERDICT/reg_HMU_003_DB.json",
+        "HMU_007_TN":   "./jsonData/histo-invivo-VERDICT/reg_HMU_007_TN.json",
+        "HMU_010_FH":   "./jsonData/histo-invivo-VERDICT/reg_HMU_010_FH.json",
+        "HMU_011_MQ":   "./jsonData/histo-invivo-VERDICT/reg_HMU_011_MQ.json",
+        "HMU_082_PS":   "./jsonData/histo-invivo-VERDICT/reg_HMU_082_PS.json",
+        "HMU_113_MT":   "./jsonData/histo-invivo-VERDICT/reg_HMU_113_MT.json",
+        "HMU_116_BC":   "./jsonData/histo-invivo-VERDICT/reg_HMU_116_BC.json",
+        "HMU_119_MM":   "./jsonData/histo-invivo-VERDICT/reg_HMU_119_MM.json",
+        "HMU_176_IJ":   "./jsonData/histo-invivo-VERDICT/reg_HMU_176_IJ.json",
+        "HMU_180_FK":   "./jsonData/histo-invivo-VERDICT/reg_HMU_180_KF.json",
+        "HMU_181_MO":   "./jsonData/histo-invivo-VERDICT/reg_HMU_181_MO.json",
+        "HMU_201_MB":   "./jsonData/histo-invivo-VERDICT/reg_HMU_201_MB.json"
     }
 }

@@ -8,11 +8,11 @@ from torch.autograd         import Variable
 from preprocess             import *
 
 
-def list_to_image(dims, x_array, y_array, m, tensor=False, use_cuda=True, compact=False):
+def list_to_image(dims, x_array, y_array, m=3, tensor=False, use_cuda=True, compact=False):
     # Use the landmark coordinates to create histo 'landmarks image'
-    num_landmarks   = len(x_array)
+    num_landmarks   = len(x_array)    
     landmarks       = np.zeros((dims[0], dims[1], num_landmarks))
-    
+        
     # Make square to ensure resized image still contains landmark
     # Use 5x5 for histo and 3x3 for mri, since different amount of resizing
     for i in range(num_landmarks):
@@ -79,37 +79,57 @@ def get_landmark_img(dims, land_x, land_y, m=3, permute=True):
       
     return landmarks
 
+def process_block(landmarks, rows, cols, s, dims, M, size, fIC):
+    x, y, w, h, x_offset, y_offset = dims
+    rotated    = cv2.warpAffine(landmarks,M,(cols,rows))
+    
+    if s['transform']['flip_v'] == 1: 
+        rotated = cv2.flip(rotated, 0)
+    if s['transform']['flip_h'] == 1: 
+        rotated = cv2.flip(rotated, 1)
+    if fIC: 
+        rotated = cv2.flip(rotated, 1)
+   
+    # Crop, pad & resize image
+    crop    = rotated[x:x+w, y:y+h,:]
+    padded  = np.zeros((w + 2*x_offset, h + 2*y_offset, rotated.shape[2])) 
+    padded[x_offset:crop.shape[0]+x_offset, y_offset:crop.shape[1]+y_offset, :] = crop
+    padded  = cv2.resize(padded, (size, size), interpolation=cv2.INTER_CUBIC)
+
+    return padded
+
+def resize_landmarks(img, h_new, w_new):        
+    # Resize
+    _,_, num = img.shape
+    resized  = np.zeros((w_new, h_new, num))
+    for i in range(int(num/100)-1):
+        resized[:,:,i*100:(i+1)*100]   = cv2.resize(img[:,:,i*100:(i+1)*100], (h_new, w_new), interpolation=cv2.INTER_CUBIC)
+    if num%100 != 0:
+        resized[:,:,int(num/100)*100:] = cv2.resize(img[:,:,int(num/100)*100:], (h_new, w_new), interpolation=cv2.INTER_CUBIC) 
+                
+    return resized
 
 def preprocess_landmarks(s, rows, cols, M, fIC, dims, size):
     print('Processing landmarks...')
-
-    x, y, w, h, x_offset, y_offset = dims
-    
+            
     # Read landmarks
     land_x = s['landmarks-x']
     land_y = s['landmarks-y']
+    
     landmarks  = get_landmark_img((rows,cols), land_x, land_y, permute=False)
-
+    
     # Rotate & flip image 
     landmarks           = np.pad(landmarks,((rows,rows),(cols,cols),(0,0)),'constant', constant_values=0)
-    rows, cols, _       = landmarks.shape
-    rotated_landmarks   = cv2.warpAffine(landmarks,M,(cols,rows))
-    
-    if s['transform']['flip_v'] == 1: 
-        rotated_landmarks   = cv2.flip(rotated_landmarks, 0)
-    if s['transform']['flip_h'] == 1: 
-        rotated_landmarks   = cv2.flip(rotated_landmarks, 1)
-    if fIC: 
-        rotated_landmarks   = cv2.flip(rotated_landmarks, 1)
+    new_rows, new_cols, num     = landmarks.shape
         
-
-    # Crop, pad & resize image
-    crop    = rotated_landmarks[x:x+w, y:y+h,:]
-    padded  = np.zeros((w + 2*x_offset, h + 2*y_offset, landmarks.shape[2])) 
-    padded[x_offset:crop.shape[0]+x_offset, y_offset:crop.shape[1]+y_offset, :] = crop
-    padded  = cv2.resize(padded, (size, size), interpolation=cv2.INTER_CUBIC)
-    
-    return padded
+    # Rotate & flip 100 at a time
+    processed_landmarks = np.zeros((size, size, num))
+    for i in range(int(num/100)-1):
+        processed_landmarks[:,:,i*100:(i+1)*100]   = process_block(landmarks[:,:,i*100:(i+1)*100],   new_rows, new_cols, s, dims, M, size, fIC)
+    if num%100 != 0:
+        processed_landmarks[:,:,int(num/100)*100:] = process_block(landmarks[:,:,int(num/100)*100:], new_rows, new_cols, s, dims, M, size, fIC)   
+                
+    return processed_landmarks, (rows, cols)
     
 def preprocess_mri_landmarks(landmark_imgs, dims, case, idx, directory):
     
