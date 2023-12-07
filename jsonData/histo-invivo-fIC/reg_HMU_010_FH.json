@@ -1,0 +1,9 @@
+{
+    "id":                   "HMU_010_FH",
+    "moving-type":          "stack",
+    "fixed":                "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_fIC_DL.nii.gz",
+    "fixed-segmentation":   "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_fIC_mask.nii.gz",
+    "DWI":                  "True",
+    "fIC":                  "True",
+    "moving":               "./datasets/testing/Histology/HMU_010_FH.json"
+}

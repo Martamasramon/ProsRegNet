@@ -1,0 +1,23 @@
+{
+    "version": "0.1",
+    "type": "registration",
+    "method": {
+        "type": "3DRegistration",
+        "params": "-da -dd"
+    },
+    "output_path": "./results/",
+    "studies2process": {
+        "HMU_181_MO":   "./jsonData/histo-invivo-fIC/reg_HMU_181_MO.json"
+    },
+    "studies": {
+        "HMU_003_DB":   "./jsonData/histo-invivo-fIC/reg_HMU_003_DB.json",
+        "HMU_010_FH":   "./jsonData/histo-invivo-fIC/reg_HMU_010_FH.json",
+        "HMU_011_MQ":   "./jsonData/histo-invivo-fIC/reg_HMU_011_MQ.json",
+        "HMU_082_PS":   "./jsonData/histo-invivo-fIC/reg_HMU_082_PS.json",
+        "HMU_113_MT":   "./jsonData/histo-invivo-fIC/reg_HMU_113_MT.json",
+        "HMU_116_BC":   "./jsonData/histo-invivo-fIC/reg_HMU_116_BC.json",
+        "HMU_119_MM":   "./jsonData/histo-invivo-fIC/reg_HMU_119_MM.json",
+        "HMU_180_KF":   "./jsonData/histo-invivo-fIC/reg_HMU_180_KF.json",
+        "HMU_181_MO":   "./jsonData/histo-invivo-fIC/reg_HMU_181_MO.json"
+    }
+}

@@ -6,6 +6,6 @@
     "cancer":               "./datasets/testing/DWI/HMU_119_MM/HMU_119_MM_fIC_cancer.nii.gz",
     "DWI":                  "True",
     "fIC":                  "True",
-    "DWI-map":              "./datasets/testing/DWI/HMU_119_MM/HMU_119_MM_fIC.nii.gz",
+    "DWI-map":              "./datasets/testing/DWI/HMU_119_MM/HMU_119_MM_fIC_DL.nii.gz",
     "moving":               "./datasets/testing/Histology/HMU_119_MM.json"
 }

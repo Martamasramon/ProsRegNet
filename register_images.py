@@ -96,6 +96,8 @@ def main():
         dwi_map         = studyParser.DWI_map
         landmarks       = studyParser.landmarks
         exvivo          = studyParser.exvivo
+        landmarks_grid  = True
+        register_fIC    = False
         
         for slice in moving_dict:
             regions = moving_dict[slice]['regions']
@@ -108,6 +110,11 @@ def main():
                 preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b90/'
                 coord_path             = 'coord_dwi_b90.txt'
                 tag = '_b90'  
+            elif 'fIC' in fixed_img:
+                preprocess_fixed_dest  = outputPath + '/preprocess/fIC/'
+                coord_path             = 'coord_dwi_fIC.txt'
+                register_fIC           = True
+                tag = '_fIC'  
             else:
                 preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b0/'
                 coord_path             = 'coord_dwi_b0.txt'
@@ -134,7 +141,7 @@ def main():
         ###### PREPROCESSING MRI HERE #############################################################
         if preprocess_fixed == True:
             print ("Preprocessing fixed case:", sid, '...')
-            coord = preprocess_mri(fixed_img, fixed_seg, preprocess_fixed_dest, coord, sid, dwi_map=dwi_map, fIC=fIC, cancer=mri_cancer, landmarks=landmarks)
+            coord = preprocess_mri(fixed_img, fixed_seg, preprocess_fixed_dest, coord, sid, dwi_map=dwi_map, fIC=fIC, cancer=mri_cancer, landmarks=landmarks, reg_fIC=register_fIC)
             print("Finished preprocessing fixed image", sid)
 
             with open(coord_path, 'w') as json_file: 
@@ -154,7 +161,7 @@ def main():
 
             ##### REGISTER
             start          = time.time()
-            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, regions, landmarks_histo, landmarks, fIC=fIC)
+            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, regions, landmarks_histo, landmarks, landmarks_grid=landmarks_grid, fIC=fIC, reg_fIC=register_fIC)
             end            = time.time()
             
             out3Dhist, out3Dmri, out3Dmri_cancer, out3Dhist_regions, out3Dmri_mask, scaling, transforms, landmark_image_mri, landmark_image_histo = output3D_cache
@@ -199,18 +206,21 @@ def main():
             save_path = outputPath + 'registration/histo-' + tag[1:] + '/'
             
             ## Output histology
-            output_results(save_path, out3Dhist, sid, tag + '_moved.', histSpatialInfo, model=opt.trained_models_name, extension = extension)
+            output_results(save_path, out3Dhist, sid, '_moved.', histSpatialInfo, model=opt.trained_models_name, extension = extension)
             for region in regions:
                 if 'fIC' not in region:
-                    output_results(save_path, out3Dhist_regions[region], sid, tag + '_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+                    output_results(save_path, out3Dhist_regions[region], sid,  '_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
             
+            """
             if dwi and fIC:
                 output_results(save_path, out3Dhist_regions['fIC'], sid, '_fIC_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
                 for region in regions:
                     output_results(save_path, out3Dhist_regions['fIC_'+region], sid, '_fIC_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+            """
                 
             if landmarks:
-                output_results(save_path, landmark_image_histo, sid, tag +'_landmarks_moved.', histSpatialInfo,   model=opt.trained_models_name, extension = extension)  
+                output_results(save_path, landmark_image_histo, sid, '_landmarks_moved.', histSpatialInfo,   model=opt.trained_models_name, extension = extension)  
+                landmark_list =  image_to_list(landmark_image_histo)
                        
             ## Output MRI 
             output_results(save_path, out3Dmri,         sid, tag +'_fixed.', imSpatialInfo,   model=opt.trained_models_name, extension = extension)

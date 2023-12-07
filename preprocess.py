@@ -136,15 +136,18 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC='
         cv2.imwrite(pre_process_moving_dest + case + '/hist_' + case + '_' + slice +'.png', padHist_low_res)
         cv2.imwrite(pre_process_moving_dest + case + '_high_res' + '/hist_' + case + '_high_res_' + slice +'.png', padHist_high_res)
 
+        """
         try:
             dims                = x, y, w, h, x_offset, y_offset
-            landmarks[count]    = preprocess_landmarks(s, row, col, M, fIC, dims, 240)
-            
-            for i in range(8): # NOT 8, NUM LANDMARKS!
-                cv2.imwrite(pre_process_moving_dest + case + '/' + case + '_landmark_'+str(i)+'_slice_' + slice +'.png', landmarks[count][:,:,i]*255)
+            landmarks[count], landmarks['size-'+str(count)] = preprocess_landmarks(s, row, col, M, fIC, dims, 240)
+
+            #for i in range(8): # NOT 8, NUM LANDMARKS!
+            #    cv2.imwrite(pre_process_moving_dest + case + '/' + case + '_landmark_'+str(i)+'_slice_' + slice +'.png', landmarks[count][:,:,i]*255)
             count              += 1
+            
         except:
             pass
+        """
         
     return landmarks
         
@@ -155,7 +158,7 @@ def getArray(img_path):
     return array
     
 #preprocess mri mha files to slices here
-def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, dwi_map='', fIC=False, cancer=None, healthy=None, landmarks=None, exvivo=False, target=True, fIC_slice=None):  
+def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, dwi_map='', fIC=False, cancer=None, healthy=None, landmarks=None, exvivo=False, target=True, fIC_slice=None, reg_fIC=False):  
     make_dir(pre_process_fixed_dest + case)
 
     imMri = getArray(fixed_img_mha)
@@ -215,8 +218,11 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         points = np.fliplr(points) # store them in x,y coordinates instead of row,col indices
         y, x, h, w = cv2.boundingRect(points) # create a rectangle around those points
         
-        imMri[slice, :, :] = imMri[slice, :, :] / np.max(imMri[slice, :, :]) * 255
-        mri = imMri[slice, :, :]*imMriMask[slice, :, :]
+        if not reg_fIC:
+            # if registering histo to fIC, do not normalise fIC! 
+            imMri[slice, :, :] = imMri[slice, :, :] / np.max(imMri[slice, :, :]) 
+        imMri[slice, :, :] *= 255
+        mri = imMri[slice, :, :] * imMriMask[slice, :, :]
    
         if exvivo:
             mri         = cv2.flip(mri, 1)
@@ -290,7 +296,6 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
                 cv2.imwrite(pre_process_fixed_dest + case + '/cancer_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(cancer_slice))
             else:
                 cv2.imwrite(pre_process_fixed_dest + case + '/cancer_' + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(ups_cancer))
-
         
         if healthy:
             healthy_slice = im_healthy[slice, :,:]

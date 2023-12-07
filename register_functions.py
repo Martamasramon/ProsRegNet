@@ -356,7 +356,7 @@ def get_map(preprocess_fixed_dest, text='fIC'):
     return out3D
 
    
-def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, landmarks_histo=None, landmarks_mri=None, half_out_size = 120, mri=False, exvivo=False, fIC=None):     
+def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, landmarks_histo=None, landmarks_mri=None, landmarks_grid=None, half_out_size = 120, mri=False, exvivo=False, fIC=None, reg_fIC=False):     
     if landmarks_histo and landmarks_mri:
         landmarks = True
     else:
@@ -384,7 +384,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
            
                 
     ### Grab histology files that were preprocessed     
-    if fIC or mri:
+    if fIC or mri or reg_fIC:
         reverse = False
     else:
         reverse = True
@@ -432,7 +432,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             else:
                 out3D_regions['fIC_'+region] = np.zeros((count, array_size, array_size, 3))
         
-    if landmarks:
+    if landmarks_mri:
         landmark_list   = ([pos for pos in sorted(os.listdir(preprocess_fixed_dest + 'landmarks/'))])
         landmark_image  = np.zeros((count, w, h, 3))
         
@@ -442,11 +442,8 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             landmark_cropped[landmark_num]  = ([pos for pos in sorted(os.listdir(preprocess_fixed_dest + 'landmarks/' + landmark_num)) if 'cropped' in pos])
             landmark_highRes[landmark_num]  = ([pos for pos in sorted(os.listdir(preprocess_fixed_dest + 'landmarks/' + landmark_num)) if 'highRes' in pos])
     
-        all_landmarks_histo = np.zeros((count, array_size, array_size,3 ))
-    
     ## Transform each slice
-    all_transforms = {}
-    
+    all_transforms     = {}    
     for idx in range(count): 
         # Get image paths
         source_image_path = preprocess_moving_dest + hist_case[idx]
@@ -498,15 +495,9 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         out3Dhist[idx, start_x:end_x, start_y:end_y, :] = np.uint8(affTps)
         for region in regions:
             out3D_regions[region][idx, start_x:end_x, start_y:end_y] = np.uint8(regions_aff_tps[region][:, :, 0])
-    
-        """if fIC:            
-            out3D_regions['fIC'][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(cv2.flip(affTps, 0))
-            for region in regions:
-                if region != 'density':
-                    out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y]  = np.uint8(cv2.flip(np.float32(regions_aff_tps[region][:, :, 0]), 0))   
-                else:
-                    out3D_regions['fIC_'+region ][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(cv2.flip(regions_aff_tps[region], 0))   """
-                    
+             
+        """
+        # Not necessary for MLP fIC maps
         if fIC:            
             out3D_regions['fIC'][idx, start_x:end_x, start_y:end_y, :]  = np.uint8(affTps)
             out3D_regions['fIC'][idx, :,:,:] = cv2.flip(out3D_regions['fIC'][idx, :,:,:],0)
@@ -516,23 +507,29 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
                     out3D_regions['fIC_'+region ][idx, :,:] = cv2.flip(out3D_regions['fIC_'+region ][idx, :,:],0)
                 else:
                     out3D_regions['fIC_'+region][idx, start_x:end_x, start_y:end_y, :] = np.uint8(regions_aff_tps[region])
-                    out3D_regions['fIC_'+region][idx, :,:,:] = cv2.flip(out3D_regions['fIC_'+region][idx, :,:,:],0)
+                    out3D_regions['fIC_'+region][idx, :,:,:] = cv2.flip(out3D_regions['fIC_'+region][idx, :,:,:],0)"""
             
         # Transform & output histology landmarks
-        if landmarks:
-            landmark_loc_histo = transform_landmarks(landmarks_histo[idx], transforms)
+        if landmarks_grid:
+            with open('jsonData/landmarks.json') as f:
+                landmarks_grid = json.load(f)
+                x = np.array(landmarks_grid['x'].split(';')).astype(float)
+                y = np.array(landmarks_grid['y'].split(';')).astype(float)
+                landmarks_grid_img = list_to_image((240,240), x, y)
             
-            # To save as NIFTI
-            landmark_histo_img = list_to_image((half_out_size*2,half_out_size*2), landmark_loc_histo[0,:], landmark_loc_histo[1,:], 2, compact=True)
-            landmark_histo_img = cv2.resize(landmark_histo_img, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
-            all_landmarks_histo[idx,start_x:end_x, start_y:end_y,:] = np.uint8(landmark_histo_img)
+            landmark_loc_histo = transform_landmarks(landmarks_grid_img, transforms)
             
-            # For error calc
-            temp_all      = np.zeros((array_size, array_size, landmark_loc_histo.shape[1]))
-            landmark_temp = list_to_image((half_out_size*2,half_out_size*2), landmark_loc_histo[0,:], landmark_loc_histo[1,:], 2)
-            landmark_temp = cv2.resize(landmark_temp, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
-            temp_all[start_x:end_x, start_y:end_y,:] = np.uint8(landmark_temp)
-            landmark_loc_histo = image_to_list(temp_all,  hist=False)
+            ## SAVE AS TEXT 
+            with open('./results/landmarks/' + sid + '_' + str(idx) + '.txt', 'w') as file:  
+                x_transformed = landmark_loc_histo[0].cpu().numpy().astype(str)
+                y_transformed = landmark_loc_histo[1].cpu().numpy().astype(str)
+                x_str = ";".join(x_transformed)
+                y_str = ";".join(y_transformed)
+                file.write(f'\n\nX\n {x_str}')
+                file.write(f'\n\nY\n {y_str}')
+                
+            
+            # landmarks_histo is size 240x240xnum_landmarks
                 
         # Output MRI
         imMri_highRes   = cv2.imread(preprocess_fixed_dest  + mri_highRes[idx])
@@ -548,7 +545,21 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             print('error with cancer mask')
             out3Dmri_cancer = np.zeros(())
         
-        if landmarks:
+        if landmarks:  
+            # To save as NIFTI
+            #landmark_histo_img = list_to_image((half_out_size*2,half_out_size*2), landmark_loc_histo[0,:], landmark_loc_histo[1,:], 2, compact=True)
+            #landmark_histo_img = cv2.resize(landmark_histo_img, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
+            
+            #all_landmarks_histo = np.zeros((count, array_size, array_size,3 ))
+            #all_landmarks_histo[idx,start_x:end_x, start_y:end_y,:] = np.uint8(landmark_histo_img)
+            
+            # Histo for error calc
+            #temp_all      = np.zeros((array_size, array_size, landmark_loc_histo.shape[1]))
+            #landmark_temp = list_to_image((half_out_size*2,half_out_size*2), landmark_loc_histo[0,:], landmark_loc_histo[1,:], 2)   
+            #landmark_temp = resize_landmarks(landmark_temp, h_new, w_new) 
+            #temp_all[start_x:end_x, start_y:end_y,:] = np.uint8(landmark_temp)
+            #landmark_loc_histo = image_to_list(temp_all,  hist=False)
+                      
             ## Use preprocessed imgs to calculate error
             all_landmarks   = np.zeros((half_out_size*4,half_out_size*4,len(landmark_list)))
             

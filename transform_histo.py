@@ -6,7 +6,7 @@ from register_functions     import output_results
 import argparse
 import cv2
 
-samples = ['HMU_113_MT', 'HMU_119_MM']
+samples = ['HMU_180_KF']
 
 def main():
     
@@ -32,8 +32,10 @@ def main():
         folder      = 'histo-b90/'
         coord_path  = 'coord_dwi_b90.txt'
         mri_folder  = 'dwi-b90/'
-        flip_h      = True
-        flip_v      = False
+    elif opt.mri == 'fIC':
+        folder      = 'histo-fIC/'
+        coord_path  = 'coord_dwi_fIC.txt'
+        mri_folder  = 'fIC/'
     else:
         print('ERROR. Input modality not recognised.')
         return
@@ -100,6 +102,9 @@ def main():
             for annot in paths:
                 warped_imgs[annot][i,:,:,:] = transform_histo(transforms, paths[annot][i], flip_v, flip_h, use_cuda=True, out_size=2*half_out_size)
             
+            # Save png image
+            cv2.imwrite('./results/registration/' + folder + sid + '/' + sid + '_' + str(i) +'.png', warped_imgs['histo'][i,:,:,:]*255)
+            
             # Transform to MRI space
             new_size, start_x, end_x, start_y, end_y = resize_from_coord(coord, sid, i, x_s, y_s)
                         
@@ -107,10 +112,11 @@ def main():
                 out_histo[annot][i, start_x:end_x, start_y:end_y, :] = cv2.resize(warped_imgs[annot][i,:,:,:], new_size, interpolation=cv2.INTER_CUBIC)  
                 if flip_v:
                     out_histo[annot][i,:,:,:] = cv2.flip(out_histo[annot][i,:,:,:] , 0)
-
+            
         # Save images
         for annot in paths:
-            output_results('./results/registration/' + folder, out_histo[annot], sid, '_final_' + opt.mri + '_' + annot, spatialInfo, 'final', extension = '.nii.gz')
+            print(annot)
+            output_results('./results/registration/' + folder, out_histo[annot], sid, '_final_' + annot, spatialInfo, 'final', extension = '.nii.gz')
 
         print('Finished processing sample. \n')
         
