@@ -20,6 +20,7 @@ class ParserStudyDict:
         self.healthy                    = None
         self.landmarks                  = None
         self.exvivo                     = None
+        self.landmarks_grid             = None
         
         self.SetFromDict()
         
@@ -72,6 +73,11 @@ class ParserStudyDict:
             pass
         try:
             self.fIC_slice                      = self.dict['fIC-slice']                   
+        except :
+            pass
+        
+        try:
+            self.landmarks_grid                 = self.dict['landmarks-grid']                   
         except :
             pass
             

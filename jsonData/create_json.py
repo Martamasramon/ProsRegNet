@@ -1,45 +1,53 @@
 import os
 import json
 
-def create_json(path_mri, path_histo, file_name):
+def create_folders(path_mri, path_histo, sid):
+    try: 
+        directory = os.path.join('..',path_mri,sid)
+        os.mkdir(directory)
+        print('Made directory', directory)
+    except: 
+        pass 
+
+    try: 
+        directory = os.path.join('..',path_histo,sid)
+        os.mkdir(directory)
+        print('Made directory', directory)
+    except: 
+        pass 
+    
+    
+def create_json(path_mri, path_histo, path_json, file_name):
     
     json_data = {
-        "id": file_name,
-        "invivo-accession": "",
-        "exvivo-accession": "",
-        "fixed": os.path.join(path_mri, file_name, 'T2_nifti_' + file_name + '.nii.gz'),
-        "fixed-segmentation": os.path.join(path_mri, file_name, 'T2_nifti_' + file_name + '_mask.nii.gz'),
-        "fixed-landmarks2": "",
-        "fixed-landmarks3": "",
-        "fixed-landmarks1": "",
-        "moving-type": "stack",
-        "moving": os.path.join(path_histo, file_name + '.json'),
-        "T2w": "",
-        "ADC": "",
-        "DWI": ""
+        "id":                   file_name,
+        "moving-type":          "stack",
+        "fixed":                os.path.join(path_mri, file_name, file_name + '_b3000.nii.gz'),
+        "fixed-segmentation":   os.path.join(path_mri, file_name, file_name + '_b3000_mask.nii.gz'),
+        "cancer":               "",
+        "DWI":                  "True",
+        "fIC":                  "True",
+        "DWI-map":              os.path.join(path_mri, file_name, file_name + '_fIC_DL.nii.gz'),
+        "moving":               os.path.join(path_histo, file_name + '.json')
     }
     json_object = json.dumps(json_data, indent=4)
     
     # Save to file
-    with open('reg_' + file_name + '.json', "w") as outfile:
+    with open(os.path.join(path_json, 'reg_' + file_name + '.json'), "w") as outfile:
         outfile.write(json_object)
 
 
 def main():
     # Paths to image folders 
-    path_mri    = './datasets/testing/MRI'
+    path_mri    = './datasets/testing/DWI'
     path_histo  = './datasets/testing/Histology'
+    path_json   = 'histo-invivo-VERDICT'
     
-    # List of all available samples
-    """file_names = ['HMU_003_DB', 'HMU_007_TN', 'HMU_010_FH', 
-                'HMU_011_MQ', 'HMU_025_SH', 'HMU_038_JC', 
-                'HMU_056_JH', 'HMU_064_SB', 'HMU_065_RH', 
-                'HMU_066_JF', 'HMU_067_MS', 
-                'HMU_069_NS', 'HMU-004-HC']"""
-                
-    file_names = ['DWI_HMU_003_DB', 'DWI_HMU_007_TN', 'DWI_HMU_010_FH']
-
+    # List of samples
+    file_names = ['HMU_033_JS','HMU_038_JC','HMU_056_JH','HMU_063_RS','HMU_065_RH','HMU_066_JF','HMU_069_NS','HMU_076_RV','HMU_077_MW','HMU_084_AJ','HMU_087_FM','HMU_094_RB','HMU_099_DL','HMU_121_CN']
+    
     for name in file_names:
-        create_json(path_mri, path_histo, name)
+        create_folders(path_mri, path_histo, name)
+        create_json(path_mri, path_histo, path_json, name)
         
 main()

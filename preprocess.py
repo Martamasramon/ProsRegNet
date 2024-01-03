@@ -275,6 +275,8 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
         if dwi_map:
             if fIC_slice == None or fIC_slice == '':
                 map_slice = slice
+            else:
+                map_slice = fIC_slice
             
             if fIC:
                 ####### NOTE: we are scaling the pixel values ####### 

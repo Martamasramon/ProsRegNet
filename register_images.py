@@ -96,7 +96,7 @@ def main():
         dwi_map         = studyParser.DWI_map
         landmarks       = studyParser.landmarks
         exvivo          = studyParser.exvivo
-        landmarks_grid  = True
+        landmarks_grid  = studyParser.landmarks_grid
         register_fIC    = False
         
         for slice in moving_dict:

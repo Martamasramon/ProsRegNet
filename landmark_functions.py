@@ -151,7 +151,7 @@ def preprocess_mri_landmarks(landmark_imgs, dims, case, idx, directory):
     
     
     
-def transform_landmarks(landmarks, transforms, use_cuda=True, out_size=240):
+def transform_landmarks(landmarks, transforms, use_cuda=True, out_size=240, mri=False):
     theta_aff_1, theta_aff_2, theta_tps = transforms
     
     # Convert to variable
@@ -164,7 +164,10 @@ def transform_landmarks(landmarks, transforms, use_cuda=True, out_size=240):
      
     # Get transformation models   
     affTnf = GeometricTnf(geometric_model='affine', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
-    tpsTnf = GeometricTnf(geometric_model='tps',    out_h=out_size, out_w=out_size, use_cuda=use_cuda)
+    if mri:
+        tpsTnf = GeometricTnf(geometric_model='tps-mri', out_h=out_size, out_w=out_size, use_cuda=use_cuda)
+    else:
+        tpsTnf = GeometricTnf(geometric_model='tps',    out_h=out_size, out_w=out_size, use_cuda=use_cuda)
     
     # Apply transformations
     warped_landmarks = affTnf(landmarks,        theta_aff_1.view(-1,2,3))
