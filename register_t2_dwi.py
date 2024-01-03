@@ -99,6 +99,7 @@ def main():
         fIC_slice   = studyParser.fIC_slice
         cancer      = studyParser.cancer
         healthy     = studyParser.healthy
+        landmarks_grid = studyParser.landmarks_grid
 
         regions = []
         if moving_seg:
@@ -139,7 +140,7 @@ def main():
 
             ##### REGISTER
             start          = time.time()
-            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord_dwi, model_cache, sid, regions, half_out_size=40, mri=True, fIC=fIC)
+            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord_dwi, model_cache, sid, regions, landmarks_grid=landmarks_grid, half_out_size=40, mri=True, fIC=fIC)
             end            = time.time()
             
             out3D_T2, out3D_DWI, _, out3D_T2_regions, out3D_DWI_mask, scaling, transforms, _, _ = output3D_cache

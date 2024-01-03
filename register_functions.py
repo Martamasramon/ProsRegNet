@@ -474,7 +474,10 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
         affTps, regions_aff_tps, transforms_json, transforms = runCnn(model_cache, source_image_path, target_image_path, imHisto, out_size=2*half_out_size, mri=mri, exvivo=exvivo) 
         all_transforms[idx] = transforms_json
         
-        # Transform main histology & regions to MRI space    
+        # Save transformed source image as png
+        cv2.imwrite(preprocess_moving_dest + '/warped_' + sid + '_' + str(idx).zfill(2) +'.jpg', affTps*255)
+        
+        # Transform source image & regions to MRI space    
         affTps = cv2.resize(affTps*255, (h_new, w_new), interpolation=cv2.INTER_CUBIC)  
         for region in regions:
             regions_aff_tps[region] = cv2.resize(regions_aff_tps[region], (h_new, w_new), interpolation=cv2.INTER_CUBIC)
@@ -511,23 +514,29 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
             
         # Transform & output histology landmarks
         if landmarks_grid:
-            with open('jsonData/landmarks.json') as f:
+            if mri:
+                file_name = 'landmarks_mri'
+                suffix    = 'mri_'
+            else:
+                file_name = 'landmarks'
+                suffix    = ''
+                
+            with open('jsonData/'+ file_name +'.json') as f:
                 landmarks_grid = json.load(f)
                 x = np.array(landmarks_grid['x'].split(';')).astype(float)
                 y = np.array(landmarks_grid['y'].split(';')).astype(float)
-                landmarks_grid_img = list_to_image((240,240), x, y)
-            
-            landmark_loc_histo = transform_landmarks(landmarks_grid_img, transforms)
+                landmarks_grid_img = list_to_image((half_out_size*2,half_out_size*2), x, y)
+                
+            landmark_loc_histo = transform_landmarks(landmarks_grid_img, transforms, mri=mri, out_size=half_out_size*2)
             
             ## SAVE AS TEXT 
-            with open('./results/landmarks/' + sid + '_' + str(idx) + '.txt', 'w') as file:  
+            with open('./results/landmarks/transformed_landmarks_' + suffix + sid + '_' + str(idx) + '.txt', 'w') as file:  
                 x_transformed = landmark_loc_histo[0].cpu().numpy().astype(str)
                 y_transformed = landmark_loc_histo[1].cpu().numpy().astype(str)
                 x_str = ";".join(x_transformed)
                 y_str = ";".join(y_transformed)
-                file.write(f'\n\nX\n {x_str}')
-                file.write(f'\n\nY\n {y_str}')
-                
+                file.write(f'{x_str}')
+                file.write(f'\n{y_str}')
             
             # landmarks_histo is size 240x240xnum_landmarks
                 

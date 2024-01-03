@@ -6,7 +6,8 @@ from register_functions     import output_results
 import argparse
 import cv2
 
-samples = ['HMU_180_KF']
+samples  = ['HMU_033_JS','HMU_038_JC','HMU_056_JH','HMU_063_RS','HMU_065_RH','HMU_066_JF','HMU_069_NS','HMU_076_RV','HMU_077_MW','HMU_084_AJ','HMU_087_FM','HMU_094_RB','HMU_099_DL','HMU_121_CN']
+save_img = False
 
 def main():
     
@@ -102,8 +103,9 @@ def main():
             for annot in paths:
                 warped_imgs[annot][i,:,:,:] = transform_histo(transforms, paths[annot][i], flip_v, flip_h, use_cuda=True, out_size=2*half_out_size)
             
-            # Save png image
-            cv2.imwrite('./results/registration/' + folder + sid + '/' + sid + '_' + str(i) +'.png', warped_imgs['histo'][i,:,:,:]*255)
+            if save_img:
+                # Save png image
+                cv2.imwrite('./results/registration/' + folder + sid + '/' + sid + '_' + str(i) +'.png', warped_imgs['histo'][i,:,:,:]*255)
             
             # Transform to MRI space
             new_size, start_x, end_x, start_y, end_y = resize_from_coord(coord, sid, i, x_s, y_s)
