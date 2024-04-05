@@ -1,0 +1,13 @@
+{
+    "id":                   "HMU_201_MB",
+    "moving-type":          "stack",
+    "fixed":                "./datasets/testing/DWI/HMU_201_MB/HMU_201_MB_b3000.nii.gz",
+    "fixed-segmentation":   "./datasets/testing/DWI/HMU_201_MB/HMU_201_MB_b3000_mask_A3.nii.gz",
+    "fIC":                  "./datasets/testing/DWI/HMU_201_MB/HMU_201_MB_fIC_DL.nii.gz",
+    "fIC-slice":            "",
+    "moving":               "./datasets/testing/MRI/HMU_201_MB/HMU_201_MB_T2W.nii.gz",
+    "moving-segmentation":  "./datasets/testing/MRI/HMU_201_MB/HMU_201_MB_T2W_mask.nii.gz",
+    "cancer":               "",
+    "healthy":              "",
+    "landmarks-grid":       "True"
+}

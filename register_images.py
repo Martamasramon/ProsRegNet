@@ -161,7 +161,7 @@ def main():
 
             ##### REGISTER
             start          = time.time()
-            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, regions, landmarks_histo, landmarks, landmarks_grid=landmarks_grid, fIC=fIC, reg_fIC=register_fIC)
+            output3D_cache = register(preprocess_moving_dest + sid + '/' , preprocess_fixed_dest + sid + '/', coord, model_cache, sid, regions, landmarks_histo, landmarks, landmarks_grid=landmarks_grid, DWI_map=dwi, fIC=fIC, reg_fIC=register_fIC)
             end            = time.time()
             
             out3Dhist, out3Dmri, out3Dmri_cancer, out3Dhist_regions, out3Dmri_mask, scaling, transforms, landmark_image_mri, landmark_image_histo = output3D_cache
@@ -208,14 +208,19 @@ def main():
             ## Output histology
             output_results(save_path, out3Dhist, sid, '_moved.', histSpatialInfo, model=opt.trained_models_name, extension = extension)
             for region in regions:
-                if 'fIC' not in region:
+                if 'fIC' not in region and 'ADC' not in region:
                     output_results(save_path, out3Dhist_regions[region], sid,  '_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
             
             """
-            if dwi and fIC:
-                output_results(save_path, out3Dhist_regions['fIC'], sid, '_fIC_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+            if dwi:
+                if fIC:
+                    map_name = 'fIC'
+                else:
+                    map_name = 'ADC'
+                
+                output_results(save_path, out3Dhist_regions[map_name], sid, '_fIC_moved.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
                 for region in regions:
-                    output_results(save_path, out3Dhist_regions['fIC_'+region], sid, '_fIC_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
+                    output_results(save_path, out3Dhist_regions[map_name+'_'+region], sid, '_fIC_moved_' + region + '.' , histSpatialInfo, model=opt.trained_models_name, extension = extension)
             """
                 
             if landmarks:

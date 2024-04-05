@@ -1,12 +1,11 @@
 {
-    "id":                   "HMU_113_MT",
-    "moving-type":          "stack",
-    "fixed":                "./datasets/testing/MRI/HMU_113_MT/HMU_113_MT_T2W.nii.gz",
-    "fixed-segmentation":   "./datasets/testing/MRI/HMU_113_MT/HMU_113_MT_T2W_mask.nii.gz",
-    "cancer":               "./datasets/testing/MRI/HMU_113_MT/HMU_113_MT_T2W_cancer.nii.gz",
-    "healthy":              "./datasets/testing/MRI/HMU_113_MT/HMU_113_MT_T2W_healthy.nii.gz",
-    "DWI":                  "",
-    "fIC":                  "",
-    "DWI-map":              "",
-    "moving":               "./datasets/testing/Histology/HMU_113_MT.json"
+    "id": "HMU_113_MT",
+    "moving-type": "stack",
+    "fixed": "./datasets/testing/MRI/HMU_113_MT/HMU_113_MT_T2W.nii.gz",
+    "fixed-segmentation": "./datasets/testing/MRI/HMU_113_MT/HMU_113_MT_T2W_mask.nii.gz",
+    "cancer": "",
+    "DWI": "False",
+    "fIC": "",
+    "DWI-map": "",
+    "moving": "./datasets/testing/Histology/HMU_113_MT.json"
 }

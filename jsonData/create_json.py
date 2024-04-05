@@ -23,12 +23,12 @@ def create_json(path_mri, path_histo, path_json, file_name):
         "id":                   file_name,
         "moving-type":          "stack",
         "fixed":                os.path.join(path_mri, file_name, file_name + '_b3000.nii.gz'),
-        "fixed-segmentation":   os.path.join(path_mri, file_name, file_name + '_b3000_mask.nii.gz'),
+        "fixed-segmentation":   os.path.join(path_mri, file_name, file_name + '_b3000_mask_best.nii.gz'),
         "cancer":               "",
         "DWI":                  "True",
-        "fIC":                  "True",
-        "DWI-map":              os.path.join(path_mri, file_name, file_name + '_fIC_DL.nii.gz'),
-        "moving":               os.path.join(path_histo, file_name + '.json')
+        "fIC":                  "",
+        "DWI-map":              os.path.join(path_mri, file_name, file_name + '_ADC.nii.gz'),
+        "moving":               os.path.join(path_histo, file_name + '_best.json')
     }
     json_object = json.dumps(json_data, indent=4)
     
@@ -44,8 +44,8 @@ def main():
     path_json   = 'histo-invivo-VERDICT'
     
     # List of samples
-    file_names = ['HMU_033_JS','HMU_038_JC','HMU_056_JH','HMU_063_RS','HMU_065_RH','HMU_066_JF','HMU_069_NS','HMU_076_RV','HMU_077_MW','HMU_084_AJ','HMU_087_FM','HMU_094_RB','HMU_099_DL','HMU_121_CN']
-    
+    file_names = ['HMU_010_FH','HMU_011_MQ','HMU_038_JC','HMU_063_RS','HMU_066_JF','HMU_076_RV','HMU_082_PS','HMU_084_AJ','HMU_113_MT','HMU_121_CN','HMU_176_IJ','HMU_180_KF','201_MB']
+ 
     for name in file_names:
         create_folders(path_mri, path_histo, name)
         create_json(path_mri, path_histo, path_json, name)

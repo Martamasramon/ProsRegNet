@@ -34,7 +34,7 @@ def transformAndSaveRegion(preprocess_moving_dest, case, slice, s, region, theta
         except: 
             pass 
         
-        if region != 'density':
+        if region == 'mask' or region == 'cancer':
             # find edge and downsample
             rotated_ann[rotated_ann > 0] = 1
 
@@ -157,11 +157,11 @@ def getArray(img_path):
     array   = sitk.GetArrayFromImage(img)
     return array
     
-#preprocess mri mha files to slices here
-def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case, dwi_map='', fIC=False, cancer=None, healthy=None, landmarks=None, exvivo=False, target=True, fIC_slice=None, reg_fIC=False):  
+#preprocess mri files to slices here
+def preprocess_mri(fixed_img, fixed_seg, pre_process_fixed_dest, coord, case, dwi_map='', fIC=False, cancer=None, healthy=None, landmarks=None, exvivo=False, target=True, fIC_slice=None, reg_fIC=False):  
     make_dir(pre_process_fixed_dest + case)
 
-    imMri = getArray(fixed_img_mha)
+    imMri = getArray(fixed_img)
     if len(imMri.shape) > 3:
         imMri = np.squeeze(imMri[0,:,:,:])
         
@@ -189,7 +189,7 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
     if (imMri.shape[1]!=maskArray.shape[1] or imMri.shape[2]!=maskArray.shape[2]):
         print("Input MRI and MRI mask have different sizes. Reshaping mask.")
         print(imMri.shape, maskArray.shape)
-        mri_ori     = sitk.ReadImage(fixed_img_mha)
+        mri_ori     = sitk.ReadImage(fixed_img)
         resampler   = sitk.ResampleImageFilter()
         resampler.SetReferenceImage(mri_ori)
         imMriMask   = resampler.Execute(imMriMask)
@@ -278,12 +278,13 @@ def preprocess_mri(fixed_img_mha, fixed_seg, pre_process_fixed_dest, coord, case
             else:
                 map_slice = fIC_slice
             
-            if fIC:
+            if fIC==True:
                 ####### NOTE: we are scaling the pixel values ####### 
                 im_dwi_map_slice = im_dwi_map[int(map_slice), :, :] / 2 * 255
                 tag = '/fIC_'
             else:
-                im_dwi_map_slice = im_dwi_map[int(map_slice), :, :] / 3 * 255
+                im_dwi_map_slice = im_dwi_map[0, int(map_slice), :, :] * 600 * 255
+                #print(np.min(im_dwi_map_slice),np.max(im_dwi_map_slice))
                 tag = '/ADC_'
             
             cv2.imwrite(pre_process_fixed_dest + case + tag + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_dwi_map_slice))

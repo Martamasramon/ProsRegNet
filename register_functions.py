@@ -356,7 +356,7 @@ def get_map(preprocess_fixed_dest, text='fIC'):
     return out3D
 
    
-def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, landmarks_histo=None, landmarks_mri=None, landmarks_grid=None, half_out_size = 120, mri=False, exvivo=False, fIC=None, reg_fIC=False):     
+def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, sid, regions, landmarks_histo=None, landmarks_mri=None, landmarks_grid=None, half_out_size = 120, mri=False, exvivo=False, DWI_map=None, fIC=None, reg_fIC=False):     
     if landmarks_histo and landmarks_mri:
         landmarks = True
     else:
@@ -384,7 +384,7 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
            
                 
     ### Grab histology files that were preprocessed     
-    if fIC or mri or reg_fIC:
+    if fIC==True or mri==True or reg_fIC==True:
         reverse = False
     else:
         reverse = True
@@ -423,14 +423,21 @@ def register(preprocess_moving_dest, preprocess_fixed_dest, coord, model_cache, 
     out3D_regions = {}
     for region in regions:
         out3D_regions[region]       = np.zeros((count, array_size, array_size))
-        
-    if fIC:
-        out3D_regions['fIC']        = np.zeros((count, array_size, array_size, 3))
+    
+    """  
+    if DWI_map:  
+        if fIC:
+            map_name = 'fIC'
+        else:
+            map_name = 'ADC'
+                    
+        out3D_regions[map_name] = np.zeros((count, array_size, array_size, 3))
         for region in regions:
             if region != 'density':
-                out3D_regions['fIC_'+region] = np.zeros((count, array_size, array_size))
+                out3D_regions[map_name + '_' + region] = np.zeros((count, array_size, array_size))
             else:
-                out3D_regions['fIC_'+region] = np.zeros((count, array_size, array_size, 3))
+                out3D_regions[map_name + '_' + region] = np.zeros((count, array_size, array_size, 3))
+    """
         
     if landmarks_mri:
         landmark_list   = ([pos for pos in sorted(os.listdir(preprocess_fixed_dest + 'landmarks/'))])

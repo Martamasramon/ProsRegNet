@@ -1,11 +1,11 @@
 {
-    "id":                   "HMU_010_FH",
-    "moving-type":          "stack",
-    "fixed":                "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_b3000.nii.gz",
-    "fixed-segmentation":   "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_b3000_mask.nii.gz",
-    "cancer":               "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_fIC_cancer.nii.gz",
-    "DWI":                  "True",
-    "fIC":                  "True",
-    "DWI-map":              "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_fIC_DL.nii.gz",
-    "moving":               "./datasets/testing/Histology/HMU_010_FH.json"
+    "id": "HMU_010_FH",
+    "moving-type": "stack",
+    "fixed": "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_b3000.nii.gz",
+    "fixed-segmentation": "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_b3000_mask_best.nii.gz",
+    "cancer": "",
+    "DWI": "True",
+    "fIC": "",
+    "DWI-map": "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_ADC.nii.gz",
+    "moving": "./datasets/testing/Histology/HMU_010_FH_best.json"
 }
