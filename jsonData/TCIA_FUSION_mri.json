@@ -7,13 +7,19 @@
     },
     "output_path": "./results/",
     "studies2process": {
+        "HMU_010_FH":       "./jsonData/T2-DWI/reg_HMU_010_FH.json",
+        "HMU_011_MQ":       "./jsonData/T2-DWI/reg_HMU_011_MQ.json",
         "HMU_113_MT":       "./jsonData/T2-DWI/reg_HMU_113_MT.json",
         "HMU_176_IJ":       "./jsonData/T2-DWI/reg_HMU_176_IJ.json",
-        "HMU_180_FK":       "./jsonData/T2-DWI/reg_HMU_180_KF.json"
+        "HMU_180_FK":       "./jsonData/T2-DWI/reg_HMU_180_KF.json",
+        "HMU_201_MB":       "./jsonData/T2-DWI/reg_HMU_201_MB.json"
     },
     "studies": {
+        "HMU_010_FH":       "./jsonData/T2-DWI/reg_HMU_010_FH.json",
+        "HMU_011_MQ":       "./jsonData/T2-DWI/reg_HMU_011_MQ.json",
         "HMU_113_MT":       "./jsonData/T2-DWI/reg_HMU_113_MT.json",
         "HMU_176_IJ":       "./jsonData/T2-DWI/reg_HMU_176_IJ.json",
-        "HMU_180_FK":       "./jsonData/T2-DWI/reg_HMU_180_KF.json"
+        "HMU_180_FK":       "./jsonData/T2-DWI/reg_HMU_180_KF.json",
+        "HMU_201_MB":       "./jsonData/T2-DWI/reg_HMU_201_MB.json"
     }
 }

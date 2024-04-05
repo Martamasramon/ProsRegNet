@@ -6,8 +6,10 @@ from register_functions     import output_results
 import argparse
 import cv2
 
-samples  = ['HMU_033_JS','HMU_038_JC','HMU_056_JH','HMU_063_RS','HMU_065_RH','HMU_066_JF','HMU_069_NS','HMU_076_RV','HMU_077_MW','HMU_084_AJ','HMU_087_FM','HMU_094_RB','HMU_099_DL','HMU_121_CN']
-save_img = False
+samples      = ['HMU_010_FH','HMU_011_MQ','HMU_038_JC','HMU_063_RS','HMU_066_JF','HMU_082_PS','HMU_084_AJ','HMU_113_MT','HMU_121_CN','HMU_176_IJ','HMU_180_KF']
+samples      = ['HMU_038_JC']
+
+save_png_img = False
 
 def main():
     
@@ -53,11 +55,15 @@ def main():
         # Get image paths
         img_path   = os.path.join('./results/preprocess/hist' , sid+'_high_res/')
         all_paths = {}
-        all_paths['histo']      = sorted(glob(img_path + 'hist*.png'),      reverse=reverse)
-        all_paths['mask']       = sorted(glob(img_path + 'mask*.png'),      reverse=reverse)
-        all_paths['density']    = sorted(glob(img_path + 'density*.png'),   reverse=reverse)
-        all_paths['cancer']     = sorted(glob(img_path + 'cancer*.png'),    reverse=reverse)
-        all_paths['BPH']        = sorted(glob(img_path + 'BPH*.png'),       reverse=reverse)
+        all_paths['histo']      = sorted(glob(img_path + 'hist*.png'),          reverse=reverse)
+        all_paths['mask']       = sorted(glob(img_path + 'mask*.png'),          reverse=reverse)
+        all_paths['density']    = sorted(glob(img_path + 'density*.png'),       reverse=reverse)
+        all_paths['epithelium'] = sorted(glob(img_path + 'epithelium*.png'),    reverse=reverse)
+        all_paths['stroma']     = sorted(glob(img_path + 'stroma*.png'),        reverse=reverse)
+        all_paths['lumen']      = sorted(glob(img_path + 'lumen*.png'),         reverse=reverse)
+        all_paths['other']      = sorted(glob(img_path + 'other*.png'),         reverse=reverse)
+        all_paths['cancer']     = sorted(glob(img_path + 'cancer*.png'),        reverse=reverse)
+        all_paths['BPH']        = sorted(glob(img_path + 'BPH*.png'),           reverse=reverse)
         
         paths = dict(all_paths)
         for annot in all_paths:
@@ -103,7 +109,7 @@ def main():
             for annot in paths:
                 warped_imgs[annot][i,:,:,:] = transform_histo(transforms, paths[annot][i], flip_v, flip_h, use_cuda=True, out_size=2*half_out_size)
             
-            if save_img:
+            if save_png_img:
                 # Save png image
                 cv2.imwrite('./results/registration/' + folder + sid + '/' + sid + '_' + str(i) +'.png', warped_imgs['histo'][i,:,:,:]*255)
             

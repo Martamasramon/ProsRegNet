@@ -1,12 +1,13 @@
 {
     "id":                   "HMU_180_KF",
     "moving-type":          "stack",
-    "fixed":                "./datasets/testing/DWI/HMU_180_KF/HMU_180_KF_b90.nii.gz",
-    "fixed-segmentation":   "./datasets/testing/DWI/HMU_180_KF/HMU_180_KF_DWI_mask.nii.gz",
-    "fIC":                  "./datasets/testing/DWI/HMU_180_KF/HMU_180_KF_fIC.nii.gz",
+    "fixed":                "./datasets/testing/DWI/HMU_180_KF/HMU_180_KF_b3000.nii.gz",
+    "fixed-segmentation":   "./datasets/testing/DWI/HMU_180_KF/HMU_180_KF_b3000_mask_A3.nii.gz",
+    "fIC":                  "./datasets/testing/DWI/HMU_180_KF/HMU_180_KF_fIC_DL.nii.gz",
     "fIC-slice":            "",
     "moving":               "./datasets/testing/MRI/HMU_180_KF/HMU_180_KF_T2W.nii.gz",
     "moving-segmentation":  "./datasets/testing/MRI/HMU_180_KF/HMU_180_KF_T2W_mask.nii.gz",
     "cancer":               "./datasets/testing/MRI/HMU_180_KF/HMU_180_KF_T2W_cancer.nii.gz",
-    "healthy":              "./datasets/testing/MRI/HMU_180_KF/HMU_180_KF_T2W_healthy.nii.gz"
+    "healthy":              "./datasets/testing/MRI/HMU_180_KF/HMU_180_KF_T2W_healthy.nii.gz",
+    "landmarks-grid":       "True"
 }

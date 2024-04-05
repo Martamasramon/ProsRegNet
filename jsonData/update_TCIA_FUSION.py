@@ -1,12 +1,12 @@
 import os
 import json
 
-def create_json(file_names):
+def create_json(file_names,folder):
     
     # Add all json files to 'studies'
-    studies = { "aaa0069": "./jsonData/reg_aaa0069.json" }
+    studies = {}
     for name in file_names:
-        studies[name] = os.path.join('./jsonData', name + '.json')
+        studies[name] = os.path.join('./jsonData', folder, 'reg_' + name + '.json')
     
     json_data = {
         "version": "0.1",
@@ -21,8 +21,6 @@ def create_json(file_names):
         # Later change to "studies2process": studies
         
         "studies2process": {
-            "aaa0069": "./jsonData/reg_aaa0069.json",
-            "HMU_010_FH": "./jsonData/reg_HMU_010_FH.json"
         },
         "studies": studies
     }
@@ -34,13 +32,18 @@ def create_json(file_names):
 
 
 def main():
+    folder = 'histo-invivo-VERDICT'
     # List of all available samples
-    file_names = ['HMU_003_DB', 'HMU_007_TN', 'HMU_010_FH', 
-                'HMU_011_MQ', 'HMU_025_SH', 'HMU_038_JC', 
-                'HMU_056_JH', 'HMU_064_SB', 'HMU_065_RH', 
-                'HMU_066_JF', 'HMU_067_MS', 
-                'HMU_069_NS', 'HMU-004-HC']
+    file_names = ['HMU_003_DB', 'HMU_007_TN', 'HMU_010_FH', 'HMU_011_MQ', 
+                  'HMU_025_SH', 'HMU_033_JS', 'HMU_038_JC', 'HMU_056_JH',
+                  'HMU_063_RS', 'HMU_065_RH', 'HMU_066_JF', 'HMU_069_NS',
+                  'HMU_076_RV', 'HMU_077_MW', 'HMU_082_PS', 'HMU_084_AJ',
+                  'HMU_087_FM', 'HMU_094_RB', 'HMU_099_DL', 'HMU_113_MT',
+                  'HMU_116_BC', 'HMU_118_PL', 'HMU_119_MM', 'HMU_121_CN', 
+                  'HMU_176_IJ', 'HMU_180_KF', 'HMU_181_MO', 'HMU_198_JL',
+                  'HMU_201_MB', 'HMU_242_JD', 'HMU_245_DC', 'HMU_256_DB',
+                  'HMU_258_JK', 'HMU_265_JM']
 
-    create_json(file_names)
+    create_json(file_names, folder)
         
 main()

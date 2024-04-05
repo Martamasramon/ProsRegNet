@@ -1,0 +1,11 @@
+{
+    "id": "HMU_198_JL",
+    "moving-type": "stack",
+    "fixed": "./datasets/testing/DWI/HMU_198_JL/HMU_198_JL_b3000.nii.gz",
+    "fixed-segmentation": "./datasets/testing/DWI/HMU_198_JL/HMU_198_JL_b3000_mask.nii.gz",
+    "cancer": "",
+    "DWI": "True",
+    "fIC": "True",
+    "DWI-map": "./datasets/testing/DWI/HMU_198_JL/HMU_198_JL_fIC_DL.nii.gz",
+    "moving": "./datasets/testing/Histology/HMU_198_JL.json"
+}

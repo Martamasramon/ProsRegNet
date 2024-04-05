@@ -1,11 +1,11 @@
 {
     "id":                   "HMU_010_FH",
     "moving-type":          "stack",
-    "fixed":                "./datasets/testing/MRI/HMU_010_FH/MRI_in_vivo_HMU_010_FH.nii.gz",
-    "fixed-segmentation":   "./datasets/testing/MRI/HMU_010_FH/HMU_010_FH_T2W_mask_A2.nii.gz",
-    "cancer":               "./datasets/testing/MRI/HMU_010_FH/HMU_010_FH_T2W_cancer.nii.gz",
-    "DWI":                  "",
+    "fixed":                "./datasets/testing/MRI/HMU_010_FH/HMU_010_FH_T2W.nii.gz",
+    "fixed-segmentation":   "./datasets/testing/MRI/HMU_010_FH/HMU_010_FH_T2W_mask.nii.gz",
+    "cancer":               "",
+    "DWI":                  "False",
     "fIC":                  "",
     "DWI-map":              "",
-    "moving":               "./datasets/testing/Histology/HMU_010_FH_A2.json"
+    "moving":               "./datasets/testing/Histology/HMU_010_FH.json"
 }
