@@ -11,6 +11,7 @@ landmarks*.o*
 *.pyc
 *.txt
 *.pkl
+*.pth.tar
 transform_landmarks.py
 landmarks.sh
 
