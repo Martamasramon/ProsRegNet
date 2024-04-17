@@ -6,9 +6,8 @@ from register_functions     import output_results
 import argparse
 import cv2
 
-samples      = ['HMU_010_FH','HMU_011_MQ','HMU_038_JC','HMU_063_RS','HMU_066_JF','HMU_082_PS','HMU_084_AJ','HMU_113_MT','HMU_121_CN','HMU_176_IJ','HMU_180_KF']
-samples      = ['HMU_038_JC']
-
+samples      = ['HMU_010_FH','HMU_038_JC','HMU_063_RS','HMU_066_JF','HMU_076_RV','HMU_082_PS','HMU_084_AJ','HMU_113_MT','HMU_121_CN','HMU_176_IJ','HMU_180_KF','HMU_201_MB']
+#samples      = ['HMU_010_FH','HMU_038_JC','HMU_082_PS','HMU_084_AJ','HMU_121_CN']
 save_png_img = False
 
 def main():

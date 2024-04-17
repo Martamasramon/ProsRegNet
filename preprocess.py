@@ -173,6 +173,8 @@ def preprocess_mri(fixed_img, fixed_seg, pre_process_fixed_dest, coord, case, dw
     
     if cancer:
         im_cancer   = getArray(cancer)
+        if len(im_cancer.shape) > 3:
+            im_cancer = np.squeeze(im_cancer[0,:,:,:])
         
     if healthy:
         im_healthy  = getArray(healthy)
@@ -278,13 +280,14 @@ def preprocess_mri(fixed_img, fixed_seg, pre_process_fixed_dest, coord, case, dw
             else:
                 map_slice = fIC_slice
             
-            if fIC==True:
+            if fIC:
                 ####### NOTE: we are scaling the pixel values ####### 
                 im_dwi_map_slice = im_dwi_map[int(map_slice), :, :] / 2 * 255
                 tag = '/fIC_'
             else:
-                im_dwi_map_slice = im_dwi_map[0, int(map_slice), :, :] * 600 * 255
-                #print(np.min(im_dwi_map_slice),np.max(im_dwi_map_slice))
+                im_dwi_map_slice = im_dwi_map[0, int(map_slice), :, :] * 440 * 255 # VERDICT -derived
+                print(np.max(im_dwi_map_slice))
+		#im_dwi_map_slice = im_dwi_map[map_slice, :, :] * 48 # From mpMRI
                 tag = '/ADC_'
             
             cv2.imwrite(pre_process_fixed_dest + case + tag + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_dwi_map_slice))
@@ -293,6 +296,8 @@ def preprocess_mri(fixed_img, fixed_seg, pre_process_fixed_dest, coord, case, dw
             cancer_slice = im_cancer[slice, :,:]
             if np.amax(cancer_slice) == 1:
                 cancer_slice *= 255
+            if np.amax(cancer_slice) == 3:
+                cancer_slice *= 85
             ups_cancer   = cv2.resize(cancer_slice[min_x:x+w+x_offset, min_y:y+h +y_offset].astype('float32'), (new_h,  new_w), interpolation=cv2.INTER_CUBIC)
             
             if target:

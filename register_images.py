@@ -106,7 +106,7 @@ def main():
         ###### PREPROCESSING DESTINATIONS ######################################
         preprocess_moving_dest = outputPath + '/preprocess/hist/'
         if dwi:
-            if 'b3000' in fixed_img:
+            if 'b3000' in fixed_img or 'DWI' in fixed_img:
                 preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b90/'
                 coord_path             = 'coord_dwi_b90.txt'
                 tag = '_b90'  
