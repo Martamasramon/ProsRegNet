@@ -7,7 +7,7 @@ import argparse
 import cv2
 
 samples      = ['HMU_010_FH','HMU_038_JC','HMU_063_RS','HMU_066_JF','HMU_076_RV','HMU_082_PS','HMU_084_AJ','HMU_113_MT','HMU_121_CN','HMU_176_IJ','HMU_180_KF','HMU_201_MB']
-#samples      = ['HMU_010_FH','HMU_038_JC','HMU_082_PS','HMU_084_AJ','HMU_121_CN']
+samples      = ['HMU_010_FH','HMU_038_JC','HMU_082_PS','HMU_084_AJ','HMU_121_CN','HMU_176_IJ','HMU_180_KF','HMU_201_MB']
 save_png_img = False
 
 def main():
@@ -63,6 +63,7 @@ def main():
         all_paths['other']      = sorted(glob(img_path + 'other*.png'),         reverse=reverse)
         all_paths['cancer']     = sorted(glob(img_path + 'cancer*.png'),        reverse=reverse)
         all_paths['BPH']        = sorted(glob(img_path + 'BPH*.png'),           reverse=reverse)
+        all_paths['urethra']    = sorted(glob(img_path + 'urethra*.png'),           reverse=reverse)
         
         paths = dict(all_paths)
         for annot in all_paths:

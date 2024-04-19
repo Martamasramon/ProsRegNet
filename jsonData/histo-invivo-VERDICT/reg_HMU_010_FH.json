@@ -5,7 +5,7 @@
     "fixed-segmentation": "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_b3000_mask_best.nii.gz",
     "cancer": "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_b3000_mask_NT.nii.gz",
     "DWI": "True",
-    "fIC": "",
-    "DWI-map": "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_ADC.nii.gz",
+    "fIC": "True",
+    "DWI-map": "./datasets/testing/DWI/HMU_010_FH/HMU_010_FH_fIC_DL.nii.gz",
     "moving": "./datasets/testing/Histology/HMU_010_FH_best.json"
 }
