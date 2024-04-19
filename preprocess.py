@@ -154,7 +154,7 @@ def preprocess_hist(moving_dict, pre_process_moving_dest, case, dwi=False, fIC='
 
 def getArray(img_path):
     img     = sitk.ReadImage(img_path)
-    array   = sitk.GetArrayFromImage(img)
+    array   = sitk.GetArrayFromImage(img).astype(float)
     return array
     
 #preprocess mri files to slices here
@@ -167,7 +167,7 @@ def preprocess_mri(fixed_img, fixed_seg, pre_process_fixed_dest, coord, case, dw
         
     imMriMask   = sitk.ReadImage(fixed_seg)
     maskArray   = sitk.GetArrayFromImage(imMriMask)
-    
+
     if dwi_map:
         im_dwi_map  = getArray(dwi_map)
     
@@ -210,8 +210,8 @@ def preprocess_mri(fixed_img, fixed_seg, pre_process_fixed_dest, coord, case, dw
     for slice in range(imMri.shape[0]):
         if np.sum(np.ndarray.flatten(imMriMask[slice, :, :])) == 0: 
             continue
-        
-        mri_mask = imMriMask[slice, :, :] 
+                
+        mri_mask = imMriMask[slice, :, :].copy()
         if np.amax(mri_mask) == 1:
             mri_mask *= 255
         
@@ -220,12 +220,15 @@ def preprocess_mri(fixed_img, fixed_seg, pre_process_fixed_dest, coord, case, dw
         points = np.fliplr(points) # store them in x,y coordinates instead of row,col indices
         y, x, h, w = cv2.boundingRect(points) # create a rectangle around those points
         
+        
+
         if not reg_fIC:
             # if registering histo to fIC, do not normalise fIC! 
             imMri[slice, :, :] = imMri[slice, :, :] / np.max(imMri[slice, :, :]) 
         imMri[slice, :, :] *= 255
+        
         mri = imMri[slice, :, :] * imMriMask[slice, :, :]
-   
+
         if exvivo:
             mri         = cv2.flip(mri, 1)
             mri_mask    = cv2.flip(mri_mask, 1)
@@ -266,6 +269,7 @@ def preprocess_mri(fixed_img, fixed_seg, pre_process_fixed_dest, coord, case, dw
         upsMri  = cv2.resize(cropMri.astype('float32'), (new_h,  new_w), interpolation=cv2.INTER_CUBIC)
         upsMask = cv2.resize(cropMask.astype('float32'), (new_h,  new_w), interpolation=cv2.INTER_CUBIC)
             
+        print(np.max(upsMri))
         # write to a file        
         cv2.imwrite(pre_process_fixed_dest + case + '/mri_' + case + '_' + str(slice).zfill(2) +'.jpg', upsMri)  
         cv2.imwrite(pre_process_fixed_dest + case + '/mri_uncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])
@@ -285,9 +289,8 @@ def preprocess_mri(fixed_img, fixed_seg, pre_process_fixed_dest, coord, case, dw
                 im_dwi_map_slice = im_dwi_map[int(map_slice), :, :] / 2 * 255
                 tag = '/fIC_'
             else:
-                im_dwi_map_slice = im_dwi_map[0, int(map_slice), :, :] * 440 * 255 # VERDICT -derived
-                print(np.max(im_dwi_map_slice))
-		#im_dwi_map_slice = im_dwi_map[map_slice, :, :] * 48 # From mpMRI
+                im_dwi_map_slice = im_dwi_map[map_slice, :, :] * 48 # From mpMRI
+                #im_dwi_map_slice = im_dwi_map[0, int(map_slice), :, :] * 440 * 255 # VERDICT -derived
                 tag = '/ADC_'
             
             cv2.imwrite(pre_process_fixed_dest + case + tag + case + '_' + str(slice).zfill(2) +'.jpg', np.uint8(im_dwi_map_slice))
