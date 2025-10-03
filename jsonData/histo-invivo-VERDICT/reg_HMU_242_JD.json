@@ -1,11 +1,11 @@
 {
     "id": "HMU_242_JD",
     "moving-type": "stack",
-    "fixed": "./datasets/testing/DWI/HMU_242_JD/HMU_242_JD_b3000.nii.gz",
-    "fixed-segmentation": "./datasets/testing/DWI/HMU_242_JD/HMU_242_JD_b3000_mask.nii.gz",
-    "cancer": "",
+    "fixed": "/cluster/project7/backup_masramon/MRI/in-vivo/HMU_242_JD/HMU_242_JD_b3000.nii.gz",
+    "fixed-segmentation": "/cluster/project7/backup_masramon/MRI/in-vivo/HMU_242_JD/HMU_242_JD_b3000_mask_best.nii.gz",
+    "cancer": "/cluster/project7/backup_masramon/MRI/in-vivo/HMU_242_JD/FIC urethra.nii.gz",
     "DWI": "True",
     "fIC": "True",
-    "DWI-map": "./datasets/testing/DWI/HMU_242_JD/HMU_242_JD_fIC_DL.nii.gz",
-    "moving": "./datasets/testing/Histology/HMU_242_JD.json"
+    "DWI-map": "/cluster/project7/backup_masramon/MRI/in-vivo/HMU_242_JD/HMU_242_JD_fIC_DL.nii.gz",
+    "moving": "./datasets/testing/HMU_242_JD_best.json"
 }

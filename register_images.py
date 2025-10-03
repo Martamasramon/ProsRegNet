@@ -6,6 +6,7 @@ import sys
 import time 
 import json
 import SimpleITK    as sitk
+import pandas as pd
 
 from geotnf.point_tnf           import *
 from process_img                import *
@@ -74,6 +75,9 @@ def main():
     studies     = json_obj.studies
     toProcess   = json_obj.ToProcess
     outputPath  = json_obj.output_path 
+    
+    registration_performance = pd.DataFrame(columns=('sid', 'slices', 'DICE','Hausdorff'))
+    registration_urethra     = pd.DataFrame(columns=('sid', 'slices', 'DICE','Hausdorff'))
 
     # start doing preprocessing on each case and register
     for s in studies:
@@ -104,28 +108,28 @@ def main():
             break
         
         ###### PREPROCESSING DESTINATIONS ######################################
-        preprocess_moving_dest = outputPath + '/preprocess/hist/'
+        preprocess_moving_dest = outputPath + 'preprocess/hist/'
         if dwi:
             if 'b3000' in fixed_img or 'DWI' in fixed_img:
-                preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b90/'
+                preprocess_fixed_dest  = outputPath + 'preprocess/dwi-b90/'
                 coord_path             = 'coord_dwi_b90.txt'
                 tag = '_b90'  
             elif 'fIC' in fixed_img:
-                preprocess_fixed_dest  = outputPath + '/preprocess/fIC/'
+                preprocess_fixed_dest  = outputPath + 'preprocess/fIC/'
                 coord_path             = 'coord_dwi_fIC.txt'
                 register_fIC           = True
                 tag = '_fIC'  
             else:
-                preprocess_fixed_dest  = outputPath + '/preprocess/dwi-b0/'
+                preprocess_fixed_dest  = outputPath + 'preprocess/dwi-b0/'
                 coord_path             = 'coord_dwi_b0.txt'
                 tag = '_b0'  
         else:
             if exvivo:
-                preprocess_fixed_dest  = outputPath + '/preprocess/exvivo/'
+                preprocess_fixed_dest  = outputPath + 'preprocess/exvivo/'
                 coord_path             = 'coord_exvivo.txt'
                 tag = '_exvivo'
             else:  
-                preprocess_fixed_dest  = outputPath + '/preprocess/mri/'
+                preprocess_fixed_dest  = outputPath + 'preprocess/mri/'
                 coord_path             = 'coord.txt'
                 tag = '_T2'
         print('Saving in...', tag[1:], '\n')                        
@@ -168,18 +172,24 @@ def main():
             print("\nRegistration done in {:6.3f}(min)".format((end-start)/60.0))
             
             #### CALCULATE ERROR
-            calc_dice(out3Dhist_regions['mask'], out3Dmri_mask)
-            hausdorff(out3Dhist_regions['mask'], out3Dmri_mask)
+            dice = calc_dice(out3Dhist_regions['mask'], out3Dmri_mask)
+            haus = hausdorff(out3Dhist_regions['mask'], out3Dmri_mask)
+            
+            new_row = {'sid':sid, 'slices':[i for i in moving_dict], 'DICE': dice , 'Hausdorff': haus}
+            registration_performance = pd.concat([registration_performance, pd.DataFrame([new_row])], ignore_index=True)
 
             try:
-                print('\nCancer...')
+                print('\nCancer... Actually urethra hehehe')
                 if fIC:
                     fIC_cancer = out3Dmri_cancer.copy()
                     for i in range(3):
                         out3Dmri_cancer[:,:,:,i] = cv2.flip(cv2.flip(out3Dmri_cancer[:,:,:,i],0),1)
 
-                calc_dice(out3Dhist_regions['cancer'], out3Dmri_cancer[:,:,:,0])
-                hausdorff(out3Dhist_regions['cancer'], out3Dmri_cancer[:,:,:,0])
+                dice = calc_dice(out3Dhist_regions['urethra'], out3Dmri_cancer[:,:,:,0])
+                haus = hausdorff(out3Dhist_regions['urethra'], out3Dmri_cancer[:,:,:,0])
+                
+                new_row = {'sid':sid, 'slices':[i for i in moving_dict], 'DICE': dice , 'Hausdorff': haus}
+                registration_urethra = pd.concat([registration_urethra, pd.DataFrame([new_row])], ignore_index=True)
             except:
                 pass
             
@@ -254,8 +264,13 @@ def main():
             ## Save transforms 
             save_all_transforms(transforms, sid, imSpatialInfo, scaling, 'histo-' + tag[1:] + '/')
 
+            # Save performance metrics
+            registration_performance.to_csv(outputPath + 'registration_performance.csv', index=False)  
+            registration_urethra.to_csv(    outputPath + 'registration_urethra.csv',     index=False)
+            
             timings[s] = (end-start)/60.0
             print('Done!\n')
+            
 
     return timings    
 

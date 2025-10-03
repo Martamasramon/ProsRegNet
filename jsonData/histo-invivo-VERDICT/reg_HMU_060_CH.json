@@ -1,0 +1,11 @@
+{
+    "id": "HMU_060_CH",
+    "moving-type": "stack",
+    "fixed": "/cluster/project7/backup_masramon/MRI/in-vivo/HMU_060_CH/HMU_060_CH_b3000.nii.gz",
+    "fixed-segmentation": "/cluster/project7/backup_masramon/MRI/in-vivo/HMU_060_CH/HMU_060_CH_b3000_mask.nii.gz",
+    "cancer": "/cluster/project7/backup_masramon/MRI/in-vivo/HMU_060_CH/FIC urethra.nii.gz",
+    "DWI": "True",
+    "fIC": "True",
+    "DWI-map": "/cluster/project7/backup_masramon/MRI/in-vivo/HMU_060_CH/HMU_060_CH_fIC_DL.nii.gz",
+    "moving": "./datasets/testing/HMU_060_CH.json"
+}

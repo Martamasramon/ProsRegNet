@@ -1,0 +1,11 @@
+{
+    "id": "HMU_004_HC",
+    "moving-type": "stack",
+    "fixed": "/cluster/project7/backup_masramon/MRI/in-vivo/HMU_004_HC/HMU_004_HC_b3000.nii.gz",
+    "fixed-segmentation": "/cluster/project7/backup_masramon/MRI/in-vivo/HMU_004_HC/HMU_004_HC_b3000_mask.nii.gz",
+    "cancer": "",
+    "DWI": "True",
+    "fIC": "True",
+    "DWI-map": "/cluster/project7/backup_masramon/MRI/in-vivo/HMU_004_HC/HMU_004_HC_fIC_DL.nii.gz",
+    "moving": "./datasets/testing/HMU_004_HC.json"
+}

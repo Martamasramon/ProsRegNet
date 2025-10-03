@@ -219,19 +219,19 @@ def preprocess_mri(fixed_img, fixed_seg, pre_process_fixed_dest, coord, case, dw
         points = np.argwhere(mri_mask != 0)
         points = np.fliplr(points) # store them in x,y coordinates instead of row,col indices
         y, x, h, w = cv2.boundingRect(points) # create a rectangle around those points
-        
-        
 
         if not reg_fIC:
             # if registering histo to fIC, do not normalise fIC! 
             imMri[slice, :, :] = imMri[slice, :, :] / np.max(imMri[slice, :, :]) 
         imMri[slice, :, :] *= 255
         
+        # if exvivo or 'T2' in fixed_img:
+        #     print('Flipping MRI')
+        #     imMri[slice, :, :] = cv2.flip(imMri[slice, :, :], 1)
+        #     mri_mask           = cv2.flip(mri_mask, 1)
+            
         mri = imMri[slice, :, :] * imMriMask[slice, :, :]
 
-        if exvivo:
-            mri         = cv2.flip(mri, 1)
-            mri_mask    = cv2.flip(mri_mask, 1)
             
         if h>w:
             y_offset = int(h*0.15)
@@ -269,7 +269,6 @@ def preprocess_mri(fixed_img, fixed_seg, pre_process_fixed_dest, coord, case, dw
         upsMri  = cv2.resize(cropMri.astype('float32'), (new_h,  new_w), interpolation=cv2.INTER_CUBIC)
         upsMask = cv2.resize(cropMask.astype('float32'), (new_h,  new_w), interpolation=cv2.INTER_CUBIC)
             
-        print(np.max(upsMri))
         # write to a file        
         cv2.imwrite(pre_process_fixed_dest + case + '/mri_' + case + '_' + str(slice).zfill(2) +'.jpg', upsMri)  
         cv2.imwrite(pre_process_fixed_dest + case + '/mri_uncropped_' + case + '_' + str(slice).zfill(2) +'.jpg', imMri[slice, :, :])

@@ -6,8 +6,18 @@ from register_functions     import output_results
 import argparse
 import cv2
 
-samples      = ['HMU_010_FH','HMU_038_JC','HMU_063_RS','HMU_066_JF','HMU_076_RV','HMU_082_PS','HMU_084_AJ','HMU_113_MT','HMU_121_CN','HMU_176_IJ','HMU_180_KF','HMU_201_MB']
-samples      = ['HMU_010_FH','HMU_038_JC','HMU_082_PS','HMU_084_AJ','HMU_121_CN','HMU_176_IJ','HMU_180_KF','HMU_201_MB']
+samples      = ['HMU_011_MQ','HMU_056_JH','HMU_077_MW','HMU_087_FM','HMU_180_KF','HMU_242_JD','HMU_348_EA']
+
+# 'HMU_010_FH',  'HMU_025_SH', 'HMU_038_JC', 'HMU_063_RS', 'HMU_066_JF', 
+#     'HMU_069_NS', 'HMU_076_RV', 'HMU_082_PS', 'HMU_084_AJ','HMU_113_MT', 'HMU_121_CN', 
+#     'HMU_176_IJ', 'HMU_180_KF', 'HMU_201_MB'
+
+"""['HMU_003_DB','HMU_004_HC','HMU_007_TN','HMU_011_MQ','HMU_033_JS','HMU_056_JH','HMU_060_CH', 'HMU_064_SB', 
+                  'HMU_065_RH','HMU_067_MS','HMU_068_PB','HMU_077_MW','HMU_087_FM','HMU_094_RB', 'HMU_099_DL', 
+                  'HMU_116_BC','HMU_118_PL', 'HMU_119_MM','HMU_128_RK','HMU_174_IS', 'HMU_181_MO','HMU_198_JL', 
+                  'HMU_226_NS','HMU_227_KT','HMU_235_CC', 'HMU_242_JD', 'HMU_245_DC', 'HMU_256_DB','HMU_258_JK',
+                  'HMU_265_JM', 'HMU_342_ME','HMU_348_EA','HMU_258_JK']"""
+
 save_png_img = False
 
 def main():
@@ -57,13 +67,12 @@ def main():
         all_paths['histo']      = sorted(glob(img_path + 'hist*.png'),          reverse=reverse)
         all_paths['mask']       = sorted(glob(img_path + 'mask*.png'),          reverse=reverse)
         all_paths['density']    = sorted(glob(img_path + 'density*.png'),       reverse=reverse)
-        all_paths['epithelium'] = sorted(glob(img_path + 'epithelium*.png'),    reverse=reverse)
         all_paths['stroma']     = sorted(glob(img_path + 'stroma*.png'),        reverse=reverse)
         all_paths['lumen']      = sorted(glob(img_path + 'lumen*.png'),         reverse=reverse)
-        all_paths['other']      = sorted(glob(img_path + 'other*.png'),         reverse=reverse)
+        all_paths['epithelial'] = sorted(glob(img_path + 'epithelial*.png'),    reverse=reverse)
         all_paths['cancer']     = sorted(glob(img_path + 'cancer*.png'),        reverse=reverse)
         all_paths['BPH']        = sorted(glob(img_path + 'BPH*.png'),           reverse=reverse)
-        all_paths['urethra']    = sorted(glob(img_path + 'urethra*.png'),           reverse=reverse)
+        all_paths['urethra']    = sorted(glob(img_path + 'urethra*.png'),       reverse=reverse)
         
         paths = dict(all_paths)
         for annot in all_paths:
